@@ -1,27 +1,7 @@
 // Route comparison UI. ORS is mocked with REAL saved responses; crossings come from the real
 // Vienna snapshot via the local /api/crossings (no API key needed).
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { normalizeOrsRoutes } from '../../public/lib/ors.js';
-
-const fixture = (name) => normalizeOrsRoutes(JSON.parse(readFileSync(`test/fixtures/${name}.json`, 'utf8')));
-
-async function mockOrs(page) {
-  const calls = [];
-  await page.route('**/api/route?*', (route) => {
-    const u = new URL(route.request().url());
-    calls.push(Object.fromEntries(u.searchParams));
-    const mode = u.searchParams.get('mode');
-    const toBelvedere = u.searchParams.get('to').startsWith('16.3809');
-    const name = toBelvedere ? 'ors-hoiv-belvedere-foot'
-      : mode === 'wheelchair' ? 'ors-hoiv-hbf-wheelchair' : 'ors-hoiv-hbf-foot';
-    route.fulfill({ json: { mode, routes: fixture(name) } });
-  });
-  await page.route('**/api/geocode?*', (route) => route.fulfill({
-    json: { results: [{ label: 'Wien Hauptbahnhof, Vienna, Austria', lon: 16.3755, lat: 48.185 }] },
-  }));
-  return calls;
-}
+import { mockOrs } from './helpers.js';
 
 test('quick destination → safest route first, shortest route marked, summary spoken', async ({ page }) => {
   await mockOrs(page);

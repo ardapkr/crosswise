@@ -23,7 +23,19 @@
     <button id="start" class="big primary" type="button">Start</button>
 
     <section id="app" aria-label="Crosswise controls" hidden>
-      <section class="card" aria-labelledby="where-heading">
+      <!-- Shown while walking a route -->
+      <section id="nav-section" class="card nav" aria-labelledby="nav-heading" hidden>
+        <h2 id="nav-heading" tabindex="-1">Walking</h2>
+        <p class="nav-label">Next</p>
+        <p id="nav-next" class="nav-next">Waiting for your location…</p>
+        <p id="nav-remaining" class="nav-remaining"></p>
+        <div class="row">
+          <button id="nav-repeat" type="button" class="big">Repeat next</button>
+          <button id="nav-stop" type="button" class="big">Stop route</button>
+        </div>
+      </section>
+
+      <section id="where-section" class="card" aria-labelledby="where-heading">
         <h2 id="where-heading">Where to?</h2>
         <form id="route-form" autocomplete="off">
           <label for="to">Destination</label>

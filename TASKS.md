@@ -25,11 +25,11 @@
 - [x] Notify: "Route comparison ready to test on phone"
 
 ## Phase 2 — Guidance + crossing alerts (target: 18:30 — outdoor filming starts)
-- [ ] `lib/guidance.js`: given position + route + crossing groups → next event (turn / crossing) and distance (tested)
-- [ ] Live GPS with `watchPosition`; announce crossing at ~40 m and ~10 m: type, sound signal, kerb info, "press the button under the box" when sound=yes
-- [ ] Turn instructions from ORS steps
-- [ ] `?demo=1` simulated walk along the route (Playwright test runs it)
-- [ ] Notify: "Guidance ready — test outdoors / film"
+- [x] `lib/guidance.js`: given position + route + crossing groups → next event (turn / crossing) and distance (tested)
+- [x] Live GPS with `watchPosition`; announce crossing at ~40 m and ~10 m: type, sound signal, kerb info, "press the button under the box" when sound=yes
+- [x] Turn instructions from ORS steps
+- [x] `?demo=1` simulated walk along the route (Playwright test runs it)
+- [x] Notify: "Guidance ready — test outdoors / film"
 
 ## Phase 3 — Live bus scan (target: 22:00)
 - [ ] `/api/look` + `/api/prompts.js` (all 4 modes), JSON-only answers, robust parsing

@@ -163,6 +163,27 @@ describe('off route', () => {
   });
 });
 
+import { nextEventText, simulatedPosition } from '../../public/lib/guidance.js';
+
+describe('nextEventText (big display)', () => {
+  it('describes the next event with a rounded distance', () => {
+    const [c1] = route.crossings;
+    expect(nextEventText({ event: { kind: 'crossing', crossing: c1 }, distance: 34 }, 'blind'))
+      .toBe('Traffic light with acoustic signal in 30 m');
+    expect(nextEventText({ event: { kind: 'turn', instruction: 'Turn left onto Ghegastraße' }, distance: 18 }, 'blind'))
+      .toBe('Turn left onto Ghegastraße in 20 m');
+    expect(nextEventText({ event: { kind: 'arrive' }, distance: 3 }, 'blind')).toBe('Destination in 0 m');
+    expect(nextEventText(null, 'blind')).toBe('You have arrived.');
+  });
+});
+
+describe('simulatedPosition (demo mode)', () => {
+  it('walks along the route at 1.3 m/s', () => {
+    const p = simulatedPosition(geometry, 100, 1.3);
+    expect(updateGuidance(createGuideState(route, 'blind'), p).progress).toBeCloseTo(130, 0);
+  });
+});
+
 describe('not too chatty at complex intersections', () => {
   const line = [];
   for (let i = 0; i <= 40; i++) line.push([A[0] + i * 0.000135, A[1]]);

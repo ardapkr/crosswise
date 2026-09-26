@@ -130,3 +130,11 @@ input::placeholder { color: #9a9a9a; }
 .route.level-risky { border-left-color: var(--bad); }
 .route.level-risky .level { color: var(--bad); }
 .route:first-child { border-top-color: var(--accent); border-right-color: var(--accent); border-bottom-color: var(--accent); }
+
+/* --- navigation panel --- */
+.nav { border-color: var(--accent); }
+.nav-label { margin: 0; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.9rem; }
+.nav-next { font-size: 1.9rem; font-weight: 800; margin: 4px 0 10px; line-height: 1.25; }
+.nav-remaining { font-size: 1.1rem; margin: 0 0 14px; }
+.row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+.row .big { min-height: 80px; font-size: 1.2rem; }

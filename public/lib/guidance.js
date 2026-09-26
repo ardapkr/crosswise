@@ -6,7 +6,7 @@
 //
 // route = { geometry, steps (from lib/ors.js), crossings (from crossingsOnRoute, with `along`) }
 
-import { pointToLineDistance, distance } from './geo.js';
+import { pointToLineDistance, distance, pointAlong } from './geo.js';
 import { normalizeMode } from './modes.js';
 
 export const CROSSING_FAR_M = 40;
@@ -229,4 +229,25 @@ export function updateGuidance(state, position, { accuracy = 10 } = {}) {
     offRoute,
     next,
   };
+}
+
+const CAP = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** Short text for the big "next" display, e.g. "Traffic light with acoustic signal in 30 m". */
+export function nextEventText(next, mode) {
+  if (!next) return 'You have arrived.';
+  const m = `${Math.round(next.distance / 10) * 10} m`;
+  const e = next.event;
+  if (e.kind === 'crossing') {
+    let t = CAP(crossingType(e.crossing));
+    if (normalizeMode(mode) !== 'blind') t += `, ${kerbText(e.crossing)}`;
+    return `${t} in ${m}`;
+  }
+  if (e.kind === 'turn') return `${e.instruction} in ${m}`;
+  return `Destination in ${m}`;
+}
+
+/** Demo mode: where a simulated walker is after `seconds` at `speed` m/s. */
+export function simulatedPosition(line, seconds, speed = 1.3) {
+  return pointAlong(line, seconds * speed);
 }

@@ -3,6 +3,7 @@
 import { MODES, normalizeMode } from '../lib/modes.js';
 import { speak, repeatLast, unlockSpeech } from './speech.js';
 import { initRoutes } from './routes-ui.js';
+import { startNavigation } from './navigation.js';
 
 const MODE_KEY = 'crosswise.mode';
 const $ = (id) => document.getElementById(id);
@@ -44,14 +45,48 @@ function setMode(mode) {
   if (changed) routes.replan();
 }
 
+// --- walking guidance ---
+let nav = null;
+
+function showWalking(on) {
+  $('nav-section').hidden = !on;
+  $('where-section').hidden = on;
+  $('routes-section').hidden = on;
+}
+
+function startRoute(plan, route) {
+  nav?.stop();
+  showWalking(true);
+  $('nav-heading').focus();
+  speak(`Starting the route: about ${Math.max(1, Math.round(route.duration / 60))} minutes, ${route.score.count} crossings.` +
+    (state.demo ? ' Demo walk.' : ''), 'navigation');
+  nav = startNavigation({
+    route,
+    mode: plan.mode,
+    speak,
+    demo: state.demo,
+    speed: Number(params.get('speed')) || 1.3,
+    startAt: Number(params.get('at')) || 0, // demo only: start this many metres into the route
+    onEnd: () => { nav = null; setTimeout(() => showWalking(false), 4000); },
+  });
+}
+
+function stopRoute() {
+  nav?.stop();
+  nav = null;
+  showWalking(false);
+  speak('Route stopped.');
+  $('to').focus();
+}
+
+$('nav-stop').addEventListener('click', stopRoute);
+$('nav-repeat').addEventListener('click', () => nav?.repeat());
+
 const routes = initRoutes({
   getMode: () => state.mode,
   speak,
   demo: state.demo,
-  onChoose: (plan, route) => {
-    // Phase 2 (guidance) hooks in here.
-    speak(`Route chosen: ${Math.round(route.duration / 60)} minutes. Guidance is coming soon.`, 'navigation');
-  },
+  onChoose: startRoute,
 });
 
 function start() {
