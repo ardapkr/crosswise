@@ -60,3 +60,37 @@ describe('speech priority', () => {
     expect(nextMessage([])).toEqual([null, []]);
   });
 });
+
+describe('busy moments (trip + crossings): nothing important is lost, nothing stale is said', () => {
+  it('a "keep" message is never trimmed, even behind many crossing alerts', () => {
+    let q = [];
+    q = enqueue(q, { text: 'Get off now: Hauptbahnhof.', priority: PRIORITY.navigation, keep: true });
+    for (let i = 0; i < 6; i++) q = enqueue(q, msg('crossing ' + i, 'crossing'));
+    expect(q.map((m) => m.text)).toContain('Get off now: Hauptbahnhof.');
+  });
+
+  it('without keep, the least important is trimmed first', () => {
+    let q = [];
+    q = enqueue(q, msg('turn', 'navigation'));
+    for (let i = 0; i < 4; i++) q = enqueue(q, msg('crossing ' + i, 'crossing'));
+    expect(q.map((m) => m.text)).not.toContain('turn');
+    expect(q).toHaveLength(4);
+  });
+
+  it('expired messages are skipped when their turn comes', () => {
+    const q = [
+      { text: 'In 40 metres: crossing.', priority: PRIORITY.crossing, expiresAt: 1000 },
+      { text: 'You are at the stop.', priority: PRIORITY.navigation, keep: true },
+    ];
+    expect(nextMessage(q, 500)[0].text).toBe('In 40 metres: crossing.');
+    const [head, rest] = nextMessage(q, 2000);
+    expect(head.text).toBe('You are at the stop.');
+    expect(rest).toEqual([]);
+  });
+
+  it('the same text is not queued twice', () => {
+    let q = enqueue([], msg('crossing', 'crossing'));
+    q = enqueue(q, msg('crossing', 'crossing'));
+    expect(q).toHaveLength(1);
+  });
+});

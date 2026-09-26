@@ -103,3 +103,20 @@ test('wheelchair mode asks for step-free trips and shows the vehicles\' access',
   await expect(page.locator('#options .access').first()).toContainText(/wheelchair/i);
   expect(calls.at(-1).mode).toBe('wheelchair');
 });
+
+test('with a real-speed voice, no trip step is lost and no stale warning is read late', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.route('https://tile.openstreetmap.org/**', (route) => route.abort());
+  await fakeSpeech(page, { msPerChar: 15 }); // fast, but a busy junction still fills the queue
+  await mockOrs(page, { transit: 'hoiv-hbf' });
+  await page.goto('/?demo=1&speed=25');
+  await page.getByRole('button', { name: 'Start' }).click();
+  await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click();
+  await page.locator('#options > li').first().getByRole('button', { name: /Start this trip/ }).click();
+  await page.waitForFunction(() => window.__spoken.at(-1) === 'You have arrived at your destination.', null, { timeout: 100_000 });
+  const spoken = await page.evaluate(() => window.__spoken);
+  for (const re of [/^Walk \d+ minutes? to Hüttenbrennergasse/, /^You are at the stop/, /^Bus 69A towards Hauptbahnhof (leaves|was due)/,
+    /^On bus 69A/, /^Your stop is next/, /^Get off now/, /^Walk \d+ minutes? to your destination/]) {
+    expect(spoken.some((t) => re.test(t)), `${re} missing in:\n${spoken.join('\n')}`).toBe(true);
+  }
+});

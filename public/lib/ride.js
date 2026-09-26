@@ -50,7 +50,7 @@ export function updateRide(state, { now, position = null, accuracy = 999, boarde
   const once = (key, text, priority = 'navigation') => {
     if (s.announced[key]) return;
     s.announced[key] = true;
-    say.push({ text, priority });
+    say.push({ text, priority, keep: true });
   };
   const leg = s.leg;
 
@@ -78,7 +78,7 @@ export function updateRide(state, { now, position = null, accuracy = 999, boarde
         ? (assumed ? ' I think you are on board now, but I have no GPS here: I count the stops by the timetable, so the count is approximate.'
           : ' No GPS here: I count the stops by the timetable, so the count is approximate.')
         : '';
-      say.push({ text: `On ${lineName(leg)} towards ${leg.headsign}. ${plural(n, 'stop')}. Get off at ${leg.to.name}.${next}${approx}`, priority: 'navigation' });
+      say.push({ text: `On ${lineName(leg)} towards ${leg.headsign}. ${plural(n, 'stop')}. Get off at ${leg.to.name}.${next}${approx}`, priority: 'navigation', keep: true });
     }
   }
 
@@ -103,11 +103,12 @@ export function updateRide(state, { now, position = null, accuracy = 999, boarde
             ? `By the timetable you should be at ${leg.to.name} now. Get off when the doors open there.`
             : `Get off now: ${leg.to.name}.`,
           priority: 'crossing', // as important as a crossing: missing the stop is a real problem
+          keep: true,
         });
       } else if (left === 1) {
         once('next', `Your stop is next: ${leg.to.name}. Get ready to get off.${approx}`, 'crossing');
       } else {
-        say.push({ text: `${s.stops[s.passed - 1].name}. ${plural(left, 'stop')} to go.${approx}`, priority: 'info' });
+        say.push({ text: `${s.stops[s.passed - 1].name}. ${plural(left, 'stop')} to go.${approx}`, priority: 'info', ttlMs: 30000 });
       }
     }
   }

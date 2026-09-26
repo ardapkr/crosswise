@@ -48,7 +48,7 @@ export function startTrip({ trip, mode, speak, demo, speed = 1.3, onMove, onEnd,
     state = r.state;
     last = r;
     for (const m of r.say) {
-      speak(m.text, m.priority);
+      speak(m.text, m.priority, m);
       if (m.priority === 'crossing' && /^(Crossing now|Get off now|Your stop is next)/.test(m.text)) navigator.vibrate?.([250, 120, 250]);
     }
     render(r);

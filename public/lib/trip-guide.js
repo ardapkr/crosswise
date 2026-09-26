@@ -21,7 +21,7 @@ export function createTripGuide(trip, mode) {
 function enterLeg(s, i, now) {
   const trip = s.trip;
   if (i >= trip.legs.length) {
-    return [{ ...s, index: i, walk: null, ride: null, done: true }, [{ text: 'You have arrived at your destination.', priority: 'navigation' }]];
+    return [{ ...s, index: i, walk: null, ride: null, done: true }, [{ text: 'You have arrived at your destination.', priority: 'navigation', keep: true }]];
   }
   const leg = trip.legs[i];
   if (leg.kind === 'walk') {
@@ -30,12 +30,12 @@ function enterLeg(s, i, now) {
     const then = nextRide ? ` Then take ${lineName(nextRide)} towards ${nextRide.headsign}.` : '';
     return [
       { ...s, index: i, walk: createGuideState(route, s.mode), ride: null, last: null },
-      [{ text: `${walkLegText(leg, s.mode, nextRide)}${then}`, priority: 'navigation' }],
+      [{ text: `${walkLegText(leg, s.mode, nextRide)}${then}`, priority: 'navigation', keep: true }],
     ];
   }
   // a ride: the user is at the stop (or started there)
   const scan = leg.vehicle === 'bus' || leg.vehicle === 'tram' ? ` Tap Find bus: I check the line and the direction of arriving ${leg.vehicle}s.` : '';
-  const said = [{ text: `${departureText(leg, now)}${scan}`, priority: 'navigation' }];
+  const said = [{ text: `${departureText(leg, now)}${scan}`, priority: 'navigation', keep: true }];
   return [{ ...s, index: i, walk: null, ride: createRideState(leg), last: null }, said];
 }
 
@@ -65,7 +65,7 @@ export function updateTripGuide(state, { now, position = null, accuracy = 999, n
         next = false;
         const [st, msgs] = enterLeg(s, s.index + 1, now);
         s = st;
-        say.push({ text: `OK, at the stop ${leg.to.name}.`, priority: 'navigation' }, ...msgs);
+        say.push({ text: `OK, at the stop ${leg.to.name}.`, priority: 'navigation', keep: true }, ...msgs);
         continue;
       }
       if (position) {

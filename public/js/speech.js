@@ -90,16 +90,18 @@ function play(message) {
 
 function done() {
   current = null;
-  const [head, rest] = nextMessage(queue);
+  const [head, rest] = nextMessage(queue, Date.now());
   queue = rest;
   if (head) play(head);
 }
 
 /**
  * Say something. priority: 'danger' | 'crossing' | 'navigation' | 'info'
+ * opts.keep = never drop it from a busy queue (trip steps); opts.ttlMs = skip it if it waited longer
+ * (distance warnings are useless once passed).
  */
-export function speak(text, priority = 'info') {
-  const message = { text, priority: PRIORITY[priority] ?? PRIORITY.info };
+export function speak(text, priority = 'info', { keep = false, ttlMs = 0 } = {}) {
+  const message = { text, priority: PRIORITY[priority] ?? PRIORITY.info, keep, expiresAt: ttlMs ? Date.now() + ttlMs : 0 };
   const action = decide(current, message);
   if (action === 'speak') play(message);
   else if (action === 'interrupt') {

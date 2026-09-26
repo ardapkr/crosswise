@@ -6,18 +6,26 @@ import { normalizePlan, choosePatterns, shiftPlanTimes } from '../../public/lib/
 export const fixtureRoutes = (name) =>
   normalizeOrsRoutes(JSON.parse(readFileSync(`test/fixtures/${name}.json`, 'utf8')));
 
-/** Headless Chrome's speech engine is unreliable: replace it with one that "speaks" in 20 ms. */
-export async function fakeSpeech(page) {
-  await page.addInitScript(() => {
+/**
+ * Headless Chrome's speech engine is unreliable: replace it with one that "speaks" in 20 ms.
+ * msPerChar > 0 makes it as slow as a real voice (~60 ms per character), so the queue fills up like on a phone.
+ */
+export async function fakeSpeech(page, { msPerChar = 0 } = {}) {
+  await page.addInitScript((perChar) => {
+    let timer = null;
+    let current = null;
     Object.defineProperty(window, 'speechSynthesis', {
       configurable: true,
       value: {
-        speak(u) { setTimeout(() => u.onend && u.onend(), 20); },
-        cancel() {},
+        speak(u) {
+          current = u;
+          timer = setTimeout(() => { current = null; u.onend && u.onend(); }, perChar ? u.text.length * perChar : 20);
+        },
+        cancel() { clearTimeout(timer); const u = current; current = null; if (u) setTimeout(() => u.onend && u.onend(), 0); },
         getVoices() { return []; },
       },
     });
-  });
+  }, msPerChar);
 }
 
 /**

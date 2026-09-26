@@ -168,10 +168,11 @@ export function updateGuidance(state, position, { accuracy = 10 } = {}) {
   const progress = snap.along;
   const announced = { ...state.announced };
   const say = [];
-  const once = (key, text, priority) => {
+  // ttlMs: a warning that could not be said within this time is skipped (the user has walked on)
+  const once = (key, text, priority, extra = {}) => {
     if (announced[key]) return;
     announced[key] = true;
-    say.push({ text, priority });
+    say.push({ text, priority, ...extra });
   };
 
   // Off route? Only decide when GPS is accurate enough to tell.
@@ -198,21 +199,21 @@ export function updateGuidance(state, position, { accuracy = 10 } = {}) {
           announced[`${e.id}:far`] = true;  // too late for the early warning
           let text = crossingAlert(e.crossing, state.mode, 'near', d);
           if (e.nextCrossingIn) text += ` Then another crossing in ${formatDistance(e.nextCrossingIn)}.`;
-          once(`${e.id}:near`, text, 'crossing');
+          once(`${e.id}:near`, text, 'crossing', { ttlMs: 12000 });
         } else if (d <= CROSSING_FAR_M && e.warn) {
-          once(`${e.id}:far`, crossingAlert(e.crossing, state.mode, 'far', d), 'crossing');
+          once(`${e.id}:far`, crossingAlert(e.crossing, state.mode, 'far', d), 'crossing', { ttlMs: 8000 });
         }
       } else if (e.kind === 'turn') {
         const text = e.instruction;
         if (d <= TURN_NEAR_M) {
           announced[`${e.id}:far`] = true;
-          once(`${e.id}:near`, `${text} now.`, 'navigation');
+          once(`${e.id}:near`, `${text} now.`, 'navigation', { ttlMs: 10000 });
         } else if (d <= TURN_FAR_M && e.warn) {
-          once(`${e.id}:far`, `In ${formatDistance(d)}, ${lowerFirst(text)}.`, 'navigation');
+          once(`${e.id}:far`, `In ${formatDistance(d)}, ${lowerFirst(text)}.`, 'navigation', { ttlMs: 8000 });
         }
       } else if (e.kind === 'arrive' && d <= ARRIVE_M) {
         // a walking leg of a public transport trip ends at a stop, not at the destination
-        once(e.id, state.route.arriveText || 'You have arrived at your destination.', 'navigation');
+        once(e.id, state.route.arriveText || 'You have arrived at your destination.', 'navigation', { keep: true });
         arrived = true;
       }
     }
