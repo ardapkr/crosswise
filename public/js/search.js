@@ -16,9 +16,10 @@ const DEBOUNCE_MS = 300;
  *   getFocus: () => [number, number],
  *   onPick: (place: object) => void,
  *   leadingRows?: (query: string) => object[],   // e.g. "Current location" for the start field
+ *   cleanQuery?: (text: string) => string,        // e.g. "I want to go to Karl" → "Karl" (dictated sentences)
  * }} opts
  */
-export function attachSuggestions({ input, list, announcer, getFocus, onPick, leadingRows = () => [] }) {
+export function attachSuggestions({ input, list, announcer, getFocus, onPick, leadingRows = () => [], cleanQuery = (q) => q }) {
   let timer = null;
   let seq = 0;              // the newest request wins; older answers are dropped
   const cache = new Map();  // query → ORS results, so backspacing costs nothing
@@ -57,7 +58,7 @@ export function attachSuggestions({ input, list, announcer, getFocus, onPick, le
   }
 
   async function update() {
-    const q = input.value.trim();
+    const q = cleanQuery(input.value.trim());
     const my = ++seq;
     const lead = leadingRows(q);
     const known = matchKnownPlaces(q);

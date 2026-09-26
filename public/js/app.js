@@ -10,6 +10,7 @@ import { startTrip } from './trip-nav.js';
 import { initLook } from './look-ui.js';
 import { unlockSound } from './sound.js';
 import { initVoice } from './voice.js';
+import { initAsk } from './ask.js';
 import { ensureMap, setMapPadding, showWalk, showTrip, showPosition, showHere, refit } from './map.js';
 import { getJSON } from './api.js';
 import { getPosition, HOIV } from './location.js';
@@ -159,6 +160,7 @@ const routes = initRoutes({
   onChoose: startRoute,
   onChooseTrip: startTripRoute,
   closeSearch: () => setSearching(false),
+  getAsk: () => ask,
 });
 
 // --- map: fills the screen; routes are fitted into the part the panels don't cover ---
@@ -261,12 +263,16 @@ const voice = initVoice({
     read: () => look.read(),
     describe: () => look.describe(),
     where_am_i: () => whereAmI(),
-    navigate: (place) => routes.planToPlace(place),
+    // 'I want to go to X' → did you mean …? → yes → plan from here; no place → 'Where do you want to go?'
+    navigate: (place, by) => routes.confirmPlace(place, { by }),
     set_mode: (mode) => setMode(mode),
-    stop: () => { if (nav) stopRoute(); else look.stop(); },
+    stop: () => { ask.cancel(); if (nav) stopRoute(); else look.stop(); },
     repeat: () => repeatLast(),
   },
 });
 
+// Yes / no questions (voice or big buttons); created after voice so it can reopen the mic
+const ask = initAsk({ speak, getVoice: () => voice });
+
 // Expose for tests and the browser console.
-window.crosswise = { state, speak, setMode, routes, look, voice };
+window.crosswise = { state, speak, setMode, routes, look, voice, ask };

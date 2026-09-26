@@ -18,6 +18,9 @@ import {
 } from '../lib/trip.js';
 import { showRoutes, showOptions, selectRoute, routeStyle, ROUTE_STYLES } from './map.js';
 import { attachSuggestions } from './search.js';
+import { destinationFrom, cleanPlace, parseYesNo, didYouMean, placeDetail } from '../lib/dialog.js';
+import { parseAlternatives } from '../lib/commands.js';
+import { tripName } from '../lib/trip.js';
 
 const $ = (id) => document.getElementById(id);
 export const CURRENT_LOCATION = 'Current location';
@@ -40,7 +43,7 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
  * @param {{ getMode: () => string, speak: Function, demo: boolean, onChoose: (plan, route) => void,
  *           onChooseTrip?: (plan, trip) => void, closeSearch?: () => void }} opts
  */
-export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, closeSearch = () => {} }) {
+export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, closeSearch = () => {}, getAsk = () => null }) {
   let plan = null;      // { from, to, mode, ranked, groups, trips, items, transitFirst, note }
   let fromPlace = null; // chosen start; null = current location
   let comparing = false; // the walking comparison list is open
@@ -80,6 +83,7 @@ export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, close
   // --- live suggestions while typing ---
   const toBox = attachSuggestions({
     input: $('to'), list: $('to-suggestions'), announcer: $('suggest-status'), getFocus: focus,
+    cleanQuery: (q) => destinationFrom(q)?.place || q, // "I want to go to Karl…" (dictated) suggests "Karl…"
     leadingRows: (q) => (q ? [] : SUGGESTED),
     onPick: (place) => { $('to').value = place.name; run(() => planTo(place)); },
   });
@@ -104,6 +108,9 @@ export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, close
   // --- full search (Enter / search button) ---
   async function search(q) {
     toBox.clear();
+    // "I want to go to Stephansplatz" typed or dictated into the search box: a sentence, not a place name
+    const dest = destinationFrom(q);
+    if (dest) { await confirmPlace(dest.place, { by: dest.by }); return; }
     speak(`Searching for ${q}.`);
     const results = await findAll(q);
     if (!results.length) { speak(`I found nothing for ${q}. Try another name.`); return; }
@@ -111,6 +118,82 @@ export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, close
     toBox.show(results);
     speak(`${results.length} places found. First: ${results[0].name}. Choose one.`);
     $('to-suggestions').querySelector('button')?.focus();
+  }
+
+  // --- "Did you mean …?" — voice and dictation: look the place up, confirm it, then plan from here ---
+  const here = () => (demo ? [HOIV.lon, HOIV.lat] : lastPosition());
+
+  /**
+   * query = the place as said ("stephansplatz"); '' = the user wants to go somewhere but did not say where.
+   * by = 'walk' | 'transit' | null (asked for in the sentence).
+   */
+  async function confirmPlace(query, { by = null } = {}) {
+    closeSearch();
+    toBox.clear();
+    if (!query) { askDestination(by); return; }
+    $('to').value = query;
+    speak(`Looking up ${query}.`);
+    const found = (await findAll(query)).slice(0, 3);
+    if (!found.length) {
+      askDestination(by, `I could not find ${query}. Where do you want to go? Say the place again, or a street name.`);
+      return;
+    }
+    offer(found, 0, by);
+  }
+
+  function offer(found, i, by) {
+    const p = found[i];
+    getAsk().ask({
+      question: `Did you mean ${p.name}?`,
+      detail: placeDetail(p, here()),
+      spoken: didYouMean(p, here(), { n: i + 1 }),
+      yes: () => {
+        // "yes" = go there from where I am now
+        fromPlace = null;
+        $('from').value = CURRENT_LOCATION;
+        $('to').value = p.name;
+        run(() => planTo(p, { by, askToStart: true }));
+      },
+      no: () => {
+        if (i + 1 < found.length) offer(found, i + 1, by);
+        else askDestination(by, 'Sorry. Where do you want to go? Say the place again, for example: Stephansplatz.');
+      },
+    });
+  }
+
+  /** "Where do you want to go?" — the next thing the user says is the place (unless it is another command). */
+  function askDestination(by = null, spoken = 'Where do you want to go?') {
+    getAsk().askOpen({
+      spoken,
+      onText: (alternatives) => {
+        const said = alternatives.map(destinationFrom).find((d) => d?.place);
+        if (said) { run(() => confirmPlace(said.place, { by: said.by || by })); return true; }
+        if (parseYesNo(alternatives) === 'no' || /^(?:nothing|never ?mind|cancel|stop)$/i.test((alternatives[0] || '').trim())) {
+          speak('OK.');
+          return true;
+        }
+        if (parseAlternatives(alternatives).action !== 'unknown') return false; // "where am I" etc. runs as a command
+        const { place, by: by2 } = cleanPlace(alternatives[0] || '');
+        if (!place) return false;
+        run(() => confirmPlace(place, { by: by2 || by }));
+        return true;
+      },
+    });
+  }
+
+  /** After planning by voice: "Shall I start the recommended option, bus 69A? Say yes or no." */
+  function askStart() {
+    const first = plan?.items[0];
+    if (!first) return;
+    const transit = first.kind === 'transit';
+    getAsk().ask({
+      question: transit ? `Start ${tripTitle(first)}?` : 'Start walking?',
+      detail: `${minutes(first.duration)} min · recommended option`,
+      spoken: `Shall I start the recommended option, ${transit ? tripName(first) : 'the walking route'}? Say yes or no.`,
+      afterQuiet: true, // let the summary finish first
+      yes: () => (transit ? onChooseTrip?.(plan, first) : onChoose?.(plan, plan.ranked.find((r) => r.id === first.id))),
+      no: () => speak('OK. The options are on the screen. Tap Start on the one you want, or tap Speak and say where you want to go.'),
+    });
   }
 
   /** Voice: "take me to X" → first search result, planned directly (the summary names the place). */
@@ -125,7 +208,9 @@ export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, close
   const ll = (p) => `${p[0].toFixed(6)},${p[1].toFixed(6)}`;
   const soft = (promise) => promise.then((data) => ({ data }), (error) => ({ error }));
 
-  async function planTo(to) {
+  /** opts.by: 'walk' = walking only, 'transit' = public transport first; opts.askToStart: ask to start after the summary. */
+  async function planTo(to, { by = null, askToStart = false } = {}) {
+    getAsk()?.cancel(); // a new plan answers any open question (e.g. a quick destination was tapped instead)
     closeSearch();
     const mode = getMode();
     const from = await resolveStart();
@@ -136,7 +221,8 @@ export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, close
     // walking routes and public transport at the same time; either may fail without killing the other
     const [walk, transit] = await Promise.all([
       soft(getJSON(`/api/route?from=${from.lon},${from.lat}&to=${to.lon},${to.lat}&mode=${mode}`)),
-      soft(getJSON(`/api/transit?from=${ll(a)}&to=${ll(b)}&mode=${mode}`, { timeoutMs: 15000 })),
+      by === 'walk' ? Promise.resolve({ data: { patterns: [] }, walkOnly: true })
+        : soft(getJSON(`/api/transit?from=${ll(a)}&to=${ll(b)}&mode=${mode}`, { timeoutMs: 15000 })),
     ]);
     const walkRoutes = walk.data?.routes || [];
     const patterns = transit.data?.patterns || [];
@@ -170,10 +256,15 @@ export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, close
       .map((p) => firstReachable(p.options.map((o) => buildTrip(o, { routesFor: (k) => scoredLegs.get(k), groups, mode })), now))
       .filter(Boolean);
     const walkBest = ranked[0] ? { ...ranked[0], kind: 'walk' } : null;
-    const { items, transitFirst } = orderPlan(walkBest, trips);
+    let { items, transitFirst } = orderPlan(walkBest, trips);
+    if (by === 'transit' && trips.length && !transitFirst) { // the user asked for bus / tram
+      transitFirst = true;
+      items = [...items.filter((x) => x.kind === 'transit'), ...items.filter((x) => x.kind !== 'transit')];
+    }
 
     let note = '';
     if (transit.error) note = 'Public transport information is not available right now.';
+    else if (transit.walkOnly) note = '';
     else if (!patterns.length) note = 'No public transport connection found.';
     else if (transit.data.fallback) note = 'Live timetable not available: public transport times are examples.';
     plan = { from, to, mode, ranked, groups, trips, items, transitFirst, note };
@@ -182,6 +273,7 @@ export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, close
     speak(planSummary({
       walkBest, walkSummary: ranked.length ? routeSummary(ranked, mode) : null, trips, transitFirst, now, note,
     })); // info: the newest summary replaces an older one
+    if (askToStart) askStart();
   }
 
   // A small line in the route's map colour and pattern, so card and map line can be matched at a glance.
@@ -376,6 +468,9 @@ export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, close
     planTo: (to) => run(() => planTo(to)),
     search: (q) => run(() => search(q)),
     planToPlace: (q) => run(() => planToPlace(q)),
+    /** Voice / dictation: "I want to go to X" → did you mean …? → yes → plan from here → start? */
+    confirmPlace: (q, opts) => run(() => confirmPlace(q, opts)),
+    askDestination: (by) => askDestination(by),
     /** Mode changed: wheelchair uses another ORS profile, so plan again. */
     replan: () => { if (plan) run(() => planTo(plan.to)); },
     /** After walking / riding: show the plan on the map again. */

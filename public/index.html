@@ -123,6 +123,15 @@
           </button>
         </div>
         <p id="voice-heard" class="voice-heard"></p>
+        <!-- A question from the app ("Did you mean Stephansplatz?"): answer by voice (the mic reopens) or with these buttons -->
+        <section id="confirm" class="confirm" hidden aria-labelledby="confirm-question">
+          <h2 id="confirm-question" class="confirm-question" tabindex="-1"></h2>
+          <p id="confirm-detail" class="hint"></p>
+          <div class="confirm-actions">
+            <button id="confirm-yes" type="button" class="btn btn-primary">Yes</button>
+            <button id="confirm-no" type="button" class="btn">No</button>
+          </div>
+        </section>
 
         <div id="plan-section" class="plan">
           <!-- Walking + public transport (shown when public transport was found) -->

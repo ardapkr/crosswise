@@ -88,11 +88,20 @@ function play(message) {
   setTimeout(finish, 2000 + message.text.length * 90);
 }
 
+let quietWaiters = [];
+
 function done() {
   current = null;
   const [head, rest] = nextMessage(queue, Date.now());
   queue = rest;
   if (head) play(head);
+  else { const w = quietWaiters; quietWaiters = []; w.forEach((resolve) => resolve()); }
+}
+
+/** Resolves when the app has finished talking (nothing playing, nothing queued) — e.g. before opening the mic. */
+export function whenQuiet() {
+  if (!current && queue.length === 0) return Promise.resolve();
+  return new Promise((resolve) => quietWaiters.push(resolve));
 }
 
 /**
@@ -129,4 +138,5 @@ export function stopSpeaking() {
   queue = [];
   current = null;
   if (synth) synth.cancel();
+  const w = quietWaiters; quietWaiters = []; w.forEach((resolve) => resolve());
 }
