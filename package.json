@@ -18,5 +18,8 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "vitest": "^5.0.2"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0"
   }
 }
