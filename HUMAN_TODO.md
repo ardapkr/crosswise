@@ -41,8 +41,14 @@ Drop into `test-material/` and tell Claude (it renames and runs `npm run eval:vi
 Normal walking speed is `speed=1.3` (default).
 
 ## Also needed (judging criterion): feedback from a real intended user
-Ask one blind / low-vision / wheelchair user (or an association, e.g. Hilfsgemeinschaft der Blinden und
-Sehschwachen, BSVÖ) to try it for 10 minutes or give feedback on the video. Write down 3 quotes.
+Follow **USER_TEST.md** (10 minutes: 5 tasks, 5 questions, a notes table), then paste the notes to Claude.
+
+## The video
+**DEMO_SCRIPT.md** has a 2-minute draft (time / screen / what to say) and a shot list for the outdoor session.
+
+## Decision needed
+**Production deploy?** Preview links need a Vercel login; a production deploy gives a public link (useful for the
+user test and the judges). Tell Claude "deploy to production" when you want it.
 
 ## Optional: no Vercel login on the phone
 Vercel → project **crosswise** → Settings → Deployment Protection → Vercel Authentication → **Off**.

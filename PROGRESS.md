@@ -2,6 +2,10 @@
 
 **Latest preview:** https://crosswise-2mbpycsy9-trua.vercel.app  (deployed 17:38; open while logged in to Vercel)
 
+**Status:** all 8 phases built and deployed (241 unit + 34 browser tests green). Waiting on humans for: outdoor test
+(route walk, real bus, lights), bus photos, a real user test (USER_TEST.md), the video (DEMO_SCRIPT.md), and the OK
+for a production deploy. See HUMAN_TODO.md.
+
 ## Log (newest first)
 - 17:38 Fixed a wrong spoken summary: with the new blind tie-break the fallback said "has fewer crossings: 4 instead of 3". The summary now states the real deciding reason in ranking order (worst crossing → unmarked/unknown → acoustic signals → crossing count), says "avoids" only when none are left, else "has fewer X: A instead of B". Checked all 16 changed real trips read correctly. `npm run zip` builds submission/crosswise.zip (7.4 MB, no secrets). 241 unit + 34 e2e green.
 - 17:34 Map (the deferred optional Phase 1 item): Leaflet map under "Routes, safest first" — recommended route thick yellow, shortest dashed, crossings coloured like the cards (green lights+sound, blue lights, orange zebra, red unmarked/unknown); while walking it moves into the walking panel with a cyan walker dot. aria-hidden + inert (cards and speech carry the same info); axe still 0 violations; app works if the map fails to load. 238 unit + 34 e2e green.
