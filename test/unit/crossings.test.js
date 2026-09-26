@@ -199,3 +199,47 @@ describe('kerb nodes (barrier=kerb on crossing footways)', () => {
     expect(after).toBe(77);
   });
 });
+
+import { ON_ROUTE_NODE_M } from '../../public/lib/crossings.js';
+
+describe('on the route = the route goes THROUGH one of the crossing nodes (not just past the group)', () => {
+  // 4-arm intersection: crossing nodes 8 m north, south, east and west of the centre.
+  const c = [16.3950, 48.1760];
+  const m = 8 / 111320;
+  const mLon = m / Math.cos((48.176 * Math.PI) / 180);
+  const arm = (id, dLon, dLat, tags) => ({ id, lon: c[0] + dLon * mLon, lat: c[1] + dLat * m, tags: { highway: 'crossing', crossing: 'traffic_signals', ...tags } });
+  const groups = clusterCrossings([arm(1, 0, 1), arm(2, 0, -1), arm(3, 1, 0), arm(4, -1, 0)]);
+
+  it('the 4 arms form one group that remembers its nodes', () => {
+    expect(groups).toHaveLength(1);
+    expect(groups[0].members).toHaveLength(4);
+  });
+
+  it('a route through the west arm uses the crossing; along-position is the node, not the centre', () => {
+    const through = [[c[0] - 1 * mLon, c[1] - 40 * m], [c[0] - 1 * mLon, c[1] + 40 * m]]; // walks north through the W arm node
+    const on = crossingsOnRoute(groups, through);
+    expect(on).toHaveLength(1);
+    expect(on[0].distanceToRoute).toBeLessThan(ON_ROUTE_NODE_M);
+  });
+
+  // A mid-block crossing across the main road; the route walks along the pavement 6 m away.
+  const midBlock = clusterCrossings([arm(9, 0, 0)]);
+  const pavement = [[c[0] - (6 / 8) * mLon, c[1] - 40 * m], [c[0] - (6 / 8) * mLon, c[1] + 40 * m]];
+
+  it('a route along the pavement 6 m beside a crossing passes by: not on the route', () => {
+    expect(crossingsOnRoute(midBlock, pavement)).toEqual([]);
+  });
+
+  it('groups without node positions (e.g. older data) fall back to the 12 m rule', () => {
+    const { members, ...old } = midBlock[0];
+    expect(crossingsOnRoute([old], pavement)).toHaveLength(1);
+  });
+
+  it('node positions survive the compact snapshot format (±0.2 m)', () => {
+    const back = decodeGroups(encodeGroups(groups))[0];
+    expect(back.members).toHaveLength(4);
+    for (let i = 0; i < 4; i++) {
+      expect(distance(back.members[i], groups[0].members[i])).toBeLessThan(0.2);
+    }
+  });
+});

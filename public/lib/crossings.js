@@ -5,6 +5,10 @@ import { distance, pointToLineDistance, bbox, bboxContains } from './geo.js';
 
 export const CLUSTER_RADIUS_M = 20;
 export const ON_ROUTE_M = 12;
+// The route must also pass this close to one of the group's crossing NODES. Measured on real routes:
+// crossings the route really uses are 0–2 m from a node; pavements running past a crossing are 4–10 m
+// away (nothing in between). Without this, ~1 in 5 "crossings" were ones the user never crosses.
+export const ON_ROUTE_NODE_M = 3;
 
 // Traffic-signal nodes that are not for pedestrians.
 const NON_PEDESTRIAN_SIGNALS = new Set(['emergency', 'cyclist_crossing', 'tram_priority', 'blinker', 'ramp_meter']);
@@ -117,9 +121,10 @@ export function clusterCrossings(nodes, radius = CLUSTER_RADIUS_M) {
       best.lat = (best.lat * k + n.lat) / (k + 1);
       best.lon = (best.lon * k + n.lon) / (k + 1);
       best.nodeIds.push(n.id);
+      best.members.push([n.lon, n.lat]);
       for (const a of ATTRS) best[a] = better(a, best[a], c[a]);
     } else {
-      const g = { id: 'g' + n.id, lat: n.lat, lon: n.lon, nodeIds: [n.id], ...c };
+      const g = { id: 'g' + n.id, lat: n.lat, lon: n.lon, nodeIds: [n.id], members: [[n.lon, n.lat]], ...c };
       groups.push(g);
       const k = key(gi, gj);
       if (!grid.has(k)) grid.set(k, []);
@@ -183,19 +188,33 @@ export function applyKerbNodes(groups, kerbNodes, radius = KERB_MATCH_M) {
  * Crossing groups within `maxDist` metres of the route line, ordered along the route.
  * Each result gets `distanceToRoute` and `along` (metres from the route start).
  */
-export function crossingsOnRoute(groups, line, maxDist = ON_ROUTE_M) {
-  const box = bbox(line, maxDist + 5);
+export function crossingsOnRoute(groups, line, maxDist = ON_ROUTE_M, nodeDist = ON_ROUTE_NODE_M) {
+  const box = bbox(line, maxDist + CLUSTER_RADIUS_M + 5);
   const result = [];
   for (const g of groups) {
     if (!bboxContains(box, [g.lon, g.lat])) continue;
-    const r = pointToLineDistance([g.lon, g.lat], line);
-    if (r.distance <= maxDist) result.push({ ...g, distanceToRoute: r.distance, along: r.along });
+    if (!g.members?.length) {
+      // older data without node positions: group centre within maxDist
+      const r = pointToLineDistance([g.lon, g.lat], line);
+      if (r.distance <= maxDist) result.push({ ...g, distanceToRoute: r.distance, along: r.along });
+      continue;
+    }
+    // A big intersection's centre can be up to CLUSTER_RADIUS_M from its crossing nodes.
+    if (pointToLineDistance([g.lon, g.lat], line).distance > maxDist + CLUSTER_RADIUS_M) continue;
+    let best = null;
+    for (const m of g.members) {
+      const r = pointToLineDistance(m, line);
+      if (!best || r.distance < best.distance) best = r;
+    }
+    if (best.distance <= nodeDist) result.push({ ...g, distanceToRoute: best.distance, along: best.along });
   }
   return result.sort((a, b) => a.along - b.along);
 }
 
 // ---- Compact snapshot format (public/data/crossings-<city>.json) ----
-// Each group is one row: [lat, lon, kind, sound, vibration, kerb, tactile, island]
+// Each group is one row: [lat, lon, kind, sound, vibration, kerb, tactile, island, members]
+// members = crossing node positions as offsets from lat/lon in millionths of a degree:
+//           [dLat1, dLon1, dLat2, dLon2, ...]; [] = a single node at lat/lon.
 // kind: S=signals Z=zebra U=unmarked ?=unknown; tri-state: y / n / "" (unknown); kerb: l / r / ""
 const KIND_CODE = { signals: 'S', zebra: 'Z', unmarked: 'U', unknown: '?' };
 const CODE_KIND = Object.fromEntries(Object.entries(KIND_CODE).map(([k, v]) => [v, k]));
@@ -203,12 +222,30 @@ const tri = (v) => (v === 'yes' ? 'y' : v === 'no' ? 'n' : '');
 const untri = (c) => (c === 'y' ? 'yes' : c === 'n' ? 'no' : null);
 const round6 = (x) => Math.round(x * 1e6) / 1e6;
 
+function encodeMembers(g, lat, lon) {
+  const m = g.members || [];
+  if (m.length <= 1) return [];
+  return m.flatMap(([mLon, mLat]) => [Math.round((mLat - lat) * 1e6), Math.round((mLon - lon) * 1e6)]);
+}
+
 export function encodeGroups(groups) {
-  return groups.map((g) => [
-    round6(g.lat), round6(g.lon), KIND_CODE[g.kind],
-    tri(g.sound), tri(g.vibration), g.kerb === 'lowered' ? 'l' : g.kerb === 'raised' ? 'r' : '',
-    tri(g.tactile), tri(g.island),
-  ]);
+  return groups.map((g) => {
+    const lat = round6(g.lat);
+    const lon = round6(g.lon);
+    return [
+      lat, lon, KIND_CODE[g.kind],
+      tri(g.sound), tri(g.vibration), g.kerb === 'lowered' ? 'l' : g.kerb === 'raised' ? 'r' : '',
+      tri(g.tactile), tri(g.island), encodeMembers(g, lat, lon),
+    ];
+  });
+}
+
+function decodeMembers(r) {
+  if (!Array.isArray(r[8])) return undefined;       // old snapshot: no node positions
+  if (!r[8].length) return [[r[1], r[0]]];           // single node at the centre
+  const out = [];
+  for (let i = 0; i < r[8].length; i += 2) out.push([r[1] + r[8][i + 1] / 1e6, r[0] + r[8][i] / 1e6]);
+  return out;
 }
 
 export function decodeGroups(rows) {
@@ -218,5 +255,6 @@ export function decodeGroups(rows) {
     sound: untri(r[3]), vibration: untri(r[4]),
     kerb: r[5] === 'l' ? 'lowered' : r[5] === 'r' ? 'raised' : null,
     tactile: untri(r[6]), island: untri(r[7]),
+    members: decodeMembers(r),
   }));
 }

@@ -32,7 +32,7 @@ describe('HOIV → Hauptbahnhof on foot (blind mode)', () => {
 
   it('the spoken summary explains the trade-off', () => {
     const text = routeSummary(ranked, 'blind');
-    expect(text).toMatch(/^The recommended route is 1 minute longer and avoids the unmarked crossing on the shortest route. Its 11 crossings/);
+    expect(text).toMatch(/^The recommended route is 1 minute longer and avoids the unmarked crossing on the shortest route. Its 9 crossings: 5 with lights and an acoustic signal/);
   });
 });
 
