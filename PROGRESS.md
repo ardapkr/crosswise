@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-d1nk68qj9-trua.vercel.app  (deployed 14:53; open while logged in to Vercel)
+**Latest preview:** https://crosswise-pef0toxf5-trua.vercel.app  (deployed 15:17; open while logged in to Vercel)
 
 ## Log (newest first)
 - 15:25 **Phase 2 done.** `lib/guidance.js`: crossing alerts at ~40 m and ~10 m (type, acoustic signal, kerb in wheelchair/limited modes, "press the button under the box" when sound=yes, never "safe to cross"), turn instructions from ORS steps, arrival, off-route warning (only when GPS accuracy ≤ 40 m). Calm mode for busy intersections: turns < 15 m apart merged, no early warnings for minor turns or events right after another one → real Hbf walk went from 75 to 48 messages. `?demo=1` simulated walk (`&speed=`, `&at=` metres). Live GPS via watchPosition + screen wake lock + vibration on "Crossing now". 101 unit + 10 e2e green.

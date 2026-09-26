@@ -4,6 +4,8 @@ import { MODES, normalizeMode } from '../lib/modes.js';
 import { speak, repeatLast, unlockSpeech } from './speech.js';
 import { initRoutes } from './routes-ui.js';
 import { startNavigation } from './navigation.js';
+import { initLook } from './look-ui.js';
+import { unlockSound } from './sound.js';
 
 const MODE_KEY = 'crosswise.mode';
 const $ = (id) => document.getElementById(id);
@@ -91,6 +93,7 @@ const routes = initRoutes({
 
 function start() {
   unlockSpeech();
+  unlockSound();
   state.started = true;
   $('start').hidden = true;
   $('app').hidden = false;
@@ -102,5 +105,10 @@ function start() {
 $('start').addEventListener('click', start);
 $('repeat').addEventListener('click', repeatLast);
 
+// ?video=/path.mp4 replays a same-origin test video instead of the camera (stage demo / tests).
+const testVideo = params.get('video');
+const SAFE_PATH = /^\/[\w\-./]+$/; // same-origin path only (a foreign video would also block frame capture)
+const look = initLook({ speak, testVideoUrl: testVideo && SAFE_PATH.test(testVideo) ? testVideo : null });
+
 // Expose for tests and the browser console.
-window.crosswise = { state, speak, setMode, routes };
+window.crosswise = { state, speak, setMode, routes, look };

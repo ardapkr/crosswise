@@ -1,0 +1,408 @@
+[
+  {
+    "mode": "light",
+    "file": "light__green__01.jpg",
+    "expected": "green",
+    "error": "no JSON from vercel curl: <claude-code-hint v=\"1\" type=\"plugin\" value=\"vercel@claude-plugins-official\" />\nVercel CLI 60.0.1 (Node.js 24.19.0) | curl is in beta — https://vercel.com/feedback\nError: An unexpected error occurred in curl: TypeError: fetch failed\n",
+    "ok": false,
+    "critical": false
+  },
+  {
+    "mode": "light",
+    "file": "light__green__02.jpg",
+    "expected": "green",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "green",
+      "confidence": 0.85,
+      "note": "Across the road, center, slightly distant"
+    },
+    "observation": "Pedestrian crossing visible with green walking figure signal lit ahead",
+    "ms": 1956,
+    "roundTripMs": 15852
+  },
+  {
+    "mode": "light",
+    "file": "light__green__03.jpg",
+    "expected": "green",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "green",
+      "confidence": 0.92,
+      "note": "Across road, mounted on pole, right side"
+    },
+    "observation": "Green walking figure lit on pedestrian signal across the street right side",
+    "ms": 1452,
+    "roundTripMs": 14834
+  },
+  {
+    "mode": "light",
+    "file": "light__green__04.jpg",
+    "expected": "green",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "green",
+      "confidence": 0.95,
+      "note": "Directly ahead, clearly visible blue-green walking figure"
+    },
+    "observation": "Pedestrian signal visible directly ahead with green walking figure lit",
+    "ms": 1364,
+    "roundTripMs": 23644
+  },
+  {
+    "mode": "light",
+    "file": "light__green__05.jpg",
+    "expected": "green",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "green",
+      "confidence": 0.95,
+      "note": "Across the road, center-left of pole."
+    },
+    "observation": "Green walking figure lit on pedestrian signal. Red car signal also visible.",
+    "ms": 1597,
+    "roundTripMs": 34068
+  },
+  {
+    "mode": "light",
+    "file": "light__green__06.jpg",
+    "expected": "green",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "green",
+      "confidence": 0.95,
+      "note": "Across street, center intersection ahead"
+    },
+    "observation": "Green walking figure lit on pedestrian signal across the street",
+    "ms": 1855,
+    "roundTripMs": 16320
+  },
+  {
+    "mode": "light",
+    "file": "light__green__07.jpg",
+    "expected": "green",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "green",
+      "confidence": 0.95,
+      "note": "Pedestrian signal on left, green figure illuminated."
+    },
+    "observation": "Green walking figure lit in pedestrian signal on left; car signals right.",
+    "ms": 1580,
+    "roundTripMs": 17743
+  },
+  {
+    "mode": "light",
+    "file": "light__green__08.jpg",
+    "expected": "green",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "green",
+      "confidence": 0.95,
+      "note": "Left side, on near pole, clearly visible"
+    },
+    "observation": "Green walking figure lit on pedestrian signal on left pole",
+    "ms": 2289,
+    "roundTripMs": 19467
+  },
+  {
+    "mode": "light",
+    "file": "light__none__01.jpg",
+    "expected": "none",
+    "error": "no JSON from vercel curl: <claude-code-hint v=\"1\" type=\"plugin\" value=\"vercel@claude-plugins-official\" />\nVercel CLI 60.0.1 (Node.js 24.19.0) | curl is in beta — https://vercel.com/feedback\nError: An unexpected error occurred in curl: TypeError: fetch failed\n",
+    "ok": false,
+    "critical": false
+  },
+  {
+    "mode": "light",
+    "file": "light__red__01.jpg",
+    "expected": "red",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "red",
+      "confidence": 0.92,
+      "note": "Across road, slightly left side"
+    },
+    "observation": "Red standing figure lit on pedestrian signal across the road, slightly left",
+    "ms": 1694,
+    "roundTripMs": 68948
+  },
+  {
+    "mode": "light",
+    "file": "light__red__02.jpg",
+    "expected": "red",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "red",
+      "confidence": 0.85,
+      "note": "Left side of crossing, red figure illuminated"
+    },
+    "observation": "Pedestrian signal pole visible on left side of crosswalk, red standing figure lit",
+    "ms": 2332,
+    "roundTripMs": 93074
+  },
+  {
+    "mode": "light",
+    "file": "light__red__03.jpg",
+    "expected": "red",
+    "ok": false,
+    "critical": false,
+    "result": {
+      "status": "not_visible",
+      "confidence": 0.95,
+      "note": "Only car traffic light visible, no pedestrian signal"
+    },
+    "observation": "Traffic light with yellow lamp lit, no pedestrian signal visible in photo",
+    "ms": 2253,
+    "roundTripMs": 8490
+  },
+  {
+    "mode": "read",
+    "file": "read__bahnhof-city__01.jpg",
+    "expected": "bahnhof-city",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "found",
+      "text": "Bahnhof City Wien Hauptbahnhof, 250m, P",
+      "summary": "Parking sign pointing right: Bahnhof City Wien Hauptbahnhof, 250 meters away."
+    },
+    "observation": "",
+    "ms": 3171,
+    "roundTripMs": 16692
+  },
+  {
+    "mode": "read",
+    "file": "read__eurokey__01.jpg",
+    "expected": "eurokey",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "found",
+      "text": "EUROKEY Stadt Wien",
+      "summary": "A Eurokey push-button box mounted on a pole, labeled for Stadt Wien (City of Vienna). This is an accessible door-opening system."
+    },
+    "observation": "",
+    "ms": 1589,
+    "roundTripMs": 7507
+  },
+  {
+    "mode": "read",
+    "file": "read__hoiv__01.jpg",
+    "expected": "hoiv",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "found",
+      "text": "HOIV, PUSH THE ART",
+      "summary": "Building signage for HOIV with the motto 'Push the Art' displayed on the facade with colorful street art murals."
+    },
+    "observation": "",
+    "ms": 2038,
+    "roundTripMs": 7774
+  },
+  {
+    "mode": "describe",
+    "file": "describe__crossing-people__01.jpg",
+    "expected": "crossing-people",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "description": "You are on a zebra crossing in an urban street with modern apartment buildings on both sides. Ahead is the street continuing straight with parked cars on the right and a green tree in the middle distance. On the left is a modern white building with glass sections and shop fronts at ground level.",
+      "hazards": [
+        "zebra crossing with pedestrians and vehicles",
+        "parked cars ahead on the right side of street"
+      ]
+    },
+    "observation": "",
+    "ms": 3809,
+    "roundTripMs": 21962
+  },
+  {
+    "mode": "describe",
+    "file": "describe__signal-box__01.jpg",
+    "expected": "signal-box",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "description": "You are standing on a city pavement next to a utility pole with a traffic signal button. Ahead is a street crossing with a kerb edge dropping down to the road; cars are parked and passing on the street ahead. On the right is a building with parked vehicles, and on the left are more buildings lining the street.",
+      "hazards": [
+        "utility pole directly ahead at close range",
+        "kerb edge ahead leading to street crossing",
+        "parked vehicles on the road ahead"
+      ]
+    },
+    "observation": "",
+    "ms": 2468,
+    "roundTripMs": 8871
+  },
+  {
+    "mode": "describe",
+    "file": "describe__signal-box__02.jpg",
+    "expected": "signal-box",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "description": "You are on a pavement at a busy urban street crossing with traffic ahead. A striped pole with a traffic signal button is directly in front of you, and a yellow waste bin is attached to it. Storefronts and a shopping area are visible on the right.",
+      "hazards": [
+        "traffic moving ahead",
+        "pole and bin obstruction at hand height",
+        "vehicles parked on pavement edge"
+      ]
+    },
+    "observation": "",
+    "ms": 2135,
+    "roundTripMs": 8205
+  },
+  {
+    "mode": "describe",
+    "file": "describe__signal-box__03.jpg",
+    "expected": "signal-box",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "description": "You are at a pedestrian crossing with striped markings ahead. A utility pole is directly in front of you with a yellow waste bin attached at ground level. Residential buildings line both sides of the street ahead, with a tram stop sign (line 22) visible on the right.",
+      "hazards": [
+        "utility pole directly ahead",
+        "yellow bin at base of pole",
+        "pedestrian crossing may have traffic"
+      ]
+    },
+    "observation": "",
+    "ms": 2226,
+    "roundTripMs": 10930
+  },
+  {
+    "mode": "describe",
+    "file": "describe__signal-box__04.jpg",
+    "expected": "signal-box",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "description": "You are standing on a pavement next to a utility pole with a parking meter attached. Ahead is an open parking area with a truck and construction equipment visible in the distance. On the right is a street with a 30 km/h speed limit sign, and on the left are commercial buildings and storage facilities.",
+      "hazards": [
+        "Utility pole directly beside you at arm's reach",
+        "Parking meter box at head height on the pole",
+        "Open vehicle area ahead with moving traffic"
+      ]
+    },
+    "observation": "",
+    "ms": 2730,
+    "roundTripMs": 8116
+  },
+  {
+    "mode": "describe",
+    "file": "describe__signal-box__05.jpg",
+    "expected": "signal-box",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "description": "You are on a paved path next to a tall striped bollard with a control box attached at waist height. Ahead is open grassland with scattered vegetation, and a large highway bridge crosses behind it. On the left are trees and bushes, with a parking area beyond.",
+      "hazards": [
+        "bollard and control box directly ahead in path",
+        "uneven grassland terrain ahead",
+        "traffic on highway bridge above"
+      ]
+    },
+    "observation": "",
+    "ms": 2194,
+    "roundTripMs": 8101
+  },
+  {
+    "mode": "describe",
+    "file": "describe__signal-box__06.jpg",
+    "expected": "signal-box",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "description": "You are at a pedestrian crossing with a traffic light directly ahead on your left. The crossing is on level pavement with tactile paving. Ahead beyond the crossing is a street with cars and buildings visible in the distance.",
+      "hazards": [
+        "traffic light pole directly ahead on the left",
+        "utility box protruding on the right side of pole",
+        "uneven tactile paving surface at crossing"
+      ]
+    },
+    "observation": "",
+    "ms": 2585,
+    "roundTripMs": 8285
+  },
+  {
+    "mode": "describe",
+    "file": "describe__signal-box__07.jpg",
+    "expected": "signal-box",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "description": "You are standing on a flat paved pathway with an overhead structure (bridge or overpass) visible ahead. A metal utility pole is directly in front of you with a control box attached at waist height. Open grassy area with sparse vegetation stretches to the left and right, with tram lines visible overhead.",
+      "hazards": [
+        "metal pole directly ahead at head height",
+        "control box protruding from pole",
+        "tram overhead lines"
+      ]
+    },
+    "observation": "",
+    "ms": 2167,
+    "roundTripMs": 7741
+  },
+  {
+    "mode": "describe",
+    "file": "describe__tram-tracks__01.jpg",
+    "expected": "tram-tracks",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "description": "You are on a paved pavement next to a tram stop with a traffic light on your left. Ahead is an open green area with tram tracks running through it, and a large residential apartment building beyond. On the right is grass and bushes alongside the pavement.",
+      "hazards": [
+        "tram tracks on the ground ahead",
+        "uneven terrain with grass and gravel",
+        "traffic light pole on the left side of path"
+      ]
+    },
+    "observation": "",
+    "ms": 3124,
+    "roundTripMs": 9884
+  },
+  {
+    "mode": "describe",
+    "file": "describe__zebra__01.jpg",
+    "expected": "zebra",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "description": "You are standing on a pedestrian crossing with white striped markings ahead. The crossing extends across the street in front of you. Beyond the crossing, the street continues with pavement.",
+      "hazards": [
+        "pedestrian crossing ahead",
+        "traffic in crossing area"
+      ]
+    },
+    "observation": "",
+    "ms": 1874,
+    "roundTripMs": 8063
+  },
+  {
+    "mode": "describe",
+    "file": "describe__zebra__02.jpg",
+    "expected": "zebra",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "description": "You are standing on a zebra crossing facing a multi-story residential building ahead. The crossing extends straight across the street with the tactile paving line running through the center. On the left is a street lamp and a tram stop shelter, on the right are trees and a scooter parked on the pavement.",
+      "hazards": [
+        "scooter parked on the right side of the pavement",
+        "trees and vegetation protruding on the right"
+      ]
+    },
+    "observation": "",
+    "ms": 2790,
+    "roundTripMs": 9260
+  }
+]

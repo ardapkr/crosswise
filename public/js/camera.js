@@ -1,0 +1,66 @@
+// Rear camera (or a test video with ?video=<url>) → small JPEG frames for /api/look.
+
+const MAX_WIDTH = 768;
+const QUALITY = 0.7;
+
+let stream = null;
+let video = null;
+
+/** Starts the camera into the given <video>. Rejects with a spoken-friendly Error. */
+export async function startCamera(videoEl, { testVideoUrl = null } = {}) {
+  video = videoEl;
+  if (testVideoUrl) {
+    video.src = testVideoUrl;
+    video.loop = true;
+    video.muted = true;
+    await video.play();
+    return;
+  }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    throw new Error('This browser cannot use the camera. Try Safari on iPhone or Chrome on Android.');
+  }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 960 } },
+      audio: false,
+    });
+  } catch (e) {
+    if (e.name === 'NotAllowedError' || e.name === 'SecurityError') {
+      throw new Error('Camera permission is off. Allow the camera for this site in your browser settings.');
+    }
+    throw new Error('The camera is not available right now.');
+  }
+  video.srcObject = stream;
+  video.muted = true;
+  video.setAttribute('playsinline', '');
+  await video.play();
+  // wait until the first frame has a size
+  if (!video.videoWidth) await new Promise((r) => video.addEventListener('loadedmetadata', r, { once: true }));
+}
+
+export function stopCamera() {
+  stream?.getTracks().forEach((t) => t.stop());
+  stream = null;
+  if (video) {
+    video.pause();
+    video.srcObject = null;
+    video.removeAttribute('src');
+  }
+}
+
+export function cameraRunning() {
+  return Boolean(video && (stream || video.src) && video.videoWidth);
+}
+
+/** Current frame as base64 JPEG (no data: prefix), max 768 px wide. */
+export function captureFrame() {
+  if (!video?.videoWidth) throw new Error('The camera is not ready yet.');
+  const scale = Math.min(1, MAX_WIDTH / video.videoWidth);
+  const w = Math.round(video.videoWidth * scale);
+  const h = Math.round(video.videoHeight * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+  return canvas.toDataURL('image/jpeg', QUALITY).split(',')[1];
+}

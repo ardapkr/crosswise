@@ -54,6 +54,23 @@
         <ol id="routes" class="routes"></ol>
       </section>
 
+      <section id="look-section" class="card" aria-labelledby="look-heading">
+        <h2 id="look-heading">Camera assistant</h2>
+        <label for="bus-line">My bus or tram line <span class="hint">(optional, e.g. 13A)</span></label>
+        <input id="bus-line" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" placeholder="Any line">
+        <div class="look-buttons">
+          <button id="look-bus" type="button" class="big primary">Find my bus</button>
+          <button id="look-light" type="button" class="big">Check crossing light</button>
+          <button id="look-read" type="button" class="big">Read text</button>
+          <button id="look-describe" type="button" class="big">Describe surroundings</button>
+        </div>
+        <div id="camera-box" class="camera-box" hidden>
+          <video id="camera" playsinline muted aria-hidden="true"></video>
+          <p id="look-live" class="look-live" aria-hidden="true"></p>
+          <button id="look-stop" type="button" class="big">Stop camera</button>
+        </div>
+      </section>
+
       <section class="card" aria-labelledby="mode-heading">
         <h2 id="mode-heading">Mode</h2>
         <div id="modes" class="modes" role="group" aria-labelledby="mode-heading"></div>
