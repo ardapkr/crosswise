@@ -1,5 +1,9 @@
 # HUMAN_TODO.md — things only a human can do (fastest way first)
 
+> **⚠ Reminder: turn OFF Vercel Deployment Protection** so judges and phones can open preview links without
+> logging in: Vercel → project **crosswise** → Settings → Deployment Protection → Vercel Authentication → **Off**
+> → Save. (Security setting, so a human does it. Takes 1 minute.)
+
 Open the newest preview URL from the top of `PROGRESS.md` on the phone **while logged in to Vercel**
 (or turn off Deployment Protection — see bottom). Tap **Start** first (unlocks sound and camera).
 Report back with the **Phone test** prompt from PROMPTS.md: what it said out loud, where it was wrong.
@@ -51,6 +55,5 @@ Follow **USER_TEST.md** (10 minutes: 5 tasks, 5 questions, a notes table), then 
 **Production deploy?** Preview links need a Vercel login; a production deploy gives a public link (useful for the
 user test and the judges). Tell Claude "deploy to production" when you want it.
 
-## Optional: no Vercel login on the phone
-Vercel → project **crosswise** → Settings → Deployment Protection → Vercel Authentication → **Off**.
-(This is a security setting, so a human should decide.)
+## No Vercel login on the phone / for judges
+See the reminder at the top: Deployment Protection → Vercel Authentication → **Off**.
