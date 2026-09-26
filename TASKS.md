@@ -55,7 +55,7 @@
 - [x] Graceful fallback message when SpeechRecognition isn't supported
 
 ## Phase 7 — Where am I (target: 03:00)
-- [ ] Street name + nearest stop / crossing from ORS reverse geocode or Overpass
+- [x] Street name + nearest stop / crossing from ORS reverse geocode or Overpass
 
 ## Phase 8 — Polish + submission (target: 07:00, hard stop 07:30)
 - [ ] Accessibility pass: screen reader labels, focus order, contrast
