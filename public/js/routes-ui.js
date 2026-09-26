@@ -7,6 +7,7 @@ import { decodeGroups, crossingsOnRoute } from '../lib/crossings.js';
 import { rankRoutes, safetyLevel } from '../lib/scoring.js';
 import { routeSummary, describeCrossing } from '../lib/summary.js';
 import { bbox } from '../lib/geo.js';
+import { showRoutes } from './map.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -95,6 +96,7 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
     const ranked = rankRoutes(routes, mode);
     plan = { from, to, mode, ranked, groups };
     render(ranked, mode);
+    showRoutes($('map-box'), ranked, mode); // optional visual, not awaited
     speak(routeSummary(ranked, mode)); // info: the newest summary replaces an older one
   }
 

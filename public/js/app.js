@@ -7,6 +7,7 @@ import { startNavigation } from './navigation.js';
 import { initLook } from './look-ui.js';
 import { unlockSound } from './sound.js';
 import { initVoice } from './voice.js';
+import { showWalk, showPosition } from './map.js';
 import { getJSON } from './api.js';
 import { getPosition, HOIV } from './location.js';
 import { whereAmIText } from '../lib/whereami.js';
@@ -58,6 +59,10 @@ function showWalking(on) {
   $('nav-section').hidden = !on;
   $('where-section').hidden = on;
   $('routes-section').hidden = on;
+  // the one map element moves between the walking panel and the route list
+  const box = $('map-box');
+  if (on) $('nav-section').insertBefore(box, $('nav-section').querySelector('.row'));
+  else $('routes-section').insertBefore(box, $('routes'));
 }
 
 function startRoute(plan, route) {
@@ -66,9 +71,11 @@ function startRoute(plan, route) {
   $('nav-heading').focus();
   speak(`Starting the route: about ${Math.max(1, Math.round(route.duration / 60))} minutes, ${route.score.count} crossings.` +
     (state.demo ? ' Demo walk.' : ''), 'navigation');
+  showWalk($('map-box'), route, plan.mode);
   nav = startNavigation({
     route,
     mode: plan.mode,
+    onMove: showPosition,
     speak,
     demo: state.demo,
     speed: Number(params.get('speed')) || 1.3,

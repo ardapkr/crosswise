@@ -9,7 +9,7 @@ const $ = (id) => document.getElementById(id);
  * @param {{ route, mode, speak, demo: boolean, speed?: number, startAt?: number, onEnd?: () => void }} opts
  * @returns {{ stop: () => void, repeat: () => void }}
  */
-export function startNavigation({ route, mode, speak, demo, speed = 1.3, startAt = 0, onEnd }) {
+export function startNavigation({ route, mode, speak, demo, speed = 1.3, startAt = 0, onEnd, onMove }) {
   let state = createGuideState(route, mode);
   let last = null;       // last updateGuidance result
   let watchId = null;
@@ -30,6 +30,7 @@ export function startNavigation({ route, mode, speak, demo, speed = 1.3, startAt
   function onPosition(pos, accuracy) {
     if (stopped) return;
     lastPos = pos;
+    onMove?.(pos);
     const r = updateGuidance(state, pos, { accuracy });
     state = r.state;
     last = r;

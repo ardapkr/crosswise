@@ -159,3 +159,13 @@ button.voice.listening { background: var(--bad); color: #000; border-color: var(
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .app-voice { width: 100%; margin-top: 14px; }
 .app-voice[aria-pressed="false"] { border-style: dashed; }
+
+/* --- map (visual only) --- */
+.map-box { margin: 0 0 14px; }
+.map { height: 260px; border-radius: var(--radius); border: 2px solid var(--line); background: #111; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0 0; font-size: 0.9rem; color: var(--muted); }
+.map-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; border: 1px solid #000; }
+.leaflet-container { font: inherit; }
+.leaflet-control-attribution { font-size: 11px; }
+/* dark map from standard OSM tiles, to match the high-contrast UI */
+.map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9); }

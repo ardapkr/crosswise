@@ -20,7 +20,7 @@
 - [x] `lib/scoring.js`: per-mode crossing score + route ranking (tested: safer route must beat shorter route on fixture)
 - [x] UI: from/to input (+ "use my location"), shows routes as simple cards: duration, #crossings, worst crossing, colour
 - [x] Spoken summary: "Route 2 is 3 minutes longer, but every crossing has lights and an acoustic signal."
-- [ ] Optional small map (Leaflet from cdnjs) — only if everything above works  _(deferred: guidance first)_
+- [x] Optional small map (Leaflet from cdnjs) — only if everything above works  _(Leaflet 1.9.4 vendored in public/vendor, OSM tiles)_
 - [x] Save 3 real ORS responses around HOIV as fixtures so tests never need the network
 - [x] Notify: "Route comparison ready to test on phone"
 

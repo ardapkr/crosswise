@@ -3,6 +3,7 @@
 **Latest preview:** https://crosswise-g63k3lrsu-trua.vercel.app  (deployed 17:27; open while logged in to Vercel)
 
 ## Log (newest first)
+- 17:34 Map (the deferred optional Phase 1 item): Leaflet map under "Routes, safest first" — recommended route thick yellow, shortest dashed, crossings coloured like the cards (green lights+sound, blue lights, orange zebra, red unmarked/unknown); while walking it moves into the walking panel with a cyan walker dot. aria-hidden + inert (cards and speech carry the same info); axe still 0 violations; app works if the map fails to load. 238 unit + 34 e2e green.
 - 17:26 Accessibility pass: automated axe-core audit (WCAG 2.1 A/AA) of start, main, route cards, walking and camera screens → 0 violations (now an e2e test). Fixed the double-speech problem: the visible status is no longer a live region; new "App voice: on/off" toggle (remembered) — off = VoiceOver/TalkBack reads messages from hidden live regions, crossing/danger alerts assertively. Error states tested: offline, GPS unavailable, GPS/camera/mic permission denied, server errors. 237 unit + 32 e2e green.
 - 17:23 README.md and EVAL.md written (summary, 5 demo cases with status, baseline comparison, vision accuracy, honest limits, per-trip appendix). Still missing: real bus accuracy, outdoor walk results, real user feedback.
 - 17:17 Crossing detection fix (branch member-nodes, merged): a crossing is "on the route" only if the route passes within 3 m of one of its crossing NODES (group centre still within 12 m + cluster radius). Measured on 6 real routes: 55 of 70 counted crossings were 0–2 m from a node (really used), 15 were 4–10 m away (pavement running past a crossing the user never takes), nothing in between → ~1 in 5 alerts/penalties were false. Snapshot now stores node positions (Vienna 511 KB). Belvedere route: 8 → 5 crossings, all with acoustic signals.
@@ -20,6 +21,7 @@
 - 13:36 Test photos (26, no videos, no buses) labelled by content into `test/vision/{light,read,describe}/`; mapping in `test/vision/SOURCES.txt`. Fake cameras made from photos: `test/fixtures/{light-green,light-red,sign}.y4m`.
 
 ## Decisions
+- Leaflet is vendored (public/vendor/leaflet, BSD-2, downloaded once from cdnjs) instead of loaded from the CDN: works offline, tests stay deterministic. Tiles: standard OpenStreetMap (CARTO dark tiles now need an API key), darkened with a CSS filter.
 - Deviation from CLAUDE.md, backed by data: "on the route" = group within 12 m AND the route within 3 m of one of the group's crossing nodes (see log 17:17). Groups without node positions (old data) still use the plain 12 m rule.
 - Deviation from CLAUDE.md, backed by data: blind ranking = worst crossing, then fewest unmarked/unknown, then fewest crossings without acoustic signal, then fewest crossings, then time (was: worst, count, time). Compared 4 rules on 30 real trips (EVAL.md).
 - Voice is tap-to-talk (not press-and-hold): holding is awkward with VoiceOver/TalkBack. Recognition language en-GB (German phrases are not understood yet).

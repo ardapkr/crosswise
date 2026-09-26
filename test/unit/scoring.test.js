@@ -180,3 +180,14 @@ describe('tie-breaks after the worst crossing (measured on 30 real trips, see EV
     expect(rankRoutes([twoBad, oneBad], 'blind')[0].id).toBe('oneBad');
   });
 });
+
+import { crossingLevel } from '../../public/lib/scoring.js';
+describe('crossingLevel (map dot colour)', () => {
+  it('uses the same buckets as the route cards, per mode', () => {
+    expect(crossingLevel(LIGHT_SOUND, 'blind')).toBe('good');
+    expect(crossingLevel(LIGHT, 'blind')).toBe('ok');
+    expect(crossingLevel(ZEBRA, 'blind')).toBe('caution');
+    expect(crossingLevel(UNMARKED, 'blind')).toBe('risky');
+    expect(crossingLevel(X('signals', { sound: 'yes', kerb: 'raised' }), 'wheelchair')).toBe('caution');
+  });
+});

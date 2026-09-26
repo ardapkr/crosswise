@@ -95,3 +95,8 @@ export function safetyLevel(score) {
   if (score.worst >= 1) return 'caution';  // zebra without lights somewhere
   return 'risky';                          // unmarked / unknown / raised kerb
 }
+
+/** Colour bucket for one crossing (map dots), same buckets as safetyLevel. */
+export function crossingLevel(c, mode) {
+  return safetyLevel({ worst: crossingScore(c, mode) });
+}

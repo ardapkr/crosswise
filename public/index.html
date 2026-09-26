@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#000000">
   <title>Crosswise</title>
   <meta name="description" content="Safer walking routes with announced crossings, plus a camera assistant for buses, lights and text.">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -60,6 +61,16 @@
 
       <section id="routes-section" class="card" aria-labelledby="routes-heading" hidden>
         <h2 id="routes-heading" tabindex="-1">Routes, safest first</h2>
+        <!-- Visual map for sighted companions; hidden from screen readers (the cards say the same). -->
+        <div id="map-box" class="map-box" aria-hidden="true" inert hidden>
+          <div class="map"></div>
+          <p class="map-legend">
+            <span><i style="background:#3ddc84"></i>lights + sound</span>
+            <span><i style="background:#7fd0ff"></i>lights</span>
+            <span><i style="background:#ffb000"></i>zebra</span>
+            <span><i style="background:#ff5a5a"></i>unmarked / unknown</span>
+          </p>
+        </div>
         <ol id="routes" class="routes"></ol>
       </section>
 
