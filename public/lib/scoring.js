@@ -70,3 +70,11 @@ export function rankRoutes(routes, mode) {
   scored.forEach((r, i) => { r.rank = i + 1; });
   return scored;
 }
+
+/** Colour bucket for a route card, from its worst crossing. */
+export function safetyLevel(score) {
+  if (score.worst >= 3) return 'good';     // every crossing: lights + sound (or no crossings)
+  if (score.worst >= 2) return 'ok';       // lights everywhere
+  if (score.worst >= 1) return 'caution';  // zebra without lights somewhere
+  return 'risky';                          // unmarked / unknown / raised kerb
+}

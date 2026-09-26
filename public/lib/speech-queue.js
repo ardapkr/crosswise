@@ -13,6 +13,8 @@ export function decide(current, incoming) {
   if (!current) return 'speak';
   if (current.text === incoming.text) return 'drop';
   if (incoming.priority > current.priority) return 'interrupt';
+  // Info is chatter the user just asked for: the newest wins. Safety messages always finish.
+  if (incoming.priority === PRIORITY.info && current.priority === PRIORITY.info) return 'interrupt';
   return 'queue';
 }
 

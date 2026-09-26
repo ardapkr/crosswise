@@ -85,3 +85,48 @@ button.small { min-height: 48px; font-size: 1rem; padding: 8px 14px; }
 @media (min-width: 560px) {
   .modes { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* --- forms --- */
+label { display: block; font-weight: 700; margin: 10px 0 6px; }
+.hint { font-weight: 400; color: var(--muted); font-size: 0.9rem; }
+input[type="search"], input[type="text"] {
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 14px;
+  font-size: 1.2rem;
+  border-radius: var(--radius);
+  border: 3px solid var(--fg);
+  background: #000;
+}
+input::placeholder { color: #9a9a9a; }
+#route-form .big { margin-top: 14px; }
+
+.sub { font-size: 1rem; color: var(--muted); margin: 16px 0 8px; }
+.quick { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+.places { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 10px; }
+.places button { width: 100%; text-align: left; }
+
+/* --- route cards --- */
+.routes { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+.route {
+  border: 3px solid var(--line);
+  border-left-width: 14px;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background: #0a0a0a;
+}
+.route h3 { margin: 0 0 4px; font-size: 1.3rem; }
+.route p { margin: 4px 0; }
+.route .meta { font-size: 1.1rem; }
+.route .level { font-weight: 700; }
+.route .label { color: var(--muted); }
+.route .go { width: 100%; margin-top: 10px; }
+.route.level-good { border-left-color: var(--good); }
+.route.level-good .level { color: var(--good); }
+.route.level-ok { border-left-color: #7fd0ff; }
+.route.level-ok .level { color: #7fd0ff; }
+.route.level-caution { border-left-color: var(--warn); }
+.route.level-caution .level { color: var(--warn); }
+.route.level-risky { border-left-color: var(--bad); }
+.route.level-risky .level { color: var(--bad); }
+.route:first-child { border-top-color: var(--accent); border-right-color: var(--accent); border-bottom-color: var(--accent); }

@@ -23,6 +23,25 @@
     <button id="start" class="big primary" type="button">Start</button>
 
     <section id="app" aria-label="Crosswise controls" hidden>
+      <section class="card" aria-labelledby="where-heading">
+        <h2 id="where-heading">Where to?</h2>
+        <form id="route-form" autocomplete="off">
+          <label for="to">Destination</label>
+          <input id="to" type="search" enterkeyhint="search" placeholder="e.g. Hauptbahnhof">
+          <label for="from">Start <span class="hint">(leave empty for my location)</span></label>
+          <input id="from" type="search" enterkeyhint="search" placeholder="My location">
+          <button id="find" type="submit" class="big primary">Find safest route</button>
+        </form>
+        <ul id="places" class="places" aria-label="Places found"></ul>
+        <h3 class="sub" id="quick-heading">Quick destinations</h3>
+        <div id="quick" class="quick" role="group" aria-labelledby="quick-heading"></div>
+      </section>
+
+      <section id="routes-section" class="card" aria-labelledby="routes-heading" hidden>
+        <h2 id="routes-heading" tabindex="-1">Routes, safest first</h2>
+        <ol id="routes" class="routes"></ol>
+      </section>
+
       <section class="card" aria-labelledby="mode-heading">
         <h2 id="mode-heading">Mode</h2>
         <div id="modes" class="modes" role="group" aria-labelledby="mode-heading"></div>

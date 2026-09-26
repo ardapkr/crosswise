@@ -10,19 +10,19 @@
 - [x] Notify: "Skeleton live at <preview URL>"
 
 ## Phase 1 — Route comparison (target: 17:00) ★ core
-- [ ] `/api/route`: ORS directions with alternatives for the chosen profile, cached; returns GeoJSON routes
-- [ ] `/api/geocode`: ORS geocode, focus on Vienna, returns top 3 matches
-- [ ] `scripts/fetch-crossings.js`: download ALL crossings + traffic_signals for Vienna (bbox 48.118,16.182,48.323,16.578) and Budapest (47.35,18.92,47.62,19.34) from Overpass ONCE (timeout 300, polite, retry once); save raw to `data/raw/`
-- [ ] `scripts/build-crossings.js`: filter + classify + cluster with lib/crossings.js, keep only needed tags, write compact `public/data/crossings-vienna.json` and `crossings-budapest.json`; print counts + file size
-- [ ] `/api/crossings`: serve from the snapshot for Vienna/Budapest bbox; live Overpass (cached) only as fallback elsewhere
-- [ ] `lib/geo.js`: distance, point-to-line distance, bbox (tested)
-- [ ] `lib/crossings.js`: filter (level, private), classify, cluster within 20 m (tested with fixture)
-- [ ] `lib/scoring.js`: per-mode crossing score + route ranking (tested: safer route must beat shorter route on fixture)
-- [ ] UI: from/to input (+ "use my location"), shows routes as simple cards: duration, #crossings, worst crossing, colour
-- [ ] Spoken summary: "Route 2 is 3 minutes longer, but every crossing has lights and an acoustic signal."
-- [ ] Optional small map (Leaflet from cdnjs) — only if everything above works
-- [ ] Save 3 real ORS responses around HOIV as fixtures so tests never need the network
-- [ ] Notify: "Route comparison ready to test on phone"
+- [x] `/api/route`: ORS directions with alternatives for the chosen profile, cached; returns GeoJSON routes
+- [x] `/api/geocode`: ORS geocode, focus on Vienna, returns top 3 matches
+- [x] `scripts/fetch-crossings.js`: download ALL crossings + traffic_signals for Vienna (bbox 48.118,16.182,48.323,16.578) and Budapest (47.35,18.92,47.62,19.34) from Overpass ONCE (timeout 300, polite, retry once); save raw to `data/raw/`
+- [x] `scripts/build-crossings.js`: filter + classify + cluster with lib/crossings.js, keep only needed tags, write compact `public/data/crossings-vienna.json` and `crossings-budapest.json`; print counts + file size
+- [x] `/api/crossings`: serve from the snapshot for Vienna/Budapest bbox; live Overpass (cached) only as fallback elsewhere
+- [x] `lib/geo.js`: distance, point-to-line distance, bbox (tested)
+- [x] `lib/crossings.js`: filter (level, private), classify, cluster within 20 m (tested with fixture)
+- [x] `lib/scoring.js`: per-mode crossing score + route ranking (tested: safer route must beat shorter route on fixture)
+- [x] UI: from/to input (+ "use my location"), shows routes as simple cards: duration, #crossings, worst crossing, colour
+- [x] Spoken summary: "Route 2 is 3 minutes longer, but every crossing has lights and an acoustic signal."
+- [ ] Optional small map (Leaflet from cdnjs) — only if everything above works  _(deferred: guidance first)_
+- [x] Save 3 real ORS responses around HOIV as fixtures so tests never need the network
+- [x] Notify: "Route comparison ready to test on phone"
 
 ## Phase 2 — Guidance + crossing alerts (target: 18:30 — outdoor filming starts)
 - [ ] `lib/guidance.js`: given position + route + crossing groups → next event (turn / crossing) and distance (tested)

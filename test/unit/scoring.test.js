@@ -129,3 +129,16 @@ describe('routeSummary', () => {
     expect(routeSummary(r, 'wheelchair')).toMatch(/kerb height unknown at 1 crossing/i);
   });
 });
+
+import { safetyLevel } from '../../public/lib/scoring.js';
+describe('safetyLevel (card colour)', () => {
+  it('maps the worst crossing score to good / ok / caution / risky', () => {
+    expect(safetyLevel({ worst: Infinity })).toBe('good');
+    expect(safetyLevel({ worst: 3 })).toBe('good');
+    expect(safetyLevel({ worst: 3.5 })).toBe('good');
+    expect(safetyLevel({ worst: 2 })).toBe('ok');
+    expect(safetyLevel({ worst: 1 })).toBe('caution');
+    expect(safetyLevel({ worst: 0.5 })).toBe('risky');
+    expect(safetyLevel({ worst: -1 })).toBe('risky');
+  });
+});

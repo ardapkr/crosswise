@@ -1,0 +1,73 @@
+// Route comparison UI. ORS is mocked with REAL saved responses; crossings come from the real
+// Vienna snapshot via the local /api/crossings (no API key needed).
+import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { normalizeOrsRoutes } from '../../public/lib/ors.js';
+
+const fixture = (name) => normalizeOrsRoutes(JSON.parse(readFileSync(`test/fixtures/${name}.json`, 'utf8')));
+
+async function mockOrs(page) {
+  const calls = [];
+  await page.route('**/api/route?*', (route) => {
+    const u = new URL(route.request().url());
+    calls.push(Object.fromEntries(u.searchParams));
+    const mode = u.searchParams.get('mode');
+    const toBelvedere = u.searchParams.get('to').startsWith('16.3809');
+    const name = toBelvedere ? 'ors-hoiv-belvedere-foot'
+      : mode === 'wheelchair' ? 'ors-hoiv-hbf-wheelchair' : 'ors-hoiv-hbf-foot';
+    route.fulfill({ json: { mode, routes: fixture(name) } });
+  });
+  await page.route('**/api/geocode?*', (route) => route.fulfill({
+    json: { results: [{ label: 'Wien Hauptbahnhof, Vienna, Austria', lon: 16.3755, lat: 48.185 }] },
+  }));
+  return calls;
+}
+
+test('quick destination → safest route first, shortest route marked, summary spoken', async ({ page }) => {
+  await mockOrs(page);
+  await page.goto('/?demo=1');
+  await page.getByRole('button', { name: 'Start' }).click();
+  await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click();
+
+  const cards = page.locator('#routes > li');
+  await expect(cards).toHaveCount(3);
+  await expect(cards.nth(0).locator('h3')).toHaveText(/^Recommended: 27 min/);
+  await expect(page.locator('#routes h3', { hasText: 'Shortest' })).toHaveText(/Shortest: 26 min/);
+  await expect(cards.nth(0)).toHaveClass(/level-caution/);
+  await expect(page.locator('#routes li', { hasText: 'Shortest' })).toHaveClass(/level-risky/);
+
+  await expect(page.locator('#status')).toContainText('The recommended route is 1 minute longer and avoids the unmarked crossing');
+});
+
+test('typed destination with a single search result plans directly', async ({ page }) => {
+  const calls = await mockOrs(page);
+  await page.goto('/?demo=1');
+  await page.getByRole('button', { name: 'Start' }).click();
+  await page.getByLabel('Destination', { exact: true }).fill('Hauptbahnhof');
+  await page.getByRole('button', { name: 'Find safest route' }).click();
+  await expect(page.locator('#routes > li')).toHaveCount(3);
+  expect(calls[0]).toMatchObject({ from: '16.3954,48.1761', to: '16.3755,48.185', mode: 'blind' });
+});
+
+test('switching to wheelchair re-plans with the wheelchair profile and mentions kerbs', async ({ page }) => {
+  const calls = await mockOrs(page);
+  await page.goto('/?demo=1');
+  await page.getByRole('button', { name: 'Start' }).click();
+  await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click();
+  await expect(page.locator('#routes > li')).toHaveCount(3);
+
+  await page.getByRole('button', { name: 'Wheelchair' }).click();
+  await expect(page.locator('#routes > li')).toHaveCount(1);
+  expect(calls.at(-1).mode).toBe('wheelchair');
+  await expect(page.locator('#routes .worst')).toContainText('kerb');
+  await expect(page.locator('#status')).toContainText(/kerb height unknown/i);
+});
+
+test('server errors are spoken, not silent', async ({ page }) => {
+  await page.route('**/api/route?*', (route) => route.fulfill({ status: 502, json: { error: 'Route service error 503' } }));
+  await page.goto('/?demo=1');
+  await page.getByRole('button', { name: 'Start' }).click();
+  await page.getByRole('button', { name: 'Oberes Belvedere' }).click();
+  await expect(page.locator('#status')).toContainText('Route service error 503');
+  await expect(page.getByRole('button', { name: 'Find safest route' })).toBeEnabled();
+});

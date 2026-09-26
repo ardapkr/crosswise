@@ -18,9 +18,18 @@ describe('speech priority', () => {
     expect(decide(msg('turn left', 'navigation'), msg('crossing ahead', 'crossing'))).toBe('interrupt');
   });
 
-  it('never talks over a more important or equal message: it waits', () => {
+  it('never talks over a more important message: it waits', () => {
     expect(decide(msg('crossing ahead', 'crossing'), msg('turn left', 'navigation'))).toBe('queue');
-    expect(decide(msg('a', 'info'), msg('b', 'info'))).toBe('queue');
+    expect(decide(msg('danger', 'danger'), msg('b', 'info'))).toBe('queue');
+  });
+
+  it('safety messages of equal priority are never cut off: they queue', () => {
+    expect(decide(msg('crossing 1', 'crossing'), msg('crossing 2', 'crossing'))).toBe('queue');
+    expect(decide(msg('turn left', 'navigation'), msg('turn right', 'navigation'))).toBe('queue');
+  });
+
+  it('a newer info message replaces an older info message (user tapped something new)', () => {
+    expect(decide(msg('a', 'info'), msg('b', 'info'))).toBe('interrupt');
   });
 
   it('drops an exact duplicate of what is already playing', () => {
