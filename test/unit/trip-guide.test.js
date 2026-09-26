@@ -52,7 +52,7 @@ describe('trip guidance: HOIV → Hauptbahnhof with the 69A', () => {
     const i = (re) => said.findIndex((t) => re.test(t));
     const walk1 = i(/^Walk \d+ minutes? to Hüttenbrennergasse/);
     const atStop = i(/^You are at the stop Hüttenbrennergasse\.$/);
-    const depart = i(/^Bus 69A towards Hauptbahnhof (leaves|was due) at \d\d:\d\d.*By the timetable\. Tap Find bus/);
+    const depart = i(/^Bus 69A towards Hauptbahnhof (leaves|was due) at \d\d:\d\d.*By the timetable\. Tap Find bus: I check the line and the direction of arriving buses\.$/);
     const board = i(/^On bus 69A towards Hauptbahnhof\. \d stops\. Get off at/);
     const next = i(/^Your stop is next:/);
     const off = i(/^Get off now:/);
