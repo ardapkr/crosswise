@@ -2,9 +2,68 @@
 
 **Latest preview:** https://crosswise-2mbpycsy9-trua.vercel.app  (deployed 17:38; open while logged in to Vercel)
 
-**Status:** all 8 phases built and deployed (241 unit + 34 browser tests green). Waiting on humans for: outdoor test
-(route walk, real bus, lights), bus photos, a real user test (USER_TEST.md), the video (DEMO_SCRIPT.md), and the OK
-for a production deploy. See HUMAN_TODO.md.
+## Handover — Sat 19:34 (read this first in a new session)
+
+State: `main` is clean, pushed, and green: `npm test` 241 passed, `npm run e2e` 34 passed (checked 19:34).
+The newest preview above has everything. No outdoor feedback, bus photos or user feedback have arrived yet.
+
+### Done (built, tested, deployed)
+- **Phase 0–7 complete** (all boxes in TASKS.md except the 2 below). Features: safest-crossings route comparison
+  (ORS alternatives + OSM crossing snapshot, spoken summary with the real reason), GPS guidance with crossing alerts
+  at 40 m / 10 m and `?demo=1` walk, Find my bus live scan, check light / read / describe (Claude Haiku 4.5,
+  structured JSON), 3 modes (wheelchair kerbs, limited mobility), voice commands, Where am I, Leaflet map.
+- **Phase 8 done parts:** accessibility pass (axe 0 violations + App voice toggle for screen readers), error states
+  spoken, README.md, EVAL.md (5 demo cases, baseline comparison, vision accuracy, limits), USER_TEST.md,
+  DEMO_SCRIPT.md, `npm run zip`.
+- **Measured:** 30 real trips: unmarked/unknown crossings 43 → 21 vs shortest route, median +1.4 min. Vision:
+  light 10/12 (0 critical), read 3/3, describe 11/11.
+
+### Half-done / waiting
+- **Bus reading accuracy: unknown.** `test/vision/bus/` is empty (no bus photos in test-material). The scan logic is
+  only tested with a fake camera + mocked answers. When photos come: name `bus__69A__01.jpg` / `bus__none__01.jpg`,
+  put them in `test/vision/bus/`, run `npm run eval:vision -- --log`, tune `api/prompts.js` (never guess a line).
+- **No real-world test yet:** GPS guidance outdoors, real lights, real buses, real phones (iPhone Safari / Android
+  Chrome), real VoiceOver/TalkBack. Steps in HUMAN_TODO.md.
+- **No real-user feedback yet** (judging criterion). Script ready: USER_TEST.md.
+- **EVAL.md / README.md:** bus accuracy, outdoor results and user quotes still missing ("not measured yet").
+- **DEMO_SCRIPT.md** is a draft; update with real footage + numbers.
+- TASKS Phase 8 open: **submission ZIP** (script ready — run `npm run zip` after the last commit, at the freeze) and
+  **production deploy** (needs the humans' OK; `vercel --prod` is in the "ask" list).
+
+### Known bugs and weak spots
+1. **Production URL https://crosswise-woad.vercel.app is public but STALE** — it is the Phase 0 skeleton from the
+   very first deploy (no camera, `/api/route` 404). Don't share it until a production deploy is approved and done.
+2. Light check misses (safe direction): a red figure that looks orange in the photo, and a signal shot from below,
+   are reported "not visible" (`light__red__03`, `light__green__07`). Stopped prompt tuning at 12 photos to avoid
+   overfitting.
+3. Crossing detection is geometric: where pavements are not mapped separately, a route along a street can still
+   "touch" crossings of that street (false "Crossing now"). The 3 m node rule was measured on 6 routes only.
+   To verify on site: the simulated HOIV → Hbf walk says "Crossing now: traffic light…" right at the start (0 m).
+4. OSM gaps: 28% of Vienna's signals have no acoustic-signal info, 71% of crossings no kerb info, raised kerbs are
+   rare — so wheelchair mode often ranks routes the same as blind mode (it still speaks the kerb info).
+5. ORS wheelchair profile gave only 1 route for HOIV → Hbf (nothing to compare on that trip).
+6. No cap on extra time: the recommended route was up to 6.5 min longer (it is said out loud; the user can pick
+   the shortest card).
+7. Voice commands English only (en-GB); no SpeechRecognition in Firefox (fallback message is spoken).
+8. Map tiles come from tile.openstreetmap.org (fine for a demo, not for heavy traffic).
+
+### Gotchas for the next session
+- Deploy with `npm run deploy` (preview + smoke test + updates the URL line above). The PowerShell tool may be
+  disabled; the npm script calls powershell.exe itself. Preview URLs need a Vercel login.
+- `vercel curl` in Git Bash needs `MSYS_NO_PATHCONV=1`. It is sometimes flaky ("fetch failed"): retry.
+- `.env.local` has **no keys** (Vercel "Sensitive" vars can't be pulled; reading `.env*` is blocked). Local
+  `npm run dev` works with the saved demo routes; live ORS/vision checks run against a preview.
+- `data/raw/` (Overpass downloads) is git-ignored. A fresh clone only has the built snapshots in `public/data/`,
+  which is all the app needs. Re-download only if needed: `node scripts/fetch-crossings.js` (skips existing files).
+- Don't edit files with `sed` when the text has backticks (GNU sed treats a backslash-backtick as an anchor and
+  corrupted README once) — use the Edit tool or a small node script.
+- Local server is `npm run dev` (scripts/dev-server.js), not `vercel dev`.
+
+### Next steps, in order
+1. Humans' outdoor test + bus photos → fix what breaks (Phone test prompt), measure bus accuracy, update EVAL.md.
+2. Production deploy when the humans say so.
+3. User test notes → EVAL.md "user feedback".
+4. Morning freeze (06:00): final numbers in README/EVAL, `npm run zip`, ask before the production deploy.
 
 ## Log (newest first)
 - 17:38 Fixed a wrong spoken summary: with the new blind tie-break the fallback said "has fewer crossings: 4 instead of 3". The summary now states the real deciding reason in ranking order (worst crossing → unmarked/unknown → acoustic signals → crossing count), says "avoids" only when none are left, else "has fewer X: A instead of B". Checked all 16 changed real trips read correctly. `npm run zip` builds submission/crosswise.zip (7.4 MB, no secrets). 241 unit + 34 e2e green.
