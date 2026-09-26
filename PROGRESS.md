@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-2usx25pr6-trua.vercel.app  (deployed 13:53; open while logged in to Vercel)
+**Latest preview:** https://crosswise-1q7tlljuq-trua.vercel.app  (deployed 14:06; open while logged in to Vercel)
 
 ## Log (newest first)
 - 13:54 **Phase 0 done.** Skeleton live (index.html, Start, mode switch persisted, speech priority queue + watchdog), Vitest 11 tests + Playwright 3 tests green. Private repo github.com/garypiell/crosswise. `npm run deploy` = preview deploy + smoke test + updates this file.
