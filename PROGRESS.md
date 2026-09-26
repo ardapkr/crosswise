@@ -1,8 +1,9 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-4m8n0151v-trua.vercel.app  (deployed 17:08; open while logged in to Vercel)
+**Latest preview:** https://crosswise-7iuqhnnwu-trua.vercel.app  (deployed 17:17; open while logged in to Vercel)
 
 ## Log (newest first)
+- 18:15 README.md and EVAL.md written (summary, 5 demo cases with status, baseline comparison, vision accuracy, honest limits, per-trip appendix). Still missing: real bus accuracy, outdoor walk results, real user feedback.
 - 18:00 Crossing detection fix (branch member-nodes, merged): a crossing is "on the route" only if the route passes within 3 m of one of its crossing NODES (group centre still within 12 m + cluster radius). Measured on 6 real routes: 55 of 70 counted crossings were 0–2 m from a node (really used), 15 were 4–10 m away (pavement running past a crossing the user never takes), nothing in between → ~1 in 5 alerts/penalties were false. Snapshot now stores node positions (Vienna 511 KB). Belvedere route: 8 → 5 crossings, all with acoustic signals.
 - 17:50 Baseline comparison on 30 random real trips around HOIV (scripts/eval-routes.js, saved ORS answers in eval/): vs the shortest route, unmarked/unknown crossings 43 → 21 (−51%), trips with any unmarked crossing 18 → 13, median +1.4 min when the route differs (max 6.5), worst crossing never worse. Blind tie-break after the worst crossing: fewest risky, then fewest crossings without acoustic signal (chosen by comparing 4 rules on the saved trips).
 - 17:30 **Phase 7 done.** "Where am I?" button + voice command: street + house number (ORS reverse geocode, cached, optional), nearest 2 stops (new OSM stops snapshot: Vienna 5,121 / Budapest 6,098 named stops, downloaded once), nearest crossing with its type. Real answer at HOIV: "You are on Arsenalstraße, near number 11. Nearest stop: Hüttenbrennergasse, bus, 50 metres. Also Gräßlplatz, bus, 170 metres. Nearest crossing in 20 metres: traffic light, acoustic signal unknown." While walking it uses the current (or simulated) position. 224 unit + 26 e2e green.

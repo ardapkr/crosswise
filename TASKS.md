@@ -60,7 +60,7 @@
 ## Phase 8 — Polish + submission (target: 07:00, hard stop 07:30)
 - [ ] Accessibility pass: screen reader labels, focus order, contrast
 - [ ] Error states spoken aloud (no network, GPS denied, camera denied)
-- [ ] README: problem, features, how it works, data sources, honest limits, eval numbers, how to run
-- [ ] `EVAL.md`: the 5 demo cases, baseline comparison, vision accuracy, known failures
+- [x] README: problem, features, how it works, data sources, honest limits, eval numbers, how to run  _(update eval numbers after real bus/outdoor tests)_
+- [x] `EVAL.md`: the 5 demo cases, baseline comparison, vision accuracy, known failures  _(bus accuracy + outdoor results still to add)_
 - [ ] `git archive` ZIP of the repo for submission
 - [ ] Final production deploy (ask human first)
