@@ -1,4 +1,6 @@
-// Main UI wiring. Logic lives in /lib; this file only connects buttons, speech and storage.
+// Main UI wiring. Logic lives in /lib; this file connects buttons, views, speech and storage.
+// Views: start screen → app (map + search + sheet + camera bar); "searching" and "walking" are
+// classes on #app that the CSS turns into the full-screen search panel and the walking banner.
 
 import { MODES, normalizeMode } from '../lib/modes.js';
 import { speak, repeatLast, unlockSpeech, appVoiceOn, setAppVoice } from './speech.js';
@@ -7,7 +9,7 @@ import { startNavigation } from './navigation.js';
 import { initLook } from './look-ui.js';
 import { unlockSound } from './sound.js';
 import { initVoice } from './voice.js';
-import { showWalk, showPosition } from './map.js';
+import { ensureMap, setMapPadding, showWalk, showPosition, showHere, refit } from './map.js';
 import { getJSON } from './api.js';
 import { getPosition, HOIV } from './location.js';
 import { whereAmIText } from '../lib/whereami.js';
@@ -28,6 +30,7 @@ export const state = { mode: loadMode(), started: false, demo: params.get('demo'
 
 const modeLabel = (id) => MODES.find((m) => m.id === id).label;
 
+// --- mode: segmented control (3 toggle buttons, one pressed) ---
 function renderModes() {
   const box = $('modes');
   box.innerHTML = '';
@@ -52,17 +55,45 @@ function setMode(mode) {
   if (changed) routes.replan();
 }
 
+// Panel heights as CSS variables: the sheet keeps some map visible, the map credit sits above the panels.
+const SIZES = { '--top-h': '.top', '--dock-h': '.dock', '--bottom-h': '.bottom' };
+function measurePanels() {
+  if ($('app').classList.contains('is-searching')) return; // the search panel is full screen: keep the real sizes
+  for (const [name, sel] of Object.entries(SIZES)) {
+    document.documentElement.style.setProperty(name, `${Math.round(document.querySelector(sel).getBoundingClientRect().height)}px`);
+  }
+}
+// on every size change, and right after a view change (so a route is fitted with the new sizes, not the old ones)
+const sizes = new ResizeObserver(measurePanels);
+for (const sel of ['.top', '.bottom']) sizes.observe(document.querySelector(sel));
+
+// --- search panel (full screen while typing, like a map app) ---
+function setSearching(on) {
+  $('app').classList.toggle('is-searching', on);
+  if (!on) {
+    for (const id of ['to', 'from']) if (document.activeElement === $(id)) $(id).blur();
+    measurePanels();
+  }
+}
+for (const id of ['to', 'from']) $(id).addEventListener('focus', () => setSearching(true));
+$('search-back').addEventListener('click', () => { setSearching(false); $('status').focus(); });
+$('route-form').addEventListener('keydown', (e) => {
+  // Escape closes the suggestions first (search.js), then the panel
+  if (e.key === 'Escape' && $('to-suggestions').hidden && $('from-suggestions').hidden) {
+    setSearching(false);
+    $('status').focus();
+  }
+});
+
 // --- walking guidance ---
 let nav = null;
 
 function showWalking(on) {
+  $('app').classList.toggle('is-walking', on);
+  $('nav-banner').hidden = !on;
   $('nav-section').hidden = !on;
-  $('where-section').hidden = on;
-  $('routes-section').hidden = on;
-  // the one map element moves between the walking panel and the route list
-  const box = $('map-box');
-  if (on) $('nav-section').insertBefore(box, $('nav-section').querySelector('.row'));
-  else $('routes-section').insertBefore(box, $('routes'));
+  $('plan-section').hidden = on;
+  measurePanels();
 }
 
 function startRoute(plan, route) {
@@ -80,7 +111,7 @@ function startRoute(plan, route) {
     demo: state.demo,
     speed: Number(params.get('speed')) || 1.3,
     startAt: Number(params.get('at')) || 0, // demo only: start this many metres into the route
-    onEnd: () => { nav = null; setTimeout(() => showWalking(false), 4000); },
+    onEnd: () => { nav = null; setTimeout(() => { showWalking(false); routes.redraw(); }, 4000); },
   });
 }
 
@@ -88,8 +119,9 @@ function stopRoute() {
   nav?.stop();
   nav = null;
   showWalking(false);
+  routes.redraw();
   speak('Route stopped.');
-  $('to').focus();
+  $('status').focus();
 }
 
 $('nav-stop').addEventListener('click', stopRoute);
@@ -100,35 +132,74 @@ const routes = initRoutes({
   speak,
   demo: state.demo,
   onChoose: startRoute,
+  closeSearch: () => setSearching(false),
 });
 
+// --- map: fills the screen; routes are fitted into the part the panels don't cover ---
+setMapPadding(() => {
+  const top = document.querySelector('.top').getBoundingClientRect();
+  const bottom = document.querySelector('.bottom').getBoundingClientRect();
+  if (bottom.right < window.innerWidth * 0.6) { // wide screen: panels on the left
+    return { top: 24, bottom: 24, left: bottom.right + 24, right: 24 };
+  }
+  return { top: top.bottom + 16, bottom: window.innerHeight - bottom.top + 16, left: 20, right: 20 };
+});
+// --- sheet: "Show more" gives the routes almost the whole screen, "Show less" gives the map back ---
+function setSheetExpanded(on) {
+  $('sheet').classList.toggle('expanded', on);
+  $('app').classList.toggle('sheet-expanded', on); // the map is mostly covered: the credit would float over the search
+  $('sheet-toggle').setAttribute('aria-expanded', String(on));
+  $('sheet-toggle').setAttribute('aria-label', on ? 'Show less' : 'Show more');
+}
+$('sheet-toggle').addEventListener('click', () => {
+  setSheetExpanded(!$('sheet').classList.contains('expanded'));
+  refit(); // keep the selected route in the part of the map that is still visible
+});
+
+async function initMap() {
+  const map = await ensureMap($('map-box').querySelector('.map'), { interactive: true, center: [HOIV.lat, HOIV.lon], zoom: 16 });
+  if (!map) { $('map-box').hidden = true; return; }
+  map.invalidateSize();
+  if (state.demo) showHere([HOIV.lon, HOIV.lat]);
+}
+
+// --- start ---
 function start() {
   unlockSpeech();
   unlockSound();
   state.started = true;
-  $('start').hidden = true;
+  $('gate').hidden = true;
   $('app').hidden = false;
   renderModes();
+  initMap();
   speak(`Crosswise ready. ${modeLabel(state.mode)} mode.${state.demo ? ' Demo mode: walking is simulated.' : ''} Where do you want to go?`);
-  $('to').focus();
-  // Ask for the position now (silently): "Current location" is ready and suggestions are biased to it.
-  if (!state.demo) getPosition().catch(() => {});
+  $('status').focus();
+  // Ask for the position now (silently): "Current location" is ready, suggestions and the map use it.
+  if (!state.demo) getPosition().then((p) => showHere([p.lon, p.lat])).catch(() => {});
 }
-
-// App voice on/off (for screen reader users)
-function renderVoiceToggle() {
-  $('app-voice').setAttribute('aria-pressed', String(appVoiceOn()));
-  $('app-voice').textContent = appVoiceOn() ? 'App voice: on' : 'App voice: off';
-}
-$('app-voice').addEventListener('click', () => {
-  setAppVoice(!appVoiceOn());
-  renderVoiceToggle();
-  speak(appVoiceOn() ? 'App voice on.' : 'App voice off. Your screen reader will read the messages.');
-});
-renderVoiceToggle();
-
 $('start').addEventListener('click', start);
 $('repeat').addEventListener('click', repeatLast);
+
+// --- App voice on/off (for screen reader users): on the start screen and in Settings ---
+function renderVoiceToggle() {
+  for (const b of document.querySelectorAll('.app-voice-toggle')) {
+    b.setAttribute('aria-pressed', String(appVoiceOn()));
+    b.textContent = appVoiceOn() ? 'App voice: on' : 'App voice: off';
+  }
+}
+for (const b of document.querySelectorAll('.app-voice-toggle')) {
+  b.addEventListener('click', () => {
+    setAppVoice(!appVoiceOn());
+    renderVoiceToggle();
+    speak(appVoiceOn() ? 'App voice on.' : 'App voice off. Your screen reader will read the messages.');
+  });
+}
+renderVoiceToggle();
+
+// --- settings dialog (native <dialog>: focus stays inside, Escape closes, focus returns) ---
+$('settings-open').addEventListener('click', () => $('settings').showModal());
+$('settings-close').addEventListener('click', () => $('settings').close());
+$('settings').addEventListener('click', (e) => { if (e.target === $('settings')) $('settings').close(); }); // backdrop
 
 // ?video=/path.mp4 replays a same-origin test video instead of the camera (stage demo / tests).
 const testVideo = params.get('video');

@@ -3,7 +3,7 @@
 import { test, expect } from '@playwright/test';
 import { fakeSpeech, mockOrs } from './helpers.js';
 
-const ROUTE_COLORS = ['#a78bfa', '#38bdf8', '#f0abfc'];
+const ROUTE_COLORS = ['#4cc2ff', '#b69cff', '#f0abfc'];
 const DOT_COLORS = ['#3ddc84', '#ffd23f', '#ff9f1c', '#ff5a5a'];
 
 /** stroke colour + width of every route line on the map */
@@ -63,8 +63,9 @@ test('walking: the map shows the chosen route and follows the walker', async ({ 
   await page.goto('/?demo=1&speed=40');
   await page.getByRole('button', { name: 'Start' }).click();
   await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click();
-  await page.locator('#routes > li').first().getByRole('button', { name: /Start the/ }).click();
-  await expect(page.locator('#nav-section #map-box')).toBeVisible(); // the map moved into the walking panel
+  await page.locator('#routes > li').first().getByRole('button', { name: /Start this route/ }).click();
+  await expect(page.locator('#nav-section')).toBeVisible();
+  await expect(page.locator('#map-box')).toBeVisible(); // the map stays full screen behind the panels
   await expect.poll(() => page.evaluate(() => window.__walker)).toBeTruthy();
   const a = await page.evaluate(() => window.__walker);
   await page.waitForTimeout(600);

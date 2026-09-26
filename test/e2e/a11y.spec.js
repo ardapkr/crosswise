@@ -23,9 +23,25 @@ test('main screen, route cards and walking panel', async ({ page }) => {
   await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click();
   await expect(page.locator('#routes > li')).toHaveCount(3);
   await audit(page, 'route cards');
-  await page.locator('#routes > li').first().getByRole('button', { name: /Start the/ }).click();
+  await page.locator('#routes > li').first().getByRole('button', { name: /Start this route/ }).click();
   await expect(page.locator('#nav-section')).toBeVisible();
   await audit(page, 'walking panel');
+});
+
+test('search panel with suggestions, and the settings dialog', async ({ page }) => {
+  await fakeSpeech(page);
+  await page.route('**/api/autocomplete?*', (route) => route.fulfill({
+    json: { results: [{ name: 'Karlsplatz', detail: 'Wieden, Vienna', layer: 'venue', lon: 16.3697, lat: 48.2004 }] },
+  }));
+  await page.goto('/?demo=1');
+  await page.getByRole('button', { name: 'Start' }).click();
+  await page.getByLabel('Destination', { exact: true }).fill('Karl');
+  await expect(page.getByRole('button', { name: 'Karlsplatz, Wieden, Vienna' })).toBeVisible();
+  await audit(page, 'search panel');
+  await page.getByRole('button', { name: 'Close search' }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
+  await audit(page, 'settings dialog');
 });
 
 test('camera panel open', async ({ page }) => {
@@ -33,7 +49,7 @@ test('camera panel open', async ({ page }) => {
   await page.route('**/api/look', (route) => route.fulfill({ json: { mode: 'bus', result: { status: 'not_visible' } } }));
   await page.goto('/');
   await page.getByRole('button', { name: 'Start' }).click();
-  await page.getByRole('button', { name: 'Find my bus' }).click();
+  await page.getByRole('button', { name: 'Find bus' }).click();
   await expect(page.locator('#camera-box')).toBeVisible();
   await audit(page, 'camera panel');
 });
@@ -50,10 +66,13 @@ test('App voice off: messages go to the screen reader live regions instead of th
   // the visible status is not a live region (no double speech with the app voice on)
   await expect(page.locator('#status')).not.toHaveAttribute('aria-live', /polite|assertive/);
   await page.getByRole('button', { name: 'Start' }).click();
-  const toggle = page.getByRole('button', { name: /App voice/ });
+  await page.getByRole('button', { name: 'Settings' }).click(); // the toggle lives in Settings (and on the start screen)
+  const toggle = page.getByRole('dialog').getByRole('button', { name: /App voice/ });
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeHidden();
   const before = await page.evaluate(() => window.__synthCalls);
 
   await page.evaluate(() => window.crosswise.speak('Crossing now: zebra crossing without lights.', 'crossing'));
@@ -63,7 +82,7 @@ test('App voice off: messages go to the screen reader live regions instead of th
   await expect(page.locator('#status')).toHaveText('Route stopped.'); // still shown as big text
   expect(await page.evaluate(() => window.__synthCalls)).toBe(before); // app voice silent
 
-  await page.reload(); // the choice is remembered
-  await page.getByRole('button', { name: 'Start' }).click();
+  await page.reload(); // the choice is remembered, and shown on the start screen before the app talks
   await expect(page.getByRole('button', { name: /App voice/ })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: /App voice/ })).toHaveText('App voice: off');
 });

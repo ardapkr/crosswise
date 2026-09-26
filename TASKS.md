@@ -70,4 +70,4 @@
 - [x] Voice: always English whatever the phone language (en-US voice picked explicitly, late-loading voices), recognition en-US
 - [x] Search: live suggestions while typing (ORS autocomplete via `/api/autocomplete`), "Current location" as default start; report ORS quality for Stephansdom / Hauptbahnhof / HOIV
 - [x] Map: each route its own colour, recommended thicker, crossing dots green/yellow/orange/red, tapping a route card highlights it
-- [ ] UI redesign: dark + one accent, search on top, full-screen map, bottom sheet with route cards, camera bottom bar, segmented mode control → show the humans a preview before polishing
+- [x] UI redesign: dark + one accent, search on top, full-screen map, bottom sheet with route cards, camera bottom bar, segmented mode control → show the humans a preview before polishing  _(v1 on the preview 21:47, waiting for their feedback)_

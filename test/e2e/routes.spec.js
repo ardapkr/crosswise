@@ -24,7 +24,7 @@ test('typed destination with a single search result plans directly', async ({ pa
   await page.goto('/?demo=1');
   await page.getByRole('button', { name: 'Start' }).click();
   await page.getByLabel('Destination', { exact: true }).fill('Hauptbahnhof');
-  await page.getByRole('button', { name: 'Find safest route' }).click();
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
   await expect(page.locator('#routes > li')).toHaveCount(3);
   expect(calls[0]).toMatchObject({ from: '16.3954,48.1761', to: '16.3755,48.185', mode: 'blind' });
 });
@@ -49,5 +49,5 @@ test('server errors are spoken, not silent', async ({ page }) => {
   await page.getByRole('button', { name: 'Start' }).click();
   await page.getByRole('button', { name: 'Oberes Belvedere' }).click();
   await expect(page.locator('#status')).toContainText('Route service error 503');
-  await expect(page.getByRole('button', { name: 'Find safest route' })).toBeEnabled();
+  await expect(page.locator('#find')).toBeEnabled(); // the search button is usable again
 });

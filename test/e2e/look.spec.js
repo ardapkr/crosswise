@@ -24,25 +24,37 @@ async function start(page) {
   await page.getByRole('button', { name: 'Start' }).click();
 }
 
-test('find my bus: announces the wrong bus, then "This is your bus" after 2 agreeing frames', async ({ page }) => {
+test('find my bus: the line typed during the scan → "This is 26A, not your bus", then "This is your bus" after 2 agreeing frames', async ({ page }) => {
   await fakeSpeech(page);
-  const calls = await mockLook(page, 'bus', [NOT_VISIBLE, bus('26A'), bus('26A'), bus('13A', 'Hauptbahnhof'), bus('13A', 'Hauptbahnhof')]);
+  // frames sent before the line was typed see nothing; frames for 13A get the scripted answers
+  const answers = [NOT_VISIBLE, bus('26A'), bus('26A'), bus('13A', 'Hauptbahnhof'), bus('13A', 'Hauptbahnhof')];
+  const calls = [];
+  await page.route('**/api/look', async (route) => {
+    const body = route.request().postDataJSON();
+    calls.push({ ...body, at: Date.now() });
+    const n = calls.filter((c) => c.context.targetLine === '13A').length;
+    const result = body.context.targetLine === '13A' ? answers[Math.min(n - 1, answers.length - 1)] : NOT_VISIBLE;
+    await new Promise((r) => setTimeout(r, 150));
+    await route.fulfill({ json: { mode: 'bus', result, observation: '', ms: 150 } });
+  });
   await start(page);
-  await page.getByLabel(/My bus or tram line/).fill('13a');
-  await page.getByRole('button', { name: 'Find my bus' }).click();
+  await page.getByRole('button', { name: 'Find bus' }).click();
   await expect(page.locator('#camera-box')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Find bus' })).toHaveClass(/active/);
+  await page.getByLabel(/Your line/).fill('13a');
+  await page.getByLabel(/Your line/).press('Enter'); // the camera keeps running, the scan now looks for 13A
 
   await expect(page.locator('#status')).toHaveText('This is your bus, 13A, to Hauptbahnhof.', { timeout: 15_000 });
   const spoken = await page.evaluate(() => window.__spoken);
+  expect(spoken.some((t) => t.startsWith('Looking for 13A.'))).toBe(true);
   expect(spoken).toContain('This is 26A, not your bus.');
   expect(spoken.filter((t) => t.startsWith('This is your bus'))).toHaveLength(1);
 
-  // 5 frames, all real JPEGs from the camera, never two requests at once (≥ 1.2 s apart)
-  expect(calls).toHaveLength(5);
+  // 5 frames for 13A, all real JPEGs from the camera; never two requests at once (≥ 1.2 s apart), also across the change
+  expect(calls.filter((c) => c.context.targetLine === '13A')).toHaveLength(5);
   for (const c of calls) {
     expect(c.mode).toBe('bus');
     expect(c.image.startsWith('/9j/')).toBe(true); // base64 of a JPEG header
-    expect(c.context.targetLine).toBe('13A');
   }
   for (let i = 1; i < calls.length; i++) expect(calls[i].at - calls[i - 1].at).toBeGreaterThanOrEqual(1100);
 
@@ -53,7 +65,7 @@ test('find my bus without a target line announces the first line that 2 frames a
   await fakeSpeech(page);
   await mockLook(page, 'bus', [bus('13A'), bus('18A'), bus('18A')]);
   await start(page);
-  await page.getByRole('button', { name: 'Find my bus' }).click();
+  await page.getByRole('button', { name: 'Find bus' }).click();
   await expect(page.locator('#status')).toHaveText('Bus 18A.', { timeout: 15_000 });
 });
 
@@ -62,7 +74,7 @@ test('find my bus gives up after 60 s, saying "still looking" on the way', async
   await fakeSpeech(page);
   await mockLook(page, 'bus', [NOT_VISIBLE], 0);
   await start(page);
-  await page.getByRole('button', { name: 'Find my bus' }).click();
+  await page.getByRole('button', { name: 'Find bus' }).click();
   // The camera starts in real time: wait until the scan is running before moving the fake clock.
   await expect(page.locator('#status')).toContainText('Looking for a bus or tram');
   for (let i = 0; i < 13; i++) await page.clock.runFor(5_000); // 65 s in steps, so answers can arrive
@@ -76,7 +88,7 @@ test('stop camera ends the scan', async ({ page }) => {
   await fakeSpeech(page);
   const calls = await mockLook(page, 'bus', [NOT_VISIBLE]);
   await start(page);
-  await page.getByRole('button', { name: 'Find my bus' }).click();
+  await page.getByRole('button', { name: 'Find bus' }).click();
   await expect.poll(() => calls.length).toBeGreaterThan(0);
   await page.getByRole('button', { name: 'Stop camera' }).click();
   await expect(page.locator('#status')).toHaveText('Scan stopped.');
@@ -89,7 +101,7 @@ test('check light: one photo, says what it sees plus the traffic warning, never 
   await fakeSpeech(page);
   const calls = await mockLook(page, 'light', [{ status: 'green', confidence: 0.9, note: 'It is safe to cross' }]);
   await start(page);
-  await page.getByRole('button', { name: 'Check crossing light' }).click();
+  await page.getByRole('button', { name: 'Check light' }).click();
   await expect(page.locator('#status')).toHaveText('The pedestrian light looks green. Listen for traffic before crossing.');
   expect(calls).toHaveLength(1);
   expect(calls[0].mode).toBe('light');
@@ -108,9 +120,9 @@ test('read text and describe surroundings speak the result', async ({ page }) =>
     await route.fulfill({ json: { mode, result } });
   });
   await start(page);
-  await page.getByRole('button', { name: 'Read text' }).click();
+  await page.getByRole('button', { name: 'Read', exact: true }).click();
   await expect(page.locator('#status')).toHaveText('Parking sign pointing left: Bahnhof City Wien Hauptbahnhof.');
-  await page.getByRole('button', { name: 'Describe surroundings' }).click();
+  await page.getByRole('button', { name: 'Describe', exact: true }).click();
   await expect(page.locator('#status')).toHaveText(
     'Careful: bicycle lane before the crossing. A zebra crossing is ahead. A tram stop is on the right.',
   );
@@ -122,7 +134,7 @@ test('camera permission denied is spoken, not silent', async ({ page }) => {
     navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('denied', 'NotAllowedError'));
   });
   await start(page);
-  await page.getByRole('button', { name: 'Check crossing light' }).click();
+  await page.getByRole('button', { name: 'Check light' }).click();
   await expect(page.locator('#status')).toHaveText('Camera permission is off. Allow the camera for this site in your browser settings.');
   await expect(page.locator('#camera-box')).toBeHidden();
 });
@@ -136,7 +148,7 @@ test('server trouble during a scan is spoken once, the scan keeps going', async 
     return route.fulfill({ json: { mode: 'bus', result: bus('13A') } });
   });
   await start(page);
-  await page.getByRole('button', { name: 'Find my bus' }).click();
+  await page.getByRole('button', { name: 'Find bus' }).click();
   await expect(page.locator('#status')).toHaveText('Bus 13A.', { timeout: 15_000 });
   const spoken = await page.evaluate(() => window.__spoken);
   expect(spoken).toContain('Too many requests right now. Please try again in a minute.');

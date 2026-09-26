@@ -9,7 +9,7 @@ test('no internet connection is spoken (route planning and camera assistant)', a
   await context.setOffline(true);
   await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click();
   await expect(page.locator('#status')).toHaveText('No internet connection.');
-  await page.getByRole('button', { name: 'Check crossing light' }).click();
+  await page.getByRole('button', { name: 'Check light' }).click();
   await expect(page.locator('#status')).toHaveText('No internet connection.');
   await context.setOffline(false);
 });
@@ -26,6 +26,6 @@ test('GPS unavailable during guidance is spoken', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Start' }).click();
   await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click();
-  await page.locator('#routes > li').first().getByRole('button', { name: /Start the/ }).click();
+  await page.locator('#routes > li').first().getByRole('button', { name: /Start this route/ }).click();
   await expect(page.locator('#status')).toHaveText('Your location is not available right now. Keep your phone uncovered.');
 });

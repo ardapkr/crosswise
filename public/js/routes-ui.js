@@ -7,7 +7,7 @@ import { decodeGroups, crossingsOnRoute } from '../lib/crossings.js';
 import { rankRoutes, safetyLevel } from '../lib/scoring.js';
 import { routeSummary, describeCrossing, routeCardText, routeBadge, LEVEL_TEXT } from '../lib/summary.js';
 import { bbox } from '../lib/geo.js';
-import { matchKnownPlaces, mergeSuggestions, fromGeocode } from '../lib/places.js';
+import { matchKnownPlaces, mergeSuggestions, fromGeocode, KNOWN_PLACES } from '../lib/places.js';
 import { showRoutes, selectRoute, routeStyle } from './map.js';
 import { attachSuggestions } from './search.js';
 
@@ -19,10 +19,17 @@ export const QUICK_DESTINATIONS = [
   { label: 'Oberes Belvedere', lon: 16.3809, lat: 48.1915 },
 ];
 
+// Shown in the empty search (before typing): the quick destinations, then the venue.
+const SUGGESTED = mergeSuggestions([
+  ...QUICK_DESTINATIONS.map((d) => ({ name: d.label, detail: 'Quick destination', lon: d.lon, lat: d.lat, suggested: true })),
+  ...KNOWN_PLACES.map(({ name, detail, lon, lat }) => ({ name, detail, lon, lat, suggested: true })),
+], []);
+
 /**
- * @param {{ getMode: () => string, speak: Function, demo: boolean, onChoose: (plan, route) => void }} opts
+ * @param {{ getMode: () => string, speak: Function, demo: boolean, onChoose: (plan, route) => void,
+ *           closeSearch?: () => void }} opts
  */
-export function initRoutes({ getMode, speak, demo, onChoose }) {
+export function initRoutes({ getMode, speak, demo, onChoose, closeSearch = () => {} }) {
   let plan = null;      // { from, to, ranked, groups }
   let fromPlace = null; // chosen start; null = current location
 
@@ -61,8 +68,10 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
   // --- live suggestions while typing ---
   const toBox = attachSuggestions({
     input: $('to'), list: $('to-suggestions'), announcer: $('suggest-status'), getFocus: focus,
+    leadingRows: (q) => (q ? [] : SUGGESTED),
     onPick: (place) => { $('to').value = place.name; run(() => planTo(place)); },
   });
+  $('to').addEventListener('focus', () => { if (!$('to').value.trim()) toBox.refresh(); });
   const currentRow = { current: true, name: CURRENT_LOCATION, detail: demo ? 'Demo: HOIV' : 'Use GPS' };
   const fromBox = attachSuggestions({
     input: $('from'), list: $('from-suggestions'), announcer: $('suggest-status'), getFocus: focus,
@@ -102,6 +111,7 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
 
   // --- routes ---
   async function planTo(to) {
+    closeSearch();
     const mode = getMode();
     const from = await resolveStart();
     speak(`${from.note ? from.note + ' ' : ''}Finding the safest route to ${to.name || to.label}.`);
@@ -143,15 +153,16 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
       li.className = `route level-${level}`;
       li.dataset.id = r.id;
       const badge = routeBadge(r);
-      const title = `${badge}: ${Math.max(1, Math.round(r.duration / 60))} min`;
+      const minutes = `${Math.max(1, Math.round(r.duration / 60))} min`;
       const worst = r.score.count ? describeCrossing(r.score.worstCrossing, mode) : 'No road crossings';
       li.innerHTML = `
-        <h3><button type="button" class="route-pick" aria-pressed="false">${swatch(r.rank)}<span class="title"></span></button></h3>
+        <h3><button type="button" class="route-pick" aria-pressed="false">${swatch(r.rank)}<span class="title"></span><span class="sr-only">: </span><span class="time"></span></button></h3>
         <p class="meta"></p>
         <p class="level"></p>
         <p class="worst"><span class="label">Worst crossing:</span> <span class="value"></span></p>
-        <button type="button" class="go">Start this route</button>`;
-      li.querySelector('.title').textContent = title;
+        <button type="button" class="btn go"><svg class="icon" aria-hidden="true"><use href="#i-go"/></svg><span>Start this route</span></button>`;
+      li.querySelector('.title').textContent = badge;
+      li.querySelector('.time').textContent = minutes;
       li.querySelector('.route-pick').dataset.id = r.id;
       li.querySelector('.meta').textContent =
         `${(r.distance / 1000).toFixed(1)} km · ${r.score.count} crossing${r.score.count === 1 ? '' : 's'}` +
@@ -159,7 +170,8 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
       li.querySelector('.level').textContent = LEVEL_TEXT[level];
       li.querySelector('.worst .value').textContent = worst;
       const go = li.querySelector('.go');
-      go.setAttribute('aria-label', `Start the ${badge.split(' · ')[0].toLowerCase()} route, ${Math.round(r.duration / 60)} minutes`);
+      // the name starts with the visible text (WCAG 2.5.3), then says which route
+      go.setAttribute('aria-label', `Start this route: ${badge.split(' · ')[0].toLowerCase()}, ${Math.max(1, Math.round(r.duration / 60))} minutes`);
       go.addEventListener('click', () => onChoose?.(plan, r));
       // the whole card is a tap target (the title button is the accessible one); Start has its own action
       li.addEventListener('click', (e) => { if (!e.target.closest('.go')) pick(r); });
@@ -202,5 +214,7 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
     planToPlace: (q) => run(() => planToPlace(q)),
     /** Mode changed: wheelchair uses another ORS profile, so plan again. */
     replan: () => { if (plan) run(() => planTo(plan.to)); },
+    /** After walking: show all routes of the plan on the map again. */
+    redraw: () => { if (plan) { showRoutes($('map-box'), plan.ranked); pick(plan.ranked[0], { quiet: true }); } },
   };
 }

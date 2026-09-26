@@ -12,9 +12,11 @@ test('demo walk announces crossings and arrival, then returns to the planner', a
   await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click();
   await expect(page.locator('#routes > li')).toHaveCount(3);
 
-  await page.locator('#routes > li').first().getByRole('button', { name: /Start the Recommended route/ }).click();
+  await page.locator('#routes > li').first().getByRole('button', { name: /Start this route: recommended/ }).click();
   await expect(page.locator('#nav-section')).toBeVisible();
   await expect(page.locator('#where-section')).toBeHidden();
+  await expect(page.locator('#nav-banner')).toBeVisible(); // the next instruction replaces the search bar
+  await expect(page.locator('#route-form')).toBeHidden();
   await expect(page.locator('#nav-next')).not.toHaveText('Waiting for your location…');
 
   await page.waitForFunction(() => window.__guide?.arrived === true, null, { timeout: 30_000 });
@@ -27,6 +29,7 @@ test('demo walk announces crossings and arrival, then returns to the planner', a
   expect(spoken.at(-1)).toBe('You have arrived at your destination.');
 
   await expect(page.locator('#where-section')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('#route-form')).toBeVisible();
 });
 
 test('stop button ends guidance and speaks it', async ({ page }) => {
@@ -35,7 +38,7 @@ test('stop button ends guidance and speaks it', async ({ page }) => {
   await page.goto('/?demo=1');
   await page.getByRole('button', { name: 'Start' }).click();
   await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click();
-  await page.locator('#routes > li').first().getByRole('button', { name: /Start the/ }).click();
+  await page.locator('#routes > li').first().getByRole('button', { name: /Start this route/ }).click();
   await expect(page.locator('#nav-section')).toBeVisible();
   await page.getByRole('button', { name: 'Stop route' }).click();
   await expect(page.locator('#nav-section')).toBeHidden();
@@ -49,7 +52,7 @@ test('real GPS mode: mocked position at HOIV starts guidance with the first inst
   await page.goto('/');
   await page.getByRole('button', { name: 'Start' }).click();
   await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click();
-  await page.locator('#routes > li').first().getByRole('button', { name: /Start the/ }).click();
+  await page.locator('#routes > li').first().getByRole('button', { name: /Start this route/ }).click();
   await expect.poll(() => page.evaluate(() => window.__spoken.join(' | '))).toContain('Head south on Hüttenbrennergasse');
   await expect(page.locator('#nav-remaining')).toContainText('left');
 });
