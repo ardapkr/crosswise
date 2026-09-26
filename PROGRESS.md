@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-gffkdfixy-trua.vercel.app  (deployed 14:14; open while logged in to Vercel)
+**Latest preview:** https://crosswise-kda0w0qz7-trua.vercel.app  (deployed 14:36; open while logged in to Vercel)
 
 ## Log (newest first)
 - 14:40 **Phase 1 done** (map deferred). Route comparison: `/api/route` (ORS + alternatives, cached, saved-demo-route fallback when ORS is down), `/api/geocode`, `/api/crossings` (city snapshot, Overpass fallback elsewhere). Snapshots: Vienna 8,987 crossing groups (374 KB), Budapest 7,257. UI: destination search, quick destinations, route cards (safest first, shortest marked), spoken summary. 78 unit + 7 e2e tests green.
