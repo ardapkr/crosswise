@@ -1,8 +1,10 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-ngiyex60m-trua.vercel.app  (deployed 16:23; open while logged in to Vercel)
+**Latest preview:** https://crosswise-g8sxwct0b-trua.vercel.app  (deployed 16:26; open while logged in to Vercel)
 
 ## Log (newest first)
+- 16:30 **Phase 3 + Phase 5 done.** Camera assistant: Find my bus (live scan: 1 frame/1.2 s, one request in flight, soft tick per frame, "still looking" every 10 s, announce after 2 agreeing frames, "This is your bus, 13A" / "This is 26A, not your bus", gives up after 60 s), Check crossing light (never "safe", always "listen for traffic"), Read text, Describe surroundings (hazards first, max 3 sentences). `/api/look` = Claude Haiku 4.5 vision with structured JSON output. 137 unit + 18 e2e green (fake camera; 60 s timeout tested with Playwright's fake clock).
+- 16:28 Vision eval (real photos, deployed API): light 10/12 (0 critical, both misses say "can't see a pedestrian light"), read 3/3, describe 11/11, bus: no photos yet. Eval now runs in ~30 s (3 parallel calls + retries). Details in EVAL.md.
 - 15:25 **Phase 2 done.** `lib/guidance.js`: crossing alerts at ~40 m and ~10 m (type, acoustic signal, kerb in wheelchair/limited modes, "press the button under the box" when sound=yes, never "safe to cross"), turn instructions from ORS steps, arrival, off-route warning (only when GPS accuracy ≤ 40 m). Calm mode for busy intersections: turns < 15 m apart merged, no early warnings for minor turns or events right after another one → real Hbf walk went from 75 to 48 messages. `?demo=1` simulated walk (`&speed=`, `&at=` metres). Live GPS via watchPosition + screen wake lock + vibration on "Crossing now". 101 unit + 10 e2e green.
 - 14:40 **Phase 1 done** (map deferred). Route comparison: `/api/route` (ORS + alternatives, cached, saved-demo-route fallback when ORS is down), `/api/geocode`, `/api/crossings` (city snapshot, Overpass fallback elsewhere). Snapshots: Vienna 8,987 crossing groups (374 KB), Budapest 7,257. UI: destination search, quick destinations, route cards (safest first, shortest marked), spoken summary. 78 unit + 7 e2e tests green.
 - Real result (HOIV → Hauptbahnhof, blind mode): shortest route (26 min) has an unmarked crossing + one of unknown type; recommended route is 1 min longer and avoids it. HOIV → Belvedere: shortest = safest (all crossings signalled).
@@ -11,6 +13,10 @@
 - 13:36 Test photos (26, no videos, no buses) labelled by content into `test/vision/{light,read,describe}/`; mapping in `test/vision/SOURCES.txt`. Fake cameras made from photos: `test/fixtures/{light-green,light-red,sign}.y4m`.
 
 ## Decisions
+- Vision model stays `claude-haiku-4-5-20251001` as specified in CLAUDE.md (fast: ~1.5–2 s per frame). Answers use structured outputs (JSON schema), and lib/look.js validates them again; a "found" bus line with confidence < 0.6 is treated as unreadable (never guess a line).
+- Single-photo checks (light/read/describe) turn the camera off right after the photo (battery + privacy).
+- The bus-scan e2e test uses Chromium's fake camera with a mocked /api/look (there is no bus footage yet); the real model is measured by `npm run eval:vision`.
+- Open issue for Phase 8: with VoiceOver/TalkBack on, the app voice (speechSynthesis) and the screen reader reading the aria-live status can talk at the same time. Plan: a "screen reader" setting that turns off the app voice.
 - Speech: newer "info" message replaces older info (user just tapped something); navigation/crossing/danger messages always finish and queue. Route summary is "info".
 - Limited-mobility ranking currently = fewer crossings first; on HOIV→Hbf it picks the route with the unmarked crossing. Revisit in Phase 4.
 - `/api/route` falls back to saved real ORS responses (`api/_data/`) for HOIV→Hauptbahnhof/Belvedere if ORS fails (also makes local dev work without keys).

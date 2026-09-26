@@ -32,23 +32,23 @@
 - [x] Notify: "Guidance ready — test outdoors / film"
 
 ## Phase 3 — Live bus scan (target: 22:00)
-- [ ] `/api/look` + `/api/prompts.js` (all 4 modes), JSON-only answers, robust parsing
-- [ ] `lib/scan.js`: agreement logic (2 consecutive matches), timeouts, "still looking" cadence (tested)
-- [ ] Camera module: rear camera, downscale to 768 px, one request in flight
-- [ ] "Find my bus" flow with optional target line ("I need 13A")
-- [ ] Playwright e2e with a fake-camera video of a bus
-- [ ] `npm run eval:vision` script
-- [ ] Notify: "Bus scan ready — needs real bus test"
+- [x] `/api/look` + `/api/prompts.js` (all 4 modes), JSON-only answers, robust parsing
+- [x] `lib/scan.js`: agreement logic (2 consecutive matches), timeouts, "still looking" cadence (tested)
+- [x] Camera module: rear camera, downscale to 768 px, one request in flight
+- [x] "Find my bus" flow with optional target line ("I need 13A")
+- [x] Playwright e2e with a fake-camera video of a bus  _(fake camera stream + mocked /api/look; no real bus footage yet → HUMAN_TODO)_
+- [x] `npm run eval:vision` script
+- [x] Notify: "Bus scan ready — needs real bus test"
 
 ## Phase 4 — Modes (target: 23:30)
 - [ ] Wheelchair profile + kerb scoring + "curb height unknown" messages
 - [ ] Limited mobility: avoid steps, prefer fewer crossings
 - [ ] Tests: same fixture ranks differently per mode
 
-## Phase 5 — Look features (target: 01:00)
-- [ ] Crossing light check (never "safe to cross")
-- [ ] Read text
-- [ ] Describe surroundings (short, most important first, max ~3 sentences)
+## Phase 5 — Look features (target: 01:00)  _(built together with the Phase 3 camera UI)_
+- [x] Crossing light check (never "safe to cross")
+- [x] Read text
+- [x] Describe surroundings (short, most important first, max ~3 sentences)
 
 ## Phase 6 — Voice (target: 02:30)
 - [ ] Push-to-talk button, `lib/commands.js` keyword parser (tested): find my bus [line], read, describe, check light, where am I, take me to <place>, switch mode

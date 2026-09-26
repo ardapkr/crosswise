@@ -36,3 +36,20 @@ Misses (both labels double-checked by zooming in — both are real model mistake
 - `light__none__01.jpg` (night, only car signals: red arrow + two round red lamps) → model said "red, standing figure lit". Harmless direction (user waits), but wrong.
 - `light__red__03.jpg` (pedestrian signal, red figure looks orange in the photo) → model said "not visible, amber car light".
 → Prompt v2: judge the SHAPE of the lit lamp (figure vs round lamp/arrow), red figures look orange in photos.
+
+### Vision eval 2026-09-26 14:28 (https://crosswise-g8sxwct0b-trua.vercel.app)
+
+| Mode | Correct | Accuracy | Critical errors | Not scored (network) | Median model latency |
+|---|---|---|---|---|---|
+| bus | – | no photos yet | – | – | – |
+| light | 10/12 | 83% | 0 | 0 | 1493 ms |
+| read | 3/3 | 100% | 0 | 0 | 1636 ms |
+| describe | 11/11 | 100% | 0 | 0 | 2089 ms |
+
+Misses:
+- `light__green__07.jpg`: {"status":"not_visible","confidence":0.95,"note":"Only car traffic signal visible, no pedestrian signal."} — saw: "Green round lamp lit in car signal. No pedestrian signal visible with human figure."
+- `light__red__03.jpg`: {"status":"not_visible","confidence":0.95,"note":"Only car signal visible, no pedestrian signal in frame."} — saw: "Yellow/orange lit circle on traffic signal, not a human figure shape."
+→ Prompt v2 result: fixed `light__none__01` (no longer invents a pedestrian signal from car lights), new miss
+`light__green__07` (signal photographed from below, figure hard to see → "not visible"). Still 10/12, but
+**every v2 miss is in the safe direction** ("I cannot see a pedestrian light"), none invents a signal and
+none says green when it isn't. Kept v2. Next step: more real photos (HUMAN_TODO) instead of tuning on 12 images.
