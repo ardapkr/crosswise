@@ -66,12 +66,14 @@ export function parseOverpass(json) {
     .map((e) => ({ id: e.id, lat: e.lat, lon: e.lon, tags: e.tags }));
 }
 
-// "Best known" ordering per attribute: the first value in the list wins.
+// "Best known" ordering per attribute: the first value in the list wins (known always beats unknown).
+// Kerbs are the exception: if ANY kerb of a crossing is raised, a wheelchair user must be warned,
+// so "raised" wins over "lowered" (the safe choice, not the optimistic one).
 const BEST = {
   kind: ['signals', 'zebra', 'unmarked', 'unknown'],
   sound: ['yes', 'no', null],
   vibration: ['yes', 'no', null],
-  kerb: ['lowered', 'raised', null],
+  kerb: ['raised', 'lowered', null],
   tactile: ['yes', 'no', null],
   island: ['yes', 'no', null],
 };
@@ -126,6 +128,55 @@ export function clusterCrossings(nodes, radius = CLUSTER_RADIUS_M) {
   }
   for (const g of groups) g.nodeIds.sort((a, b) => a - b);
   return groups;
+}
+
+// ---- Kerbs mapped as separate nodes ----
+// In Vienna most kerb information sits on barrier=kerb nodes at both ends of the crossing footway,
+// not on the crossing node itself. scripts/fetch-crossings.js downloads only kerb nodes that are part of
+// a footway=crossing way (so bus-stop platform kerbs are NOT included).
+
+export const KERB_MATCH_M = 15; // a kerb node this close to a crossing group belongs to it
+
+function kerbValue(v) {
+  if (['lowered', 'flush', 'no'].includes(v)) return 'lowered';
+  if (['raised', 'yes', 'regular'].includes(v)) return 'raised';
+  return null;
+}
+
+/** Overpass JSON of barrier=kerb nodes → [{id, lat, lon, kerb: 'lowered'|'raised'}] */
+export function parseKerbNodes(json) {
+  return (json.elements || [])
+    .filter((e) => e.type === 'node' && e.tags && (e.tags.level === undefined || e.tags.level === '0') && e.tags.access !== 'private')
+    .map((e) => ({ id: e.id, lat: e.lat, lon: e.lon, kerb: kerbValue(e.tags.kerb) }))
+    .filter((k) => k.kerb);
+}
+
+/** Returns new groups with kerb info from nearby kerb nodes (each node → its nearest group within the radius). */
+export function applyKerbNodes(groups, kerbNodes, radius = KERB_MATCH_M) {
+  const out = groups.map((g) => ({ ...g }));
+  const cell = radius / 111320;
+  const grid = new Map();
+  for (const g of out) {
+    const k = `${Math.floor(g.lat / cell)}:${Math.floor(g.lon / cell)}`;
+    if (!grid.has(k)) grid.set(k, []);
+    grid.get(k).push(g);
+  }
+  for (const kn of kerbNodes) {
+    const gi = Math.floor(kn.lat / cell);
+    const gj = Math.floor(kn.lon / cell);
+    let best = null;
+    let bestD = Infinity;
+    for (let di = -1; di <= 1; di++) {
+      for (let dj = -2; dj <= 2; dj++) { // lon cells are narrower than lat cells at 48°
+        for (const g of grid.get(`${gi + di}:${gj + dj}`) || []) {
+          const d = distance([kn.lon, kn.lat], [g.lon, g.lat]);
+          if (d <= radius && d < bestD) { best = g; bestD = d; }
+        }
+      }
+    }
+    if (best) best.kerb = better('kerb', best.kerb, kn.kerb);
+  }
+  return out;
 }
 
 /**

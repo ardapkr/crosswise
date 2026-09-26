@@ -23,6 +23,21 @@ export function buildQuery(bbox) {
 out body;`;
 }
 
+/** Kerb nodes that belong to a crossing footway (not bus-stop platforms or driveways). */
+export function buildKerbQuery(bbox) {
+  const b = bbox.join(',');
+  return `[out:json][timeout:300];
+way["footway"="crossing"](${b});
+node(w)["barrier"="kerb"];
+out body;`;
+}
+
+// Two downloads per city: the crossing/signal nodes and the kerb nodes on crossing footways.
+const DATASETS = [
+  { name: (city) => `overpass-${city}`, query: buildQuery, what: 'crossing + signal nodes' },
+  { name: (city) => `overpass-kerbs-${city}`, query: buildKerbQuery, what: 'kerb nodes on crossings' },
+];
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchOverpass(query) {
@@ -53,18 +68,20 @@ async function main() {
   await mkdir('data/raw', { recursive: true });
 
   for (const city of cities) {
-    const out = `data/raw/overpass-${city}.json`;
-    if (!force && (await exists(out))) {
-      console.log(`${out} already exists, skipping (use --force to re-download)`);
-      continue;
+    for (const ds of DATASETS) {
+      const out = `data/raw/${ds.name(city)}.json`;
+      if (!force && (await exists(out))) {
+        console.log(`${out} already exists, skipping (use --force to re-download)`);
+        continue;
+      }
+      console.log(`Downloading ${city}: ${ds.what}...`);
+      const t0 = Date.now();
+      const text = await fetchOverpass(ds.query(CITIES[city]));
+      await writeFile(out, text);
+      const n = JSON.parse(text).elements.length;
+      console.log(`${city}: ${n} nodes, ${(text.length / 1e6).toFixed(1)} MB, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+      await sleep(10_000); // be polite: pause between downloads
     }
-    console.log(`Downloading ${city}...`);
-    const t0 = Date.now();
-    const text = await fetchOverpass(buildQuery(CITIES[city]));
-    await writeFile(out, text);
-    const n = JSON.parse(text).elements.length;
-    console.log(`${city}: ${n} nodes, ${(text.length / 1e6).toFixed(1)} MB, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
-    if (cities.length > 1) await sleep(10_000); // pause between cities
   }
 }
 

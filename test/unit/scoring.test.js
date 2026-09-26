@@ -142,3 +142,25 @@ describe('safetyLevel (card colour)', () => {
     expect(safetyLevel({ worst: -1 })).toBe('risky');
   });
 });
+
+describe('limited mobility (slow walker, sighted)', () => {
+  it('acoustic signals do not matter, lights do', () => {
+    expect(crossingScore(LIGHT_SOUND, 'limited')).toBe(crossingScore(X('signals', { sound: 'no', kerb: 'lowered' }), 'limited'));
+    expect(crossingScore(X('signals'), 'limited')).toBe(2);
+  });
+  it('avoids an unmarked crossing even if that means more crossings', () => {
+    const short = { id: 'short', duration: 500, crossings: [UNMARKED, ZEBRA] };
+    const safe = { id: 'safe', duration: 600, crossings: [ZEBRA, LIGHT, LIGHT] };
+    expect(rankRoutes([short, safe], 'limited')[0].id).toBe('safe');
+  });
+  it('among routes without risky crossings: fewer crossings first, then shorter', () => {
+    const three = { id: 'three', duration: 500, crossings: [LIGHT, LIGHT, LIGHT] };
+    const one = { id: 'one', duration: 700, crossings: [ZEBRA] };
+    expect(rankRoutes([three, one], 'limited')[0].id).toBe('one');
+  });
+  it('the spoken summary says the routes avoid steps', () => {
+    const r = rankRoutes([{ id: 'x', duration: 300, crossings: [LIGHT] }], 'limited');
+    expect(routeSummary(r, 'limited')).toMatch(/Routes avoid steps\.$/);
+    expect(routeSummary(rankRoutes([{ id: 'x', duration: 300, crossings: [LIGHT] }], 'blind'), 'blind')).not.toMatch(/steps/);
+  });
+});

@@ -109,11 +109,13 @@ describe('clusterCrossings (synthetic)', () => {
     expect(a.nodeIds).toEqual([1, 2]);
     expect(a).toMatchObject({ kind: 'signals', sound: 'yes', kerb: 'lowered' });
   });
-  it('conflicting kerb info: lowered wins over raised (best known), raised over unknown', () => {
+  it('conflicting kerb info: raised wins (a wheelchair user must be warned), known beats unknown', () => {
     const g1 = clusterCrossings([n(1, 16.395, 48.176, { kerb: 'raised' }), n(2, 16.39501, 48.176, { kerb: 'lowered' })]);
-    expect(g1[0].kerb).toBe('lowered');
+    expect(g1[0].kerb).toBe('raised');
     const g2 = clusterCrossings([n(1, 16.395, 48.176, { kerb: 'raised' }), n(2, 16.39501, 48.176, {})]);
     expect(g2[0].kerb).toBe('raised');
+    const g3 = clusterCrossings([n(1, 16.395, 48.176, {}), n(2, 16.39501, 48.176, { kerb: 'lowered' })]);
+    expect(g3[0].kerb).toBe('lowered');
   });
 });
 
@@ -144,5 +146,56 @@ describe('snapshot encoding', () => {
       });
       expect(distance([back[i].lon, back[i].lat], [groups[i].lon, groups[i].lat])).toBeLessThan(0.2);
     }
+  });
+});
+
+import { parseKerbNodes, applyKerbNodes, KERB_MATCH_M } from '../../public/lib/crossings.js';
+
+describe('kerb nodes (barrier=kerb on crossing footways)', () => {
+  const group = (extra = {}) => ({ id: 'g1', lon: 16.3950, lat: 48.1760, kind: 'zebra', kerb: null, nodeIds: [1], ...extra });
+  const kerb = (id, dLatMetres, value) => ({ id, lon: 16.3950, lat: 48.1760 + dLatMetres / 111320, kerb: value });
+
+  it('parses kerb values, skipping other levels and unknown values', () => {
+    const nodes = parseKerbNodes({ elements: [
+      { type: 'node', id: 1, lat: 48.176, lon: 16.395, tags: { barrier: 'kerb', kerb: 'lowered' } },
+      { type: 'node', id: 2, lat: 48.176, lon: 16.395, tags: { barrier: 'kerb', kerb: 'flush' } },
+      { type: 'node', id: 3, lat: 48.176, lon: 16.395, tags: { barrier: 'kerb', kerb: 'raised' } },
+      { type: 'node', id: 4, lat: 48.176, lon: 16.395, tags: { barrier: 'kerb', kerb: 'lowered', level: '-1' } },
+      { type: 'node', id: 5, lat: 48.176, lon: 16.395, tags: { barrier: 'kerb' } },
+    ] });
+    expect(nodes.map((k) => [k.id, k.kerb])).toEqual([[1, 'lowered'], [2, 'lowered'], [3, 'raised']]);
+  });
+
+  it(`a kerb within ${KERB_MATCH_M} m fills an unknown kerb; farther ones are ignored`, () => {
+    const [g] = applyKerbNodes([group()], [kerb(1, 8, 'lowered')]);
+    expect(g.kerb).toBe('lowered');
+    const [far] = applyKerbNodes([group()], [kerb(1, KERB_MATCH_M + 5, 'lowered')]);
+    expect(far.kerb).toBe(null);
+  });
+
+  it('raised on one side wins over lowered on the other', () => {
+    const [g] = applyKerbNodes([group()], [kerb(1, -6, 'lowered'), kerb(2, 6, 'raised')]);
+    expect(g.kerb).toBe('raised');
+    const [g2] = applyKerbNodes([group({ kerb: 'raised' })], [kerb(1, 5, 'lowered')]);
+    expect(g2.kerb).toBe('raised');
+  });
+
+  it('each kerb goes to the nearest group only, and the input is not changed', () => {
+    const a = group({ id: 'a' });
+    const b = group({ id: 'b', lat: 48.1760 + 20 / 111320 });
+    const out = applyKerbNodes([a, b], [kerb(1, 16, 'raised')]); // 16 m from a, 4 m from b
+    expect(out.find((g) => g.id === 'a').kerb).toBe(null);
+    expect(out.find((g) => g.id === 'b').kerb).toBe('raised');
+    expect(a.kerb).toBe(null);
+  });
+
+  it('real HOIV data: kerb nodes add kerb info to ~20 more crossings (58 → 77 of 264)', () => {
+    const groups = clusterCrossings(parseOverpass(fixture));
+    const kerbs = parseKerbNodes(JSON.parse(readFileSync('test/fixtures/overpass-kerbs-hoiv.json', 'utf8')));
+    expect(kerbs.length).toBeGreaterThan(50);
+    const before = groups.filter((g) => g.kerb).length;
+    const after = applyKerbNodes(groups, kerbs).filter((g) => g.kerb).length;
+    expect(before).toBe(58);
+    expect(after).toBe(77);
   });
 });

@@ -41,9 +41,9 @@
 - [x] Notify: "Bus scan ready — needs real bus test"
 
 ## Phase 4 — Modes (target: 23:30)
-- [ ] Wheelchair profile + kerb scoring + "curb height unknown" messages
-- [ ] Limited mobility: avoid steps, prefer fewer crossings
-- [ ] Tests: same fixture ranks differently per mode
+- [x] Wheelchair profile + kerb scoring + "curb height unknown" messages
+- [x] Limited mobility: avoid steps, prefer fewer crossings
+- [x] Tests: same fixture ranks differently per mode
 
 ## Phase 5 — Look features (target: 01:00)  _(built together with the Phase 3 camera UI)_
 - [x] Crossing light check (never "safe to cross")

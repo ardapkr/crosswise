@@ -56,3 +56,33 @@ describe('crossing detection on real routes', () => {
     }
   });
 });
+
+import { clusterCrossings } from '../../public/lib/crossings.js';
+
+describe('same candidate routes, three modes, three different rankings (real Vienna crossings)', () => {
+  // Candidate routes built from REAL crossing groups of the Vienna snapshot (first match per description).
+  const pick = (kind, sound, kerb) => {
+    const g = groups.find((c) => c.kind === kind && (sound === undefined || c.sound === sound) && c.kerb === kerb);
+    if (!g) throw new Error(`no real crossing with ${kind}/${sound}/${kerb}`);
+    return g;
+  };
+  const lightsButRaisedKerb = { id: 'A', duration: 600, distance: 800, crossings: [pick('signals', 'yes', 'lowered'), pick('signals', 'yes', 'raised')] };
+  const zebrasLoweredKerbs = { id: 'B', duration: 650, distance: 850, crossings: [pick('zebra', undefined, 'lowered'), pick('zebra', undefined, 'lowered'), pick('zebra', undefined, 'lowered')] };
+  const oneZebraKerbUnknown = { id: 'C', duration: 550, distance: 700, crossings: [pick('zebra', undefined, null)] };
+  const candidates = [lightsButRaisedKerb, zebrasLoweredKerbs, oneZebraKerbUnknown];
+  const order = (mode) => rankRoutes(candidates, mode).map((r) => r.id).join('');
+
+  it('blind: acoustic signals first → A, then the single zebra, then 3 zebras', () => expect(order('blind')).toBe('ACB'));
+  it('wheelchair: the raised kerb and the unknown kerb push A and C down → B first', () => expect(order('wheelchair')).toBe('BAC'));
+  it('limited mobility: no risky crossing anywhere, so fewest crossings first → C', () => expect(order('limited')).toBe('CAB'));
+});
+
+describe('HOIV → Hauptbahnhof, limited mobility (real ORS response with steps avoided)', () => {
+  it('avoids the route with the unmarked crossing, then prefers fewer crossings', () => {
+    const ranked = rankRoutes(load('ors-hoiv-hbf-limited'), 'limited');
+    expect(ranked[0].score.risky).toBe(0);
+    expect(ranked.at(-1).score.kinds.unmarked).toBeGreaterThan(0);
+    expect(ranked[0].score.count).toBeLessThan(ranked[1].score.count);
+    expect(routeSummary(ranked, 'limited')).toMatch(/avoids the unmarked crossing on the shortest route.*Routes avoid steps\.$/);
+  });
+});

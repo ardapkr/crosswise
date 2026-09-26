@@ -83,6 +83,12 @@ const capital = (s) => s.charAt(0).toUpperCase() + s.slice(1);
  */
 export function routeSummary(ranked, mode) {
   mode = normalizeMode(mode);
+  const text = summaryText(ranked, mode);
+  // limited mobility: ORS is asked to avoid steps (lib/modes.js), so say it
+  return mode === 'limited' && ranked.length ? `${text} Routes avoid steps.` : text;
+}
+
+function summaryText(ranked, mode) {
   if (!ranked.length) return 'No route found.';
   const best = ranked[0];
   const shortest = ranked.find((r) => r.isShortest) || best;

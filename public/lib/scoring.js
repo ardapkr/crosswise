@@ -3,7 +3,8 @@
 //   blind: lights+sound 3, lights only/unknown sound 2, zebra 1, unmarked 0
 //   wheelchair: + kerb adjustment (raised −2, unknown −0.5, lowered +0.5)
 //   route: worst crossing first, then number of crossings, then duration
-//   limited mobility: fewer crossings first (crossing is the tiring/risky part), then worst, then duration
+//   limited mobility: fewest risky (unmarked/unknown) crossings, then fewest crossings, then worst, then duration;
+//                     acoustic signals give no bonus (the user can see the light)
 
 import { normalizeMode } from './modes.js';
 
@@ -12,7 +13,8 @@ const BASE = { signals: 2, zebra: 1, unmarked: 0, unknown: 0.5 };
 export function crossingScore(c, mode) {
   mode = normalizeMode(mode);
   let s = BASE[c.kind] ?? 0.5;
-  if (c.kind === 'signals' && c.sound === 'yes') s = 3;
+  // The acoustic signal helps blind users; limited-mobility users can see the light.
+  if (c.kind === 'signals' && c.sound === 'yes' && mode !== 'limited') s = 3;
 
   if (mode === 'wheelchair') {
     if (c.kerb === 'raised') s -= 2;
@@ -35,15 +37,17 @@ export function scoreRoute(route, mode) {
   let withSound = 0;
   let kerbUnknown = 0;
   let kerbRaised = 0;
+  let risky = 0; // unmarked / unknown crossings, or a raised kerb that makes a crossing hard
   for (const c of crossings) {
     kinds[c.kind] = (kinds[c.kind] || 0) + 1;
     if (c.kind === 'signals' && c.sound === 'yes') withSound++;
     if (c.kerb === null || c.kerb === undefined) kerbUnknown++;
     if (c.kerb === 'raised') kerbRaised++;
     const s = crossingScore(c, mode);
+    if (s < 1) risky++;
     if (s < worst) { worst = s; worstCrossing = c; }
   }
-  return { worst, worstCrossing, count: crossings.length, kinds, withSound, kerbUnknown, kerbRaised };
+  return { worst, worstCrossing, count: crossings.length, kinds, withSound, kerbUnknown, kerbRaised, risky };
 }
 
 /**
@@ -57,8 +61,11 @@ export function rankRoutes(routes, mode) {
 
   const byWorst = (a, b) => b.score.worst - a.score.worst;
   const byCount = (a, b) => a.score.count - b.score.count;
+  const byRisky = (a, b) => a.score.risky - b.score.risky;
   const byDuration = (a, b) => a.duration - b.duration;
-  const order = mode === 'limited' ? [byCount, byWorst, byDuration] : [byWorst, byCount, byDuration];
+  // Limited mobility: every crossing costs effort, so fewer crossings — but never by taking an
+  // unmarked crossing (cars don't stop, and crossing slowly takes longer).
+  const order = mode === 'limited' ? [byRisky, byCount, byWorst, byDuration] : [byWorst, byCount, byDuration];
 
   scored.sort((a, b) => {
     for (const cmp of order) {

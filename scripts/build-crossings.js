@@ -3,7 +3,7 @@
 // Run after scripts/fetch-crossings.js. Usage: node scripts/build-crossings.js
 
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
-import { parseOverpass, clusterCrossings, encodeGroups } from '../public/lib/crossings.js';
+import { parseOverpass, clusterCrossings, encodeGroups, parseKerbNodes, applyKerbNodes } from '../public/lib/crossings.js';
 import { CITIES } from './fetch-crossings.js';
 
 await mkdir('public/data', { recursive: true });
@@ -14,7 +14,17 @@ for (const [city, [s, w, n, e]] of Object.entries(CITIES)) {
 
   const raw = JSON.parse(await readFile(src, 'utf8'));
   const nodes = parseOverpass(raw);
-  const groups = clusterCrossings(nodes);
+  let groups = clusterCrossings(nodes);
+
+  // Kerbs mapped as separate nodes on the crossing footways (optional second download)
+  const kerbSrc = `data/raw/overpass-kerbs-${city}.json`;
+  let kerbNote = 'no kerb file';
+  try {
+    const kerbs = parseKerbNodes(JSON.parse(await readFile(kerbSrc, 'utf8')));
+    const before = groups.filter((g) => g.kerb).length;
+    groups = applyKerbNodes(groups, kerbs);
+    kerbNote = `${kerbs.length} kerb nodes: known kerb ${before} → ${groups.filter((g) => g.kerb).length} groups`;
+  } catch { /* kerb file missing: keep crossing-node kerbs only */ }
   const kinds = {};
   for (const g of groups) kinds[g.kind] = (kinds[g.kind] || 0) + 1;
   const withSound = groups.filter((g) => g.sound === 'yes').length;
@@ -33,6 +43,6 @@ for (const [city, [s, w, n, e]] of Object.entries(CITIES)) {
   await writeFile(file, text);
   console.log(
     `${city}: ${raw.elements.length} raw nodes → ${nodes.length} usable → ${groups.length} crossing groups ` +
-    `${JSON.stringify(kinds)}, ${withSound} with acoustic signal; ${file} ${(text.length / 1024).toFixed(0)} KB`,
+    `${JSON.stringify(kinds)}, ${withSound} with acoustic signal; ${kerbNote}; ${file} ${(text.length / 1024).toFixed(0)} KB`,
   );
 }
