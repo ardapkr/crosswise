@@ -2,6 +2,7 @@
 // Parsing lives in lib/commands.js (pure, tested). Recognition = the browser's SpeechRecognition.
 
 import { parseAlternatives, HELP_TEXT } from '../lib/commands.js';
+import { SPEECH_LANG } from '../lib/voices.js';
 import { stopSpeaking } from './speech.js';
 import { listenCue } from './sound.js';
 
@@ -62,7 +63,7 @@ export function initVoice({ speak, handlers }) {
 
     stopSpeaking(); // the microphone must not hear our own voice
     rec = new SR();
-    rec.lang = 'en-GB';
+    rec.lang = SPEECH_LANG; // English commands, whatever the phone's language
     rec.interimResults = false;
     rec.continuous = false;
     rec.maxAlternatives = 3;

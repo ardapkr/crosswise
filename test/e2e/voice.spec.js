@@ -72,6 +72,51 @@ test('unknown phrase and help are spoken', async ({ page }) => {
   await expect(page.locator('#status')).toContainText('You can say: find my bus');
 });
 
+test('always English: a Turkish phone whose voices load late still gets an en-US voice; recognition is en-US', async ({ page }) => {
+  await page.addInitScript(() => {
+    // A phone set to Turkish: Turkish default voice, joke voices listed first, voices arrive late (like Chrome).
+    const VOICES = [
+      { name: 'Yelda', lang: 'tr-TR', default: true, localService: true },
+      { name: 'Albert', lang: 'en-US', default: false, localService: true },
+      { name: 'Daniel', lang: 'en-GB', default: false, localService: true },
+      { name: 'Samantha', lang: 'en-US', default: false, localService: true },
+    ];
+    let voices = [];
+    const listeners = [];
+    window.__utterances = [];
+    window.SpeechSynthesisUtterance = class { constructor(text) { this.text = text; this.lang = ''; this.voice = null; } };
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        speak(u) { window.__utterances.push({ text: u.text, lang: u.lang, voice: u.voice?.name || null }); setTimeout(() => u.onend?.(), 20); },
+        cancel() {},
+        getVoices() { return voices; },
+        addEventListener(type, fn) { if (type === 'voiceschanged') listeners.push(fn); },
+      },
+    });
+    window.__loadVoices = () => { voices = VOICES; listeners.forEach((fn) => fn()); };
+    class FakeRecognition {
+      start() { window.__recLang = this.lang; setTimeout(() => { this.onresult?.({ results: [[{ transcript: 'help' }]] }); this.onend?.(); }, 30); }
+      abort() {}
+    }
+    window.SpeechRecognition = FakeRecognition;
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Start' }).click();
+  await expect.poll(() => page.evaluate(() => window.__utterances.length)).toBeGreaterThan(0);
+  // before the voices arrive: still asks for English
+  expect(await page.evaluate(() => window.__utterances.every((u) => u.lang === 'en-US'))).toBe(true);
+
+  await page.evaluate(() => window.__loadVoices());
+  await page.evaluate(() => window.crosswise.speak('Route stopped.'));
+  const last = await page.evaluate(() => window.__utterances.at(-1));
+  expect(last).toEqual({ text: 'Route stopped.', lang: 'en-US', voice: 'Samantha' });
+
+  await page.getByRole('button', { name: 'Speak a command' }).click();
+  await expect(page.locator('#status')).toContainText('You can say');
+  expect(await page.evaluate(() => window.__recLang)).toBe('en-US');
+});
+
 test('no SpeechRecognition in this browser → friendly fallback message', async ({ page }) => {
   await fakeSpeech(page);
   await page.addInitScript(() => {

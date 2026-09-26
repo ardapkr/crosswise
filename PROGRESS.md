@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-reupvlkca-trua.vercel.app  (deployed 20:01; open while logged in to Vercel)
+**Latest preview:** https://crosswise-n0ox8wanq-trua.vercel.app  (deployed 20:05; open while logged in to Vercel)
 
 ## Handover — Sat 19:34 (read this first in a new session)
 
@@ -44,7 +44,7 @@ The newest preview above has everything. No outdoor feedback, bus photos or user
 5. ORS wheelchair profile gave only 1 route for HOIV → Hbf (nothing to compare on that trip).
 6. No cap on extra time: the recommended route was up to 6.5 min longer (it is said out loud; the user can pick
    the shortest card).
-7. Voice commands English only (en-GB); no SpeechRecognition in Firefox (fallback message is spoken).
+7. Voice commands English only (en-US); no SpeechRecognition in Firefox (fallback message is spoken).
 8. Map tiles come from tile.openstreetmap.org (fine for a demo, not for heavy traffic).
 
 ### Gotchas for the next session
@@ -66,6 +66,7 @@ The newest preview above has everything. No outdoor feedback, bus photos or user
 4. Morning freeze (06:00): final numbers in README/EVAL, `npm run zip`, ask before the production deploy.
 
 ## Log (newest first)
+- 20:05 Voice always English: lib/voices.js picks an English voice explicitly (en-US, then en-GB, then any English; skips iOS joke voices like "Albert"/"Bad News", robotic ones last; Android "en_US" codes) and re-picks on voiceschanged (late voices). utterance.lang = en-US, recognition lang = en-US. Verified on this laptop's Turkish browser: default voice "Microsoft Tolga – Turkish" and no en-GB voice, so the old lang=en-GB alone could fall back to Turkish; now "Microsoft Mark (en-US)". 256 unit + 36 e2e green.
 - 20:02 New test material (test-material/new-test): 9 photos + 6 video frames of a 69A → test/vision/bus/ (4 marked "-partial": blurred/cut off/far, "unreadable" counts as correct there). **Bus eval: 12/15, 0 critical** (misses = far shots, all "unreadable"; once it saw "68A" and refused). Clip → test/fixtures/bus-69a.y4m: new Playwright project "bus-video" replays the real model answers for its frames → "This is your bus, 69A, to Simmering". Stage clip: /?video=/demo/bus-69a.mp4. The "light test" video is a screen recording of the app (not camera footage). .vercelignore added (test-material, raw data, zip no longer uploaded). 246 unit + 35 e2e green.
 - 17:38 Fixed a wrong spoken summary: with the new blind tie-break the fallback said "has fewer crossings: 4 instead of 3". The summary now states the real deciding reason in ranking order (worst crossing → unmarked/unknown → acoustic signals → crossing count), says "avoids" only when none are left, else "has fewer X: A instead of B". Checked all 16 changed real trips read correctly. `npm run zip` builds submission/crosswise.zip (7.4 MB, no secrets). 241 unit + 34 e2e green.
 - 17:34 Map (the deferred optional Phase 1 item): Leaflet map under "Routes, safest first" — recommended route thick yellow, shortest dashed, crossings coloured like the cards (green lights+sound, blue lights, orange zebra, red unmarked/unknown); while walking it moves into the walking panel with a cyan walker dot. aria-hidden + inert (cards and speech carry the same info); axe still 0 violations; app works if the map fails to load. 238 unit + 34 e2e green.
@@ -89,7 +90,7 @@ The newest preview above has everything. No outdoor feedback, bus photos or user
 - Leaflet is vendored (public/vendor/leaflet, BSD-2, downloaded once from cdnjs) instead of loaded from the CDN: works offline, tests stay deterministic. Tiles: standard OpenStreetMap (CARTO dark tiles now need an API key), darkened with a CSS filter.
 - Deviation from CLAUDE.md, backed by data: "on the route" = group within 12 m AND the route within 3 m of one of the group's crossing nodes (see log 17:17). Groups without node positions (old data) still use the plain 12 m rule.
 - Deviation from CLAUDE.md, backed by data: blind ranking = worst crossing, then fewest unmarked/unknown, then fewest crossings without acoustic signal, then fewest crossings, then time (was: worst, count, time). Compared 4 rules on 30 real trips (EVAL.md).
-- Voice is tap-to-talk (not press-and-hold): holding is awkward with VoiceOver/TalkBack. Recognition language en-GB (German phrases are not understood yet).
+- Voice is tap-to-talk (not press-and-hold): holding is awkward with VoiceOver/TalkBack. Recognition language en-US since 20:05 (German phrases are not understood yet).
 - Kerbs are aggregated conservatively: if any kerb of a crossing group is raised, the group is "raised" (a wheelchair user must be warned). All other attributes keep "best known" (e.g. one sound=yes node → group has sound).
 - Honest limit: on the real HOIV routes there are 0 raised kerbs, so wheelchair mode ranks them the same as blind mode; the difference shows in the spoken kerb info ("kerb height unknown at N crossings").
 - Vision model stays `claude-haiku-4-5-20251001` as specified in CLAUDE.md (fast: ~1.5–2 s per frame). Answers use structured outputs (JSON schema), and lib/look.js validates them again; a "found" bus line with confidence < 0.6 is treated as unreadable (never guess a line).

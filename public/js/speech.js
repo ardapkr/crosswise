@@ -6,6 +6,7 @@
 // screen reader reads them (crossing/danger alerts assertively, so they interrupt).
 
 import { PRIORITY, decide, enqueue, nextMessage } from '../lib/speech-queue.js';
+import { pickEnglishVoice, SPEECH_LANG } from '../lib/voices.js';
 
 const statusEl = () => document.getElementById('status');
 
@@ -13,6 +14,27 @@ let current = null;   // message being spoken right now
 let queue = [];
 let last = null;      // for the Repeat button
 const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
+
+// Always English, whatever the phone's language: pick an English voice explicitly (lang alone is not
+// enough on iOS). Chrome loads its voices late, so pick again when they arrive and before each message.
+let voice = null;
+function loadVoice() {
+  try { voice = pickEnglishVoice(synth.getVoices()); } catch { voice = null; }
+  window.__voice = voice?.name || null; // for tests and the console
+}
+if (synth) {
+  loadVoice();
+  if (synth.addEventListener) synth.addEventListener('voiceschanged', loadVoice);
+  else synth.onvoiceschanged = loadVoice;
+}
+
+function utterance(text) {
+  const u = new SpeechSynthesisUtterance(text);
+  if (!voice) loadVoice();
+  u.lang = SPEECH_LANG;
+  try { if (voice) u.voice = voice; } catch { /* odd voice object: lang alone still asks for English */ }
+  return u;
+}
 const VOICE_KEY = 'crosswise.appVoice';
 let voiceOn = (() => { try { return localStorage.getItem(VOICE_KEY) !== 'off'; } catch { return true; } })();
 
@@ -55,8 +77,7 @@ function play(message) {
     return;
   }
   if (!synth) { setTimeout(finish, 0); return; }
-  const u = new SpeechSynthesisUtterance(message.text);
-  u.lang = 'en-GB';
+  const u = utterance(message.text);
   u.rate = 1.0;
   u.onend = finish;
   u.onerror = finish;
@@ -95,7 +116,7 @@ export function repeatLast() {
 /** iOS only allows speech after a user tap: call this inside the Start button handler. */
 export function unlockSpeech() {
   if (!synth) return;
-  const u = new SpeechSynthesisUtterance(' ');
+  const u = utterance(' ');
   u.volume = 0;
   synth.speak(u);
 }
