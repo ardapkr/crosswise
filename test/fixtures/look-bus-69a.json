@@ -1,0 +1,53 @@
+{
+  "about": "Real answers of /api/look (claude-haiku-4-5, deployed preview, 2026-09-26 19:57) for frames of test-material/new-test/bus video.MOV, in time order. The live scan sends ~1 frame per 1.2 s, so these are what it would get while the 69A arrives. Used by test/e2e/bus-video.spec.js.",
+  "frames": [
+    {
+      "at": 0.5,
+      "file": "bus__69A-partial__14.jpg",
+      "result": {
+        "status": "unreadable",
+        "line": "",
+        "destination": "",
+        "vehicle": "bus",
+        "confidence": 0.15
+      },
+      "observation": "Bus with yellow LED display showing line number, destination text partially visible"
+    },
+    {
+      "at": 1.5,
+      "file": "bus__69A__10.jpg",
+      "result": {
+        "status": "unreadable",
+        "line": "",
+        "destination": "",
+        "vehicle": "bus",
+        "confidence": 0.3
+      },
+      "observation": "Bus destination display shows yellow text, appears to read 68A Simmeringer... destination unclear"
+    },
+    {
+      "at": 2.5,
+      "file": "bus__69A__11.jpg",
+      "result": {
+        "status": "found",
+        "line": "69A",
+        "destination": "Simmering",
+        "vehicle": "bus",
+        "confidence": 0.95
+      },
+      "observation": "Bus display shows 69A Simmering in yellow LED text"
+    },
+    {
+      "at": 3.8,
+      "file": "bus__69A__13.jpg",
+      "result": {
+        "status": "found",
+        "line": "69A",
+        "destination": "Simmering",
+        "vehicle": "bus",
+        "confidence": 0.98
+      },
+      "observation": "Yellow LED display shows 69A Simmering. Destination text clearly visible. Vienna bus, front-facing angle."
+    }
+  ]
+}

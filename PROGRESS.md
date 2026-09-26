@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-2mbpycsy9-trua.vercel.app  (deployed 17:38; open while logged in to Vercel)
+**Latest preview:** https://crosswise-reupvlkca-trua.vercel.app  (deployed 20:01; open while logged in to Vercel)
 
 ## Handover — Sat 19:34 (read this first in a new session)
 
@@ -66,6 +66,7 @@ The newest preview above has everything. No outdoor feedback, bus photos or user
 4. Morning freeze (06:00): final numbers in README/EVAL, `npm run zip`, ask before the production deploy.
 
 ## Log (newest first)
+- 20:02 New test material (test-material/new-test): 9 photos + 6 video frames of a 69A → test/vision/bus/ (4 marked "-partial": blurred/cut off/far, "unreadable" counts as correct there). **Bus eval: 12/15, 0 critical** (misses = far shots, all "unreadable"; once it saw "68A" and refused). Clip → test/fixtures/bus-69a.y4m: new Playwright project "bus-video" replays the real model answers for its frames → "This is your bus, 69A, to Simmering". Stage clip: /?video=/demo/bus-69a.mp4. The "light test" video is a screen recording of the app (not camera footage). .vercelignore added (test-material, raw data, zip no longer uploaded). 246 unit + 35 e2e green.
 - 17:38 Fixed a wrong spoken summary: with the new blind tie-break the fallback said "has fewer crossings: 4 instead of 3". The summary now states the real deciding reason in ranking order (worst crossing → unmarked/unknown → acoustic signals → crossing count), says "avoids" only when none are left, else "has fewer X: A instead of B". Checked all 16 changed real trips read correctly. `npm run zip` builds submission/crosswise.zip (7.4 MB, no secrets). 241 unit + 34 e2e green.
 - 17:34 Map (the deferred optional Phase 1 item): Leaflet map under "Routes, safest first" — recommended route thick yellow, shortest dashed, crossings coloured like the cards (green lights+sound, blue lights, orange zebra, red unmarked/unknown); while walking it moves into the walking panel with a cyan walker dot. aria-hidden + inert (cards and speech carry the same info); axe still 0 violations; app works if the map fails to load. 238 unit + 34 e2e green.
 - 17:26 Accessibility pass: automated axe-core audit (WCAG 2.1 A/AA) of start, main, route cards, walking and camera screens → 0 violations (now an e2e test). Fixed the double-speech problem: the visible status is no longer a live region; new "App voice: on/off" toggle (remembered) — off = VoiceOver/TalkBack reads messages from hidden live regions, crossing/danger alerts assertively. Error states tested: offline, GPS unavailable, GPS/camera/mic permission denied, server errors. 237 unit + 32 e2e green.

@@ -64,3 +64,10 @@
 - [x] `EVAL.md`: the 5 demo cases, baseline comparison, vision accuracy, known failures  _(bus accuracy + outdoor results still to add)_
 - [ ] `git archive` ZIP of the repo for submission
 - [ ] Final production deploy (ask human first)
+
+## Phase 9 — Feedback round 1 (Sat 19:45, from the humans' phone test) — commit, test, deploy after each
+- [x] New test material (`test-material/new-test/`): 15 bus images in the vision eval (12/15, 0 critical), the 69A clip as e2e fake camera + stage demo clip
+- [ ] Voice: always English whatever the phone language (en-US voice picked explicitly, late-loading voices), recognition en-US
+- [ ] Search: live suggestions while typing (ORS autocomplete via `/api/autocomplete`), "Current location" as default start; report ORS quality for Stephansdom / Hauptbahnhof / HOIV
+- [ ] Map: each route its own colour, recommended thicker, crossing dots green/yellow/orange/red, tapping a route card highlights it
+- [ ] UI redesign: dark + one accent, search on top, full-screen map, bottom sheet with route cards, camera bottom bar, segmented mode control → show the humans a preview before polishing

@@ -1,0 +1,8 @@
+# Not needed on Vercel (only /public is served and /api runs). Keeps deploy uploads small and fast.
+test-material/
+data/raw/
+submission/
+test-results/
+playwright-report/
+test/
+eval/

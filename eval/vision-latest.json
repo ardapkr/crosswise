@@ -1,420 +1,257 @@
 [
   {
-    "mode": "light",
-    "file": "light__green__01.jpg",
-    "expected": "green",
+    "mode": "bus",
+    "file": "bus__69A-partial__08.jpg",
+    "expected": "69A-partial",
     "ok": true,
     "critical": false,
     "result": {
-      "status": "green",
-      "confidence": 0.95,
-      "note": "Directly ahead, mounted on pole in front of building."
+      "status": "unreadable",
+      "line": "",
+      "destination": "",
+      "vehicle": "bus",
+      "confidence": 0.1
     },
-    "observation": "Cyan walking figure lit in pedestrian signal box mounted on pole.",
-    "ms": 1479,
-    "roundTripMs": 7500
+    "observation": "Bus front display shows orange/yellow characters, heavily blurred and at steep angle",
+    "ms": 2040,
+    "roundTripMs": 8444
   },
   {
-    "mode": "light",
-    "file": "light__green__02.jpg",
-    "expected": "green",
+    "mode": "bus",
+    "file": "bus__69A-partial__09.jpg",
+    "expected": "69A-partial",
     "ok": true,
     "critical": false,
     "result": {
-      "status": "green",
-      "confidence": 0.85,
-      "note": "Across the road, straight ahead at crossing."
+      "status": "unreadable",
+      "line": "",
+      "destination": "",
+      "vehicle": "bus",
+      "confidence": 0.1
     },
-    "observation": "Green walking figure lit in pedestrian signal box across the road, center ahead.",
-    "ms": 1658,
-    "roundTripMs": 6625
+    "observation": "Bus with yellow destination display, text too blurry to read clearly",
+    "ms": 1909,
+    "roundTripMs": 7644
   },
   {
-    "mode": "light",
-    "file": "light__green__03.jpg",
-    "expected": "green",
+    "mode": "bus",
+    "file": "bus__69A-partial__14.jpg",
+    "expected": "69A-partial",
     "ok": true,
     "critical": false,
     "result": {
-      "status": "green",
-      "confidence": 0.92,
-      "note": "Directly above crosswalk, mounted on pole to the right."
+      "status": "unreadable",
+      "line": "",
+      "destination": "",
+      "vehicle": "bus",
+      "confidence": 0.15
     },
-    "observation": "Green lit walking figure in pedestrian signal box above crosswalk.",
-    "ms": 1732,
-    "roundTripMs": 6763
+    "observation": "Bus with yellow LED display showing line number, destination text partially visible",
+    "ms": 1927,
+    "roundTripMs": 7748
   },
   {
-    "mode": "light",
-    "file": "light__green__04.jpg",
-    "expected": "green",
+    "mode": "bus",
+    "file": "bus__69A-partial__15.jpg",
+    "expected": "69A-partial",
     "ok": true,
     "critical": false,
     "result": {
-      "status": "green",
-      "confidence": 0.95,
-      "note": "Pedestrian signal directly ahead, center of crossing pole"
+      "status": "unreadable",
+      "line": "",
+      "destination": "",
+      "vehicle": "tram",
+      "confidence": 0
     },
-    "observation": "Bright blue lit walking figure in pedestrian signal box",
-    "ms": 1371,
-    "roundTripMs": 6588
+    "observation": "Tram vehicle visible, destination display blurry and unreadable due to motion and angle",
+    "ms": 1419,
+    "roundTripMs": 7010
   },
   {
-    "mode": "light",
-    "file": "light__green__05.jpg",
-    "expected": "green",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "status": "green",
-      "confidence": 0.95,
-      "note": "Ahead, slightly right on pole"
-    },
-    "observation": "Lit green walking human figure in small box signal",
-    "ms": 1300,
-    "roundTripMs": 6521
-  },
-  {
-    "mode": "light",
-    "file": "light__green__06.jpg",
-    "expected": "green",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "status": "green",
-      "confidence": 0.92,
-      "note": "Across the road, straight ahead at crossing"
-    },
-    "observation": "Green lit walking figure visible in pedestrian signal box across the road",
-    "ms": 1343,
-    "roundTripMs": 6522
-  },
-  {
-    "mode": "light",
-    "file": "light__green__07.jpg",
-    "expected": "green",
+    "mode": "bus",
+    "file": "bus__69A__01.jpg",
+    "expected": "69A",
     "ok": false,
     "critical": false,
     "result": {
-      "status": "not_visible",
-      "confidence": 0.95,
-      "note": "Only car traffic signal visible, no pedestrian signal."
+      "status": "unreadable",
+      "line": "",
+      "destination": "",
+      "vehicle": "bus",
+      "confidence": 0.2
     },
-    "observation": "Green round lamp lit in car signal. No pedestrian signal visible with human figure.",
-    "ms": 1489,
-    "roundTripMs": 6809
+    "observation": "Bus with yellow destination display visible, approaching at an angle on street intersection. Display text present but not clearly legible from this distance and angle.",
+    "ms": 1624,
+    "roundTripMs": 7322
   },
   {
-    "mode": "light",
-    "file": "light__green__08.jpg",
-    "expected": "green",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "status": "green",
-      "confidence": 0.95,
-      "note": "Left side of crossing, on near pole"
-    },
-    "observation": "Green walking figure lit on pedestrian signal box on left pole",
-    "ms": 1396,
-    "roundTripMs": 6851
-  },
-  {
-    "mode": "light",
-    "file": "light__none__01.jpg",
-    "expected": "none",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "status": "not_visible",
-      "confidence": 0.95,
-      "note": "Car signal visible right side, no pedestrian signal visible."
-    },
-    "observation": "Red round lamps lit on pole, not a pedestrian signal shape.",
-    "ms": 2410,
-    "roundTripMs": 7589
-  },
-  {
-    "mode": "light",
-    "file": "light__red__01.jpg",
-    "expected": "red",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "status": "red",
-      "confidence": 0.92,
-      "note": "Pedestrian signal across road, straight ahead at crossing"
-    },
-    "observation": "Orange/red human figure lit in small box signal above zebra crossing",
-    "ms": 1929,
-    "roundTripMs": 6882
-  },
-  {
-    "mode": "light",
-    "file": "light__red__02.jpg",
-    "expected": "red",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "status": "red",
-      "confidence": 0.95,
-      "note": "Across road, slightly left of center at crossing."
-    },
-    "observation": "Standing human figure lit orange-red in pedestrian signal box.",
-    "ms": 1493,
-    "roundTripMs": 6773
-  },
-  {
-    "mode": "light",
-    "file": "light__red__03.jpg",
-    "expected": "red",
+    "mode": "bus",
+    "file": "bus__69A__02.jpg",
+    "expected": "69A",
     "ok": false,
     "critical": false,
     "result": {
-      "status": "not_visible",
-      "confidence": 0.95,
-      "note": "Only car signal visible, no pedestrian signal in frame."
+      "status": "unreadable",
+      "line": "",
+      "destination": "",
+      "vehicle": "bus",
+      "confidence": 0
     },
-    "observation": "Yellow/orange lit circle on traffic signal, not a human figure shape.",
-    "ms": 1506,
-    "roundTripMs": 59029
+    "observation": "Bus with yellow LED display showing line number, destination text visible but blurry",
+    "ms": 1559,
+    "roundTripMs": 7111
   },
   {
-    "mode": "read",
-    "file": "read__bahnhof-city__01.jpg",
-    "expected": "bahnhof-city",
+    "mode": "bus",
+    "file": "bus__69A__03.jpg",
+    "expected": "69A",
     "ok": true,
     "critical": false,
     "result": {
       "status": "found",
-      "text": "Bahnhof City Wien Hauptbahnhof",
-      "summary": "Parking sign pointing right: Bahnhof City Wien Hauptbahnhof. This is a direction sign for Vienna's main train station shopping center."
+      "line": "69A",
+      "destination": "Simmering",
+      "vehicle": "bus",
+      "confidence": 0.95
     },
-    "observation": "",
-    "ms": 1636,
-    "roundTripMs": 9843
+    "observation": "Bus display shows yellow LED text reading 69A Simmering with destination",
+    "ms": 2143,
+    "roundTripMs": 7416
   },
   {
-    "mode": "read",
-    "file": "read__eurokey__01.jpg",
-    "expected": "eurokey",
+    "mode": "bus",
+    "file": "bus__69A__04.jpg",
+    "expected": "69A",
     "ok": true,
     "critical": false,
     "result": {
       "status": "found",
-      "text": "EUROKEY Stadt Wien",
-      "summary": "A push-button box at a crossing in Vienna with Eurokey access for people with disabilities."
+      "line": "69A",
+      "destination": "Simmering (U6)",
+      "vehicle": "bus",
+      "confidence": 0.95
     },
-    "observation": "",
+    "observation": "Yellow LED display on bus windscreen shows line number and destination clearly",
+    "ms": 1719,
+    "roundTripMs": 7488
+  },
+  {
+    "mode": "bus",
+    "file": "bus__69A__05.jpg",
+    "expected": "69A",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "found",
+      "line": "69A",
+      "destination": "Simmering",
+      "vehicle": "bus",
+      "confidence": 0.98
+    },
+    "observation": "LED display clearly shows 69A Simmering with destination text visible",
+    "ms": 1921,
+    "roundTripMs": 7680
+  },
+  {
+    "mode": "bus",
+    "file": "bus__69A__06.jpg",
+    "expected": "69A",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "found",
+      "line": "69A",
+      "destination": "Simmering",
+      "vehicle": "bus",
+      "confidence": 0.95
+    },
+    "observation": "Yellow LED display clearly shows 69A with destination Simmering",
+    "ms": 1447,
+    "roundTripMs": 8304
+  },
+  {
+    "mode": "bus",
+    "file": "bus__69A__07.jpg",
+    "expected": "69A",
+    "ok": true,
+    "critical": false,
+    "result": {
+      "status": "found",
+      "line": "69A",
+      "destination": "Simmering",
+      "vehicle": "bus",
+      "confidence": 0.95
+    },
+    "observation": "LED display shows 69A Simmering (direction indicator)",
     "ms": 1317,
-    "roundTripMs": 9616
+    "roundTripMs": 7253
   },
   {
-    "mode": "read",
-    "file": "read__hoiv__01.jpg",
-    "expected": "hoiv",
+    "mode": "bus",
+    "file": "bus__69A__10.jpg",
+    "expected": "69A",
+    "ok": false,
+    "critical": false,
+    "result": {
+      "status": "unreadable",
+      "line": "",
+      "destination": "",
+      "vehicle": "bus",
+      "confidence": 0.3
+    },
+    "observation": "Bus destination display shows yellow text, appears to read 68A Simmeringer... destination unclear",
+    "ms": 1690,
+    "roundTripMs": 7370
+  },
+  {
+    "mode": "bus",
+    "file": "bus__69A__11.jpg",
+    "expected": "69A",
     "ok": true,
     "critical": false,
     "result": {
       "status": "found",
-      "text": "HOIV, PUSH THE ART",
-      "summary": "Building with street art and signage reading HOIV and PUSH THE ART, with colorful murals on the facade."
+      "line": "69A",
+      "destination": "Simmering",
+      "vehicle": "bus",
+      "confidence": 0.95
     },
-    "observation": "",
-    "ms": 2109,
-    "roundTripMs": 7316
+    "observation": "Bus display shows 69A Simmering in yellow LED text",
+    "ms": 2705,
+    "roundTripMs": 8015
   },
   {
-    "mode": "describe",
-    "file": "describe__crossing-people__01.jpg",
-    "expected": "crossing-people",
+    "mode": "bus",
+    "file": "bus__69A__12.jpg",
+    "expected": "69A",
     "ok": true,
     "critical": false,
     "result": {
-      "description": "You are on a zebra crossing in the middle of a wide street intersection. Ahead is a modern multi-story building with glass elements on the left, and a row of residential buildings continues to the right. A tram stop with signage is visible ahead on the left side of the street.",
-      "hazards": [
-        "zebra crossing with vehicle traffic",
-        "runners and pedestrians moving in the crossing area"
-      ]
+      "status": "found",
+      "line": "69A",
+      "destination": "Simmering",
+      "vehicle": "bus",
+      "confidence": 0.95
     },
-    "observation": "",
-    "ms": 2362,
-    "roundTripMs": 7744
+    "observation": "Bus destination display shows 69a Simmering with U6O text",
+    "ms": 1437,
+    "roundTripMs": 6946
   },
   {
-    "mode": "describe",
-    "file": "describe__signal-box__01.jpg",
-    "expected": "signal-box",
+    "mode": "bus",
+    "file": "bus__69A__13.jpg",
+    "expected": "69A",
     "ok": true,
     "critical": false,
     "result": {
-      "description": "You are on a pavement next to a traffic signal pole directly ahead. Ahead is a street crossing with a lowered kerb, and a wide road with parked and moving cars. On the right is a narrow pavement with trees and residential buildings.",
-      "hazards": [
-        "traffic signal pole directly in front of you",
-        "street crossing ahead",
-        "parked vehicles on the right"
-      ]
+      "status": "found",
+      "line": "69A",
+      "destination": "Simmering",
+      "vehicle": "bus",
+      "confidence": 0.98
     },
-    "observation": "",
-    "ms": 2263,
-    "roundTripMs": 10528
-  },
-  {
-    "mode": "describe",
-    "file": "describe__signal-box__02.jpg",
-    "expected": "signal-box",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "description": "You are on an urban street at night with a traffic light pole directly ahead. The pavement is clear ahead with a yellow litter bin attached to the pole. To your right is a busy road with moving traffic and parked cars, with storefronts and buildings visible beyond.",
-      "hazards": [
-        "traffic and vehicles to the right",
-        "pole and bin obstruction ahead"
-      ]
-    },
-    "observation": "",
-    "ms": 2054,
-    "roundTripMs": 7235
-  },
-  {
-    "mode": "describe",
-    "file": "describe__signal-box__03.jpg",
-    "expected": "signal-box",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "description": "You are at a pedestrian crossing with a zebra crossing pattern ahead. A large metal utility pole is directly in front of you with a yellow waste bin attached to it. Residential buildings with windows line both sides of the street, and a tram stop sign (marked 22) is visible on the right.",
-      "hazards": [
-        "Utility pole directly ahead",
-        "Yellow bin attached to pole",
-        "Parked or stationary objects near crossing"
-      ]
-    },
-    "observation": "",
-    "ms": 2046,
-    "roundTripMs": 7761
-  },
-  {
-    "mode": "describe",
-    "file": "describe__signal-box__04.jpg",
-    "expected": "signal-box",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "description": "You are standing at a pole with a parking meter attached at chest height ahead. The pavement continues ahead with a street crossing visible in the distance. On the left is a commercial building (OMV) and on the right is an open parking area with construction vehicles and temporary fencing.",
-      "hazards": [
-        "parking meter mounted on pole at head height",
-        "construction site with vehicles on the right",
-        "temporary fencing and obstacles in the area"
-      ]
-    },
-    "observation": "",
-    "ms": 2089,
-    "roundTripMs": 7457
-  },
-  {
-    "mode": "describe",
-    "file": "describe__signal-box__05.jpg",
-    "expected": "signal-box",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "description": "You are standing beside a tall metal pole with a traffic signal box attached at waist height. The pavement continues ahead across open grassland with a highway overpass visible ahead. To the right, industrial or commercial structures and power lines are present.",
-      "hazards": [
-        "tall pole directly beside you at arm's level",
-        "uneven grassland ahead with potential obstacles",
-        "busy highway traffic above on overpass"
-      ]
-    },
-    "observation": "",
-    "ms": 2382,
-    "roundTripMs": 7498
-  },
-  {
-    "mode": "describe",
-    "file": "describe__signal-box__06.jpg",
-    "expected": "signal-box",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "description": "You are standing at a pedestrian crossing with traffic lights directly ahead. A dark pole is immediately in front of you with a yellow pedestrian button mounted on it. The crossing leads to a wide paved area with a street beyond, and buildings are visible in the distance on the left.",
-      "hazards": [
-        "dark pole directly ahead at head height",
-        "traffic light pole obstructing path"
-      ]
-    },
-    "observation": "",
-    "ms": 1963,
-    "roundTripMs": 7207
-  },
-  {
-    "mode": "describe",
-    "file": "describe__signal-box__07.jpg",
-    "expected": "signal-box",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "description": "You are on a flat paved path with a tall pole directly ahead with a utility box attached to it. Ahead lies an open grassy area with sparse vegetation, and a highway bridge crosses overhead in the distance. On the left and right are grassy fields; a tram line runs above on the right side.",
-      "hazards": [
-        "Pole directly ahead at head height",
-        "Utility box protruding from pole",
-        "Uneven grassy terrain ahead"
-      ]
-    },
-    "observation": "",
-    "ms": 2296,
-    "roundTripMs": 9841
-  },
-  {
-    "mode": "describe",
-    "file": "describe__tram-tracks__01.jpg",
-    "expected": "tram-tracks",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "description": "You are on a pedestrian area next to active tram tracks ahead. A large apartment building stands directly ahead across the tram lines, with a yellow sign visible at ground level. On the left is a traffic light pole and street furniture along the pavement.",
-      "hazards": [
-        "tram tracks crossing the path ahead",
-        "active tram line in use",
-        "uneven terrain with gravel and grass around track area"
-      ]
-    },
-    "observation": "",
-    "ms": 2893,
-    "roundTripMs": 7918
-  },
-  {
-    "mode": "describe",
-    "file": "describe__zebra__01.jpg",
-    "expected": "zebra",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "description": "You are at a pedestrian crossing with white striped markings ahead. The crossing extends across the street with multiple parallel white stripes on dark pavement. Beyond the crossing, the street continues straight ahead.",
-      "hazards": [
-        "pedestrian crossing ahead",
-        "uneven pavement with multiple transition lines"
-      ]
-    },
-    "observation": "",
-    "ms": 1677,
-    "roundTripMs": 7147
-  },
-  {
-    "mode": "describe",
-    "file": "describe__zebra__02.jpg",
-    "expected": "zebra",
-    "ok": true,
-    "critical": false,
-    "result": {
-      "description": "You are standing on a zebra crossing facing a large residential building ahead. The crossing has tactile paving with a guidance line down the middle. At street level ahead, there is a building entrance with shops or services, and a tram stop sign is visible on the left side of the building.",
-      "hazards": [
-        "Zebra crossing - traffic may be present",
-        "Pedestrians and cyclists in the area"
-      ]
-    },
-    "observation": "",
-    "ms": 1940,
-    "roundTripMs": 7323
+    "observation": "Yellow LED display shows 69A Simmering. Destination text clearly visible. Vienna bus, front-facing angle.",
+    "ms": 1630,
+    "roundTripMs": 7049
   }
 ]

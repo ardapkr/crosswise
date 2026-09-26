@@ -12,7 +12,7 @@ Everything here is reproducible from the repo: `npm test` (237 unit tests), `npm
 | Crossing light check (12 real photos) | **10/12 correct, 0 critical** — both misses say "I cannot see a pedestrian light" |
 | Read text (3 photos) | 3/3 |
 | Describe surroundings (11 photos) | 11/11 |
-| Bus number reading | **not measured yet** — no bus photos so far (real-world test pending) |
+| Bus number reading (15 real images of a 69A at dusk: 9 photos + 6 video frames) | **12/15 correct, 0 critical** — reads the number from ~30 m and closer; the 3 misses are far shots (~50–60 m) where it said "unreadable" instead of guessing |
 | Automated tests | 237 unit + 26 end-to-end browser tests, all green |
 
 ## The 5 demo cases
@@ -21,7 +21,7 @@ Everything here is reproducible from the repo: `npm test` (237 unit tests), `npm
 |---|---|---|---|---|
 | 1 | **Safest route vs shortest**, HOIV → Wien Hauptbahnhof, blind mode | Real OpenRouteService answer (3 alternatives) + OSM crossing data; unit + e2e tests | Recommended route is 1 min longer and avoids the unmarked crossing (plus one of unknown type) on the shortest route. Its 9 crossings: 5 lights + acoustic signal, 1 lights only, 3 zebra. Spoken as one sentence. | ✅ real data · ⏳ outdoor check |
 | 2 | **Walking with crossing alerts** | Simulated walk (`?demo=1`) on the real route in unit + e2e tests; live GPS path with mocked position | Every crossing on the route announced at ~40 m and at ~10 m, with type, acoustic signal and "press the button under the box" where there is one; never "safe to cross"; turns merged at busy junctions (46 spoken messages on the 2.2 km Hbf walk, down from 75 before the calm-junction rules) | ✅ simulated · ⏳ outdoor walk |
-| 3 | **Find my bus "13A"** (live camera scan) | e2e with Chrome's fake camera + mocked model answers; model accuracy via `eval:vision` | Scan logic verified: 1 frame / 1.2 s, one request at a time, announce only after 2 agreeing frames, "This is 26A, not your bus", "still looking" every 10 s, gives up after 60 s. **Bus-number accuracy of the model is unknown** until we have bus photos. | ⏳ needs real buses |
+| 3 | **Find my bus "13A"** (live camera scan) | e2e with Chrome's fake camera + mocked model answers; model accuracy via `eval:vision` | Scan logic verified: 1 frame / 1.2 s, one request at a time, announce only after 2 agreeing frames, "This is 26A, not your bus", "still looking" every 10 s, gives up after 60 s. Real footage: a 4.8 s clip of a 69A arriving is the fake camera, with the real model's answers for its frames replayed → *"This is your bus, 69A, to Simmering"* on the 4th frame (~3.6 s), no early guess. Model on 15 real bus images: 12/15, 0 critical. | ✅ real footage · ⏳ live at a stop |
 | 4 | **Check the crossing light** | 12 real photos of Vienna pedestrian lights (day + night) | 10/12 correct, 0 critical; misses are in the safe direction ("cannot see a pedestrian light"). The app never says "safe to cross" and always adds "listen for traffic". | ✅ |
 | 5 | **Wheelchair mode** | Real routes + kerb data; e2e | Switching re-plans with the ORS wheelchair profile; every crossing alert says the kerb ("lowered kerb" / "kerb height unknown"); raised kerbs push a route down. Kerb data exists for 2,562 of 8,987 Vienna crossings, so "kerb height unknown" is common — said out loud, never guessed. | ✅ · limit: data |
 
@@ -39,10 +39,6 @@ checked on the deployed API at HOIV, Hauptbahnhof and Budapest), voice commands 
 | Unmarked/unknown crossings in total | 43 | 21 |
 | Risky crossings for this mode in total | 43 | 21 |
 | Average share of crossings with lights + acoustic signal | 52% | 53% |
-
-- ORS offered alternatives on 26 of 30 trips; Crosswise picked a different route than the shortest on 16.
-- Cost of the safer route when it differs: median 1.4 min extra, at most 6.5 min.
-- Trips where our worst crossing is worse than the baseline's: 0 (should be 0).
 
 - ORS offered alternatives on 26 of 30 trips; Crosswise picked a different route than the shortest on 16.
 - Cost of the safer route when it differs: median 1.4 min extra, at most 6.5 min.
@@ -67,7 +63,9 @@ trips; this one gave the fewest unmarked crossings and the most acoustic signals
 - **Vision is a helper, not a sensor.** A photo model can misread; that is why the bus scan needs 2 agreeing
   frames, low-confidence numbers are treated as unreadable, and the light check never says "safe". One miss in
   12: a red pedestrian figure that looks orange in the photo was reported as "not visible".
-- **Bus reading is untested on real buses so far.** No bus photos were available at build time.
+- **Bus reading needs the bus within ~30 m.** At ~50–60 m (3 of 15 test images) the model says "unreadable" — once it
+  saw "68A" on a 69A and correctly refused to announce it. All test buses so far are one line (69A) at dusk;
+  trams, other lines, daylight and night are not measured yet.
 - **GPS in the city is often 10–30 m off.** Alerts at "40 m" and "10 m" can come early or late; off-route warnings
   are only given when GPS accuracy is better than 40 m.
 - **Crosswise assists a white cane or guide dog. It never replaces them.**
@@ -205,3 +203,17 @@ none says green when it isn't. Kept v2. Next step: more real photos (HUMAN_TODO)
 | t28 (834 m) | 3 | no | 0.0 | 0 → 0 | 1 → 1 |
 | t29 (1461 m) | 2 | no | 0.0 | 0 → 0 | 1 → 1 |
 | t30 (1465 m) | 1 | no | 0.0 | 3 → 3 | 0 → 0 |
+
+### Vision eval 2026-09-26 17:57 UTC — bus, first real photos (https://crosswise-2mbpycsy9-trua.vercel.app)
+
+15 images of a 69A to Simmering at a stop near HOIV, dusk (test/vision/bus/, sources in SOURCES.txt).
+`-partial` = number blurred, cut off or too far: "unreadable" counts as correct there, a wrong line is critical.
+
+| Mode | Correct | Accuracy | Critical errors | Not scored (network) | Median model latency |
+|---|---|---|---|---|---|
+| bus | 12/15 | 80% | 0 | 0 | 1690 ms |
+
+Misses (all "unreadable", the safe direction):
+- `bus__69A__01.jpg` (~60 m): "Display text present but not clearly legible from this distance and angle."
+- `bus__69A__02.jpg` (~55 m): "destination text visible but blurry"
+- `bus__69A__10.jpg` (video frame, ~50 m): saw "appears to read 68A Simmeringer" — not sure, so no line announced.

@@ -32,7 +32,7 @@ At the bus stop the next problem starts: which bus is this?
   unmarked/unknown crossings** (43 → 21), at a median cost of **1.4 minutes** when it differs. Its worst crossing was
   never worse than the shortest route's.
 - **Crossing light** on 12 real photos: 10 correct, **0 dangerous errors** (both misses: "I cannot see a pedestrian light").
-- **Read text** 3/3, **describe** 11/11. **Bus numbers: not yet measured on real buses** (no photos at build time).
+- **Read text** 3/3, **describe** 11/11. **Bus numbers 12/15, 0 critical** (15 real images of a 69A; the misses are far shots where it says "unreadable" instead of guessing).
 - 237 unit tests + 26 end-to-end browser tests (fake camera, fake GPS, fake speech).
 
 ## How it works

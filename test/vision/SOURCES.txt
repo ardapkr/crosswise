@@ -24,3 +24,25 @@ photo_13_2026-09-26_13-20-37.jpg -> light/light__green__08.jpg
 photo_14_2026-09-26_13-20-37.jpg -> read/read__eurokey__01.jpg
 photo_15_2026-09-26_13-20-37.jpg -> light/light__red__02.jpg
 photo_16_2026-09-26_13-20-37.jpg -> light/light__red__03.jpg
+
+# Second batch (test-material/new-test/, 19:13): a 69A bus to Simmering arriving at a stop near HOIV at dusk.
+# "-partial" = it is a 69A, but the number is blurred, cut off or too far: "unreadable" also counts as correct.
+new-test/photo_1_2026-09-26_19-13-53.jpg -> bus/bus__69A__01.jpg   (far, ~60 m, display small)
+new-test/photo_2_2026-09-26_19-13-53.jpg -> bus/bus__69A__02.jpg
+new-test/photo_3_2026-09-26_19-13-53.jpg -> bus/bus__69A__03.jpg
+new-test/photo_4_2026-09-26_19-13-53.jpg -> bus/bus__69A__04.jpg
+new-test/photo_5_2026-09-26_19-13-53.jpg -> bus/bus__69A__05.jpg
+new-test/photo_6_2026-09-26_19-13-53.jpg -> bus/bus__69A__06.jpg
+new-test/photo_7_2026-09-26_19-13-53.jpg -> bus/bus__69A__07.jpg   (close, from the side)
+new-test/photo_8_2026-09-26_19-13-53.jpg -> bus/bus__69A-partial__08.jpg   (passing, motion blur, front display cut off)
+new-test/photo_9_2026-09-26_19-13-53.jpg -> bus/bus__69A-partial__09.jpg   (side view, only the small side display)
+new-test/bus video.MOV @ 1.5 s -> bus/bus__69A__10.jpg
+new-test/bus video.MOV @ 2.5 s -> bus/bus__69A__11.jpg
+new-test/bus video.MOV @ 3.2 s -> bus/bus__69A__12.jpg
+new-test/bus video.MOV @ 3.8 s -> bus/bus__69A__13.jpg
+new-test/bus video.MOV @ 0.5 s -> bus/bus__69A-partial__14.jpg   (far, display tiny)
+new-test/bus video.MOV @ 4.4 s -> bus/bus__69A-partial__15.jpg   (passing, front display out of frame)
+new-test/bus video.MOV -> test/fixtures/bus-69a.y4m   (fake camera for e2e: 270x480, 3 fps, 4.8 s, loops)
+new-test/bus video.MOV -> public/demo/bus-69a.mp4     (stage demo: /?video=/demo/bus-69a.mp4)
+new-test/light test.MP4 = a screen recording of the app on an iPhone (two light checks: "looks green",
+  then "looks red"), not camera footage: used as a picture of the old UI, not as a vision test.

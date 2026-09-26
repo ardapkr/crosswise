@@ -1,6 +1,8 @@
 // Vision accuracy eval: runs every photo in test/vision/<mode>/ through /api/look and compares the
 // answer with the label in the filename:  <mode>__<expected>__<nn>.jpg
 //   bus__13A__01.jpg  → line 13A        bus__none__01.jpg   → must NOT report a line
+//   bus__69A-partial__08.jpg → it IS a 69A, but the number is blurred / cut off / too far:
+//                             "unreadable" and "69A" both count as correct, any other line is critical
 //   light__green__01  → green           light__none__01     → not_visible / unclear / dark
 //   read__bahnhof-city__01 → text contains "bahnhof" and "city"
 //   describe__zebra__01    → description mentions a zebra crossing (keyword list below)
@@ -39,9 +41,11 @@ const norm = (s) => (s || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]
 export function score(mode, expected, r) {
   switch (mode) {
     case 'bus': {
-      const exp = expected.toUpperCase();
+      const [exp, tag] = expected.toUpperCase().split('-');
       if (exp === 'NONE') return { ok: r.status !== 'found', critical: r.status === 'found' };
-      return { ok: r.status === 'found' && r.line === exp, critical: r.status === 'found' && r.line !== exp };
+      const wrongLine = r.status === 'found' && r.line !== exp;
+      if (tag === 'PARTIAL') return { ok: !wrongLine, critical: wrongLine }; // not reading it is fine here
+      return { ok: r.status === 'found' && r.line === exp, critical: wrongLine };
     }
     case 'light': {
       const ok = expected === 'green' ? ['green', 'flashing_green'].includes(r.status)
