@@ -1,6 +1,6 @@
 // Error states must be spoken, never silent.
 import { test, expect } from '@playwright/test';
-import { fakeSpeech } from './helpers.js';
+import { fakeSpeech, mockTransit } from './helpers.js';
 
 test('no internet connection is spoken (route planning and camera assistant)', async ({ page, context }) => {
   await fakeSpeech(page);
@@ -20,6 +20,7 @@ test('GPS unavailable during guidance is spoken', async ({ page }) => {
     navigator.geolocation.watchPosition = (ok, fail) => { setTimeout(() => fail({ code: 2 }), 50); return 1; };
     navigator.geolocation.clearWatch = () => {};
   });
+  await mockTransit(page, null);
   await page.route('**/api/route?*', (route) => route.fulfill({
     json: { routes: [{ id: 'r1', duration: 300, distance: 400, geometry: [[16.3954, 48.1761], [16.3970, 48.1761]], steps: [] }] },
   }));

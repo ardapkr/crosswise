@@ -6,13 +6,15 @@ import { MODES, normalizeMode } from '../lib/modes.js';
 import { speak, repeatLast, unlockSpeech, appVoiceOn, setAppVoice } from './speech.js';
 import { initRoutes } from './routes-ui.js';
 import { startNavigation } from './navigation.js';
+import { startTrip } from './trip-nav.js';
 import { initLook } from './look-ui.js';
 import { unlockSound } from './sound.js';
 import { initVoice } from './voice.js';
-import { ensureMap, setMapPadding, showWalk, showPosition, showHere, refit } from './map.js';
+import { ensureMap, setMapPadding, showWalk, showTrip, showPosition, showHere, refit } from './map.js';
 import { getJSON } from './api.js';
 import { getPosition, HOIV } from './location.js';
 import { whereAmIText } from '../lib/whereami.js';
+import { tripName } from '../lib/trip.js';
 
 const MODE_KEY = 'crosswise.mode';
 const $ = (id) => document.getElementById(id);
@@ -99,6 +101,7 @@ function showWalking(on) {
 function startRoute(plan, route) {
   nav?.stop();
   showWalking(true);
+  $('nav-heading').textContent = 'Walking · next';
   $('nav-heading').focus();
   speak(`Starting the route: about ${Math.max(1, Math.round(route.duration / 60))} minutes, ${route.score.count} crossings.` +
     (state.demo ? ' Demo walk.' : ''), 'navigation');
@@ -115,6 +118,27 @@ function startRoute(plan, route) {
   });
 }
 
+/** Public transport trip: walk → ride → walk, with crossing alerts on every walk and stop counting on every ride. */
+function startTripRoute(plan, trip) {
+  nav?.stop();
+  showWalking(true);
+  $('nav-heading').textContent = 'Trip · next';
+  $('nav-heading').focus();
+  speak(`Starting the trip by ${tripName(trip)}: about ${Math.max(1, Math.round(trip.duration / 60))} minutes.` +
+    (state.demo ? ' Demo trip.' : ''), 'navigation');
+  showTrip($('map-box'), trip);
+  nav = startTrip({
+    trip,
+    mode: plan.mode,
+    onMove: showPosition,
+    speak,
+    demo: state.demo,
+    speed: Number(params.get('speed')) || 1.3,
+    onTarget: (t) => look.setTarget(t), // Find my bus knows the line AND the direction
+    onEnd: () => { nav = null; setTimeout(() => { showWalking(false); routes.redraw(); }, 4000); },
+  });
+}
+
 function stopRoute() {
   nav?.stop();
   nav = null;
@@ -126,12 +150,14 @@ function stopRoute() {
 
 $('nav-stop').addEventListener('click', stopRoute);
 $('nav-repeat').addEventListener('click', () => nav?.repeat());
+$('nav-leg').addEventListener('click', () => nav?.nextLeg?.());
 
 const routes = initRoutes({
   getMode: () => state.mode,
   speak,
   demo: state.demo,
   onChoose: startRoute,
+  onChooseTrip: startTripRoute,
   closeSearch: () => setSearching(false),
 });
 

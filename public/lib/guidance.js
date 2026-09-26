@@ -4,7 +4,8 @@
 //   on every GPS fix:  const r = updateGuidance(state, [lon, lat], { accuracy });
 //                      state = r.state; r.say.forEach(m => speak(m.text, m.priority));
 //
-// route = { geometry, steps (from lib/ors.js), crossings (from crossingsOnRoute, with `along`) }
+// route = { geometry, steps (from lib/ors.js), crossings (from crossingsOnRoute, with `along`),
+//           arriveText? (said at the end instead of "You have arrived at your destination.") }
 
 import { pointToLineDistance, distance, pointAlong } from './geo.js';
 import { normalizeMode } from './modes.js';
@@ -210,7 +211,8 @@ export function updateGuidance(state, position, { accuracy = 10 } = {}) {
           once(`${e.id}:far`, `In ${formatDistance(d)}, ${lowerFirst(text)}.`, 'navigation');
         }
       } else if (e.kind === 'arrive' && d <= ARRIVE_M) {
-        once(e.id, 'You have arrived at your destination.', 'navigation');
+        // a walking leg of a public transport trip ends at a stop, not at the destination
+        once(e.id, state.route.arriveText || 'You have arrived at your destination.', 'navigation');
         arrived = true;
       }
     }
@@ -234,7 +236,7 @@ export function updateGuidance(state, position, { accuracy = 10 } = {}) {
 const CAP = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** Short text for the big "next" display, e.g. "Traffic light with acoustic signal in 30 m". */
-export function nextEventText(next, mode) {
+export function nextEventText(next, mode, target = 'Destination') {
   if (!next) return 'You have arrived.';
   const m = `${Math.round(next.distance / 10) * 10} m`;
   const e = next.event;
@@ -244,7 +246,7 @@ export function nextEventText(next, mode) {
     return `${t} in ${m}`;
   }
   if (e.kind === 'turn') return `${e.instruction} in ${m}`;
-  return `Destination in ${m}`;
+  return `${target} in ${m}`;
 }
 
 /** Demo mode: where a simulated walker is after `seconds` at `speed` m/s. */

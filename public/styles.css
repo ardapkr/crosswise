@@ -262,6 +262,19 @@ input[type="search"]::-webkit-search-cancel-button { display: none; }
 .route .go { width: 100%; margin-top: 6px; }
 .route.selected .go { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
+/* public transport options: walk = solid line, ride = dashed line (like the map) */
+.line { display: inline-block; width: 28px; height: 0; margin-right: 6px; vertical-align: 4px; border-top: 5px solid var(--text); border-radius: 3px; }
+.line.ride { border-top-style: dotted; }
+.route .legs { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 4px; }
+.route .legs li { display: flex; gap: 8px; align-items: baseline; }
+.route .legs li::before { content: ""; flex: none; width: 18px; border-top: 4px solid var(--muted); transform: translateY(-5px); }
+.route .legs li.ride { font-weight: 700; }
+.route .legs li.ride::before { border-top-style: dotted; border-color: var(--text); }
+.route .times { margin: 0; font-weight: 700; }
+.route .access, .route .compare { margin: 0; color: var(--muted); }
+#walk-compare { width: 100%; }
+#options-note { color: var(--c-lights); }
+
 /* camera assistant: full screen above the dock (the tiles stay usable), result in big text under the video */
 .camera {
   position: fixed; top: 0; left: 0; right: 0; bottom: var(--dock-h, 180px); z-index: 35;

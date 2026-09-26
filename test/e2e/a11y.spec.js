@@ -86,3 +86,19 @@ test('App voice off: messages go to the screen reader live regions instead of th
   await expect(page.getByRole('button', { name: /App voice/ })).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByRole('button', { name: /App voice/ })).toHaveText('App voice: off');
 });
+
+test('public transport options, walking comparison and the trip panel', async ({ page }) => {
+  await fakeSpeech(page);
+  await mockOrs(page, { transit: 'hoiv-hbf' });
+  await page.goto('/?demo=1&speed=0.01');
+  await page.getByRole('button', { name: 'Start' }).click();
+  await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click();
+  await expect(page.locator('#options > li').first()).toBeVisible();
+  await audit(page, 'trip options');
+  await page.getByRole('button', { name: /Compare walking routes/ }).click();
+  await expect(page.locator('#routes > li')).toHaveCount(3);
+  await audit(page, 'walking comparison');
+  await page.locator('#options > li').first().getByRole('button', { name: /Start this trip/ }).click();
+  await expect(page.getByRole('button', { name: "I'm at the stop" })).toBeVisible();
+  await audit(page, 'trip panel');
+});

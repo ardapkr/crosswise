@@ -4,8 +4,9 @@
     {
       "name": "crosswise-dev",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["scripts/dev-server.js", "3000"],
-      "port": 3000
+      "runtimeArgs": ["scripts/dev-server.js"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }
