@@ -12,9 +12,9 @@
       "vehicle": "bus",
       "confidence": 0.1
     },
-    "observation": "Bus front display shows orange/yellow characters, heavily blurred and at steep angle",
-    "ms": 2040,
-    "roundTripMs": 8444
+    "observation": "Bus destination display shows orange text but line number is blurry and unreadable due to motion blur and angle",
+    "ms": 1682,
+    "roundTripMs": 6581
   },
   {
     "mode": "bus",
@@ -27,11 +27,11 @@
       "line": "",
       "destination": "",
       "vehicle": "bus",
-      "confidence": 0.1
+      "confidence": 0
     },
-    "observation": "Bus with yellow destination display, text too blurry to read clearly",
-    "ms": 1909,
-    "roundTripMs": 7644
+    "observation": "Bus with yellow destination display showing blurry text, unreadable line number",
+    "ms": 1450,
+    "roundTripMs": 5880
   },
   {
     "mode": "bus",
@@ -44,11 +44,11 @@
       "line": "",
       "destination": "",
       "vehicle": "bus",
-      "confidence": 0.15
+      "confidence": 0.3
     },
-    "observation": "Bus with yellow LED display showing line number, destination text partially visible",
-    "ms": 1927,
-    "roundTripMs": 7748
+    "observation": "Bus with yellow LED display showing line number, text partially visible but blurry",
+    "ms": 1630,
+    "roundTripMs": 6062
   },
   {
     "mode": "bus",
@@ -61,11 +61,11 @@
       "line": "",
       "destination": "",
       "vehicle": "tram",
-      "confidence": 0
+      "confidence": 0.1
     },
-    "observation": "Tram vehicle visible, destination display blurry and unreadable due to motion and angle",
-    "ms": 1419,
-    "roundTripMs": 7010
+    "observation": "Tram visible with overhead lines, display area blurred and not clearly readable",
+    "ms": 2041,
+    "roundTripMs": 6930
   },
   {
     "mode": "bus",
@@ -80,26 +80,26 @@
       "vehicle": "bus",
       "confidence": 0.2
     },
-    "observation": "Bus with yellow destination display visible, approaching at an angle on street intersection. Display text present but not clearly legible from this distance and angle.",
-    "ms": 1624,
-    "roundTripMs": 7322
+    "observation": "Bus with illuminated yellow/orange destination display showing line number",
+    "ms": 1380,
+    "roundTripMs": 6160
   },
   {
     "mode": "bus",
     "file": "bus__69A__02.jpg",
     "expected": "69A",
     "ok": false,
-    "critical": false,
+    "critical": true,
     "result": {
-      "status": "unreadable",
-      "line": "",
-      "destination": "",
+      "status": "found",
+      "line": "6A",
+      "destination": "Simmering",
       "vehicle": "bus",
-      "confidence": 0
+      "confidence": 0.95
     },
-    "observation": "Bus with yellow LED display showing line number, destination text visible but blurry",
-    "ms": 1559,
-    "roundTripMs": 7111
+    "observation": "Bus with yellow LED display showing '6A' and 'Simmering' destination text",
+    "ms": 2228,
+    "roundTripMs": 7241
   },
   {
     "mode": "bus",
@@ -114,9 +114,9 @@
       "vehicle": "bus",
       "confidence": 0.95
     },
-    "observation": "Bus display shows yellow LED text reading 69A Simmering with destination",
-    "ms": 2143,
-    "roundTripMs": 7416
+    "observation": "Bus with yellow LED destination display showing '69a' and destination text 'Simmering'",
+    "ms": 2215,
+    "roundTripMs": 6942
   },
   {
     "mode": "bus",
@@ -127,13 +127,13 @@
     "result": {
       "status": "found",
       "line": "69A",
-      "destination": "Simmering (U6)",
+      "destination": "Simmering",
       "vehicle": "bus",
       "confidence": 0.95
     },
-    "observation": "Yellow LED display on bus windscreen shows line number and destination clearly",
-    "ms": 1719,
-    "roundTripMs": 7488
+    "observation": "Yellow LED display shows 69A Simmering with destination text",
+    "ms": 2144,
+    "roundTripMs": 6772
   },
   {
     "mode": "bus",
@@ -146,11 +146,11 @@
       "line": "69A",
       "destination": "Simmering",
       "vehicle": "bus",
-      "confidence": 0.98
+      "confidence": 0.95
     },
-    "observation": "LED display clearly shows 69A Simmering with destination text visible",
-    "ms": 1921,
-    "roundTripMs": 7680
+    "observation": "Yellow LED display clearly shows 69A Simmering with destination text",
+    "ms": 1404,
+    "roundTripMs": 5953
   },
   {
     "mode": "bus",
@@ -163,11 +163,11 @@
       "line": "69A",
       "destination": "Simmering",
       "vehicle": "bus",
-      "confidence": 0.95
+      "confidence": 0.99
     },
-    "observation": "Yellow LED display clearly shows 69A with destination Simmering",
-    "ms": 1447,
-    "roundTripMs": 8304
+    "observation": "Yellow LED display shows 69A Simmering (SSO), clearly readable above windscreen",
+    "ms": 1565,
+    "roundTripMs": 6276
   },
   {
     "mode": "bus",
@@ -178,13 +178,13 @@
     "result": {
       "status": "found",
       "line": "69A",
-      "destination": "Simmering",
+      "destination": "Simmering (Sch)",
       "vehicle": "bus",
       "confidence": 0.95
     },
-    "observation": "LED display shows 69A Simmering (direction indicator)",
-    "ms": 1317,
-    "roundTripMs": 7253
+    "observation": "Bus with yellow LED display showing 69a and destination text",
+    "ms": 1475,
+    "roundTripMs": 6310
   },
   {
     "mode": "bus",
@@ -199,9 +199,9 @@
       "vehicle": "bus",
       "confidence": 0.3
     },
-    "observation": "Bus destination display shows yellow text, appears to read 68A Simmeringer... destination unclear",
-    "ms": 1690,
-    "roundTripMs": 7370
+    "observation": "Bus display shows yellow text, line number partially visible but blurry and at angle",
+    "ms": 1671,
+    "roundTripMs": 6296
   },
   {
     "mode": "bus",
@@ -216,9 +216,9 @@
       "vehicle": "bus",
       "confidence": 0.95
     },
-    "observation": "Bus display shows 69A Simmering in yellow LED text",
-    "ms": 2705,
-    "roundTripMs": 8015
+    "observation": "Bus display shows yellow LED text reading 69A Simmering",
+    "ms": 2119,
+    "roundTripMs": 6856
   },
   {
     "mode": "bus",
@@ -233,9 +233,9 @@
       "vehicle": "bus",
       "confidence": 0.95
     },
-    "observation": "Bus destination display shows 69a Simmering with U6O text",
-    "ms": 1437,
-    "roundTripMs": 6946
+    "observation": "Yellow LED display shows '69a Simmering' with destination text below",
+    "ms": 1494,
+    "roundTripMs": 6421
   },
   {
     "mode": "bus",
@@ -248,10 +248,10 @@
       "line": "69A",
       "destination": "Simmering",
       "vehicle": "bus",
-      "confidence": 0.98
+      "confidence": 0.95
     },
-    "observation": "Yellow LED display shows 69A Simmering. Destination text clearly visible. Vienna bus, front-facing angle.",
-    "ms": 1630,
-    "roundTripMs": 7049
+    "observation": "LED display shows 69A Simmering with destination text below",
+    "ms": 1364,
+    "roundTripMs": 6758
   }
 ]

@@ -1,7 +1,7 @@
 # Crosswise
 
 **Safer walking routes and a talking camera assistant for blind, low-vision, wheelchair and limited-mobility
-pedestrians in Vienna.** Built in 18 hours at the TELOS Hackathon (Track A1 · Applied AI for Consumers).
+pedestrians in Vienna.** Built in ~18 hours at the TELOS Hackathon (Track A1 · Applied AI for Consumers).
 
 > Crosswise assists a white cane or guide dog. It never replaces them.
 
@@ -33,9 +33,13 @@ At the bus stop the next problem starts: which bus is this?
 - **30 random real trips around HOIV**: compared with the shortest route, the recommended route has **51% fewer
   unmarked/unknown crossings** (43 → 21), at a median cost of **1.4 minutes** when it differs. Its worst crossing was
   never worse than the shortest route's.
-- **Crossing light** on 12 real photos: 10 correct, **0 dangerous errors** (both misses: "I cannot see a pedestrian light").
-- **Read text** 3/3, **describe** 11/11. **Bus numbers 12/15, 0 critical** (15 real images of a 69A; the misses are far shots where it says "unreadable" instead of guessing).
-- 334 unit tests + 52 end-to-end browser tests (fake camera, fake GPS, fake speech, saved real timetable answers).
+- **Crossing light** on 12 real photos: 10 correct, **0 dangerous errors** in every run (misses: "I cannot see a pedestrian light").
+- **5 named Vienna walks** (e.g. HOIV → Hauptbahnhof, HOIV → Wien Mitte): on the 2 where Crosswise picks another route,
+  unmarked/unknown crossings go **2 → 0** (+1.0 min) and **8 → 2** (+2.7 min); on the other 3 the shortest route already is the safest.
+- **Read text** 3/3, **describe** 10–11/11. **Bus numbers 12/15** in each of 3 runs on 15 real images of a 69A. On far shots
+  (50–60 m) the model sometimes misreads a single image (0, 2 and 1 wrong lines in the 3 runs) — the app only speaks a line
+  after **2 consecutive frames agree**, and no wrong line was announced in any test.
+- 386 unit tests + 58 end-to-end browser tests (fake camera, fake GPS, fake speech, saved real timetable answers).
 
 ## How it works
 

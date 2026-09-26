@@ -1,7 +1,9 @@
 # EVAL.md — does Crosswise work? Honest numbers
 
-Everything here is reproducible from the repo: `npm test` (237 unit tests), `npm run e2e` (26 browser tests),
-`npm run eval:vision` (real photos → deployed `/api/look`), `node scripts/eval-routes.js` (30 saved real trips).
+Everything here is reproducible from the repo: `npm test` (386 unit tests), `npm run e2e` (58 browser tests),
+`npm run eval:vision` (real photos → deployed `/api/look`), `node scripts/eval-routes.js` (30 saved real trips),
+`node scripts/eval-trips.js` (5 named Vienna walks + 2 public transport trips, saved answers in `eval/trips-named.json`).
+The final measurements (Sun 27 Sep, ~00:55) are in **"Final measurements"** right below the summary.
 "Critical" means the dangerous kind of mistake: a wrong bus number, or "green" when the light is not green.
 
 ## Summary
@@ -9,11 +11,88 @@ Everything here is reproducible from the repo: `npm test` (237 unit tests), `npm
 | What | Result |
 |---|---|
 | Safer route vs shortest route (30 random real trips around HOIV) | **−51% unmarked/unknown crossings** (43 → 21), median **+1.4 min** when the route differs, never a worse worst crossing |
-| Crossing light check (12 real photos) | **10/12 correct, 0 critical** — both misses say "I cannot see a pedestrian light" |
+| 5 named Vienna walks (HOIV → Hauptbahnhof / Belvedere / Schwarzenbergplatz / Wien Mitte, Hauptbahnhof → Karlsplatz) | Route changed on 2 of 5; there unmarked/unknown crossings **2 → 0** (+1.0 min) and **8 → 2** (+2.7 min); on the other 3 the shortest route already was the safest |
+| Crossing light check (12 real photos) | **10/12 correct, 0 critical** (same in every run) — the misses say "I cannot see a pedestrian light" |
 | Read text (3 photos) | 3/3 |
-| Describe surroundings (11 photos) | 11/11 |
-| Bus number reading (15 real images of a 69A at dusk: 9 photos + 6 video frames) | **12/15 correct, 0 critical** — reads the number from ~30 m and closer; the 3 misses are far shots (~50–60 m) where it said "unreadable" instead of guessing |
-| Automated tests | 237 unit + 26 end-to-end browser tests, all green |
+| Describe surroundings (11 photos) | 10–11/11 (final run 10/11: one scene description without the signal box) |
+| Bus number reading (15 real images of a 69A at dusk: 9 photos + 6 video frames) | **12/15 correct in each of 3 runs.** Single-image wrong lines: 0 (17:57), 2 (final run: "6DS", "68A"), 1 ("6A") — all on the far shots (~50–60 m). The app only speaks a line after **2 consecutive frames agree**; on the real video's frame sequence the lone "68A" is followed by 69A, 69A, 69A, so only **69A** would be announced. No wrong line was announced in any test. |
+| Automated tests | 386 unit + 58 end-to-end browser tests, all green (Sun 00:45) |
+
+## Final measurements (Sun 27 Sep, 00:45–01:00, production https://crosswise-woad.vercel.app)
+
+### 5 named Vienna walks: shortest route (baseline) vs Crosswise, blind mode
+
+Real OpenRouteService routes (up to 3 alternatives) + the OSM crossing snapshot, scored by the app's own code
+(`node scripts/eval-trips.js`; `--fetch` asks the live API again). "Unsignalled" = zebra, unmarked or unknown type;
+"unmarked/unknown" is the dangerous part of that.
+
+Fetched 2026-09-26T22:53:27.004Z from https://crosswise-woad.vercel.app, blind mode.
+
+| Trip | Route | Minutes | Crossings | Unsignalled (zebra/unmarked/unknown) | of which unmarked/unknown | With acoustic signal |
+|---|---|---|---|---|---|---|
+| HOIV → Hauptbahnhof | Shortest (baseline) | 25.7 | 7 | 3 | 2 | 4 |
+| HOIV → Hauptbahnhof | **Crosswise** | 26.7 | 9 | 3 | 0 | 5 |
+| HOIV → Oberes Belvedere | Shortest (baseline) | 27.9 | 5 | 0 | 0 | 5 |
+| | Crosswise = same route (3 alternatives) | | | | | |
+| HOIV → Schwarzenbergplatz | Shortest (baseline) | 39.0 | 5 | 0 | 0 | 5 |
+| | Crosswise = same route (3 alternatives) | | | | | |
+| HOIV → Wien Mitte | Shortest (baseline) | 48.1 | 23 | 13 | 8 | 9 |
+| HOIV → Wien Mitte | **Crosswise** | 50.8 | 20 | 4 | 2 | 14 |
+| Hauptbahnhof → Karlsplatz | Shortest (baseline) | 29.9 | 13 | 6 | 0 | 7 |
+| | Crosswise = same route (3 alternatives) | | | | | |
+
+| Trip | Option | Minutes door to door | Walking min | Crossings on foot | Unsignalled | of which unmarked/unknown | With acoustic signal |
+|---|---|---|---|---|---|---|---|
+| HOIV → Stephansplatz | bus 69A and U1 (recommended) | 25.2 | 7.7 | 7 | 1 | 0 | 4 |
+| HOIV → Stephansplatz | tram D | 36.9 | 17.9 | 5 | 1 | 0 | 3 |
+| HOIV → Stephansplatz | Walk only | 57.7 | 57.7 | 21 | 10 | 3 | 9 |
+| | transit listed first: yes | | | | | | |
+| HOIV → Schönbrunn | tram D and U4 (recommended) | 51.1 | 23.1 | 8 | 1 | 0 | 6 |
+| HOIV → Schönbrunn | bus 69A, U1 and U4 | 46.1 | 18.9 | 10 | 1 | 0 | 7 |
+| HOIV → Schönbrunn | Walk only | 85.2 | 85.2 | 41 | 17 | 5 | 17 |
+| | transit listed first: yes | | | | | | |
+
+Reading the tables:
+- **HOIV → Hauptbahnhof:** +1.0 min, 2 more crossings, but **0 instead of 2 unmarked/unknown** and one more acoustic signal.
+- **HOIV → Wien Mitte:** +2.7 min, **2 instead of 8 unmarked/unknown**, 14 instead of 9 with acoustic signal, 3 fewer crossings.
+  (48 min on foot: in the app, public transport would be listed first here.)
+- **3 of 5 trips:** the shortest route already was the safest one, so Crosswise keeps it (no detour for nothing).
+- **Public transport** (Transitous timetable for Sun 10:00): for both long trips the app lists transit first and says why
+  (walking > 20 min). Stephansplatz: 69A + U1, 25 min door to door, **0 unmarked/unknown crossings on foot** vs 3 when
+  walking the whole way (58 min). Schönbrunn: tram D + U4 recommended — it arrives at 10:54 like the 69A + U1 + U4
+  option but with one change fewer; both have 0 unmarked/unknown on foot vs 5 when walking (85 min).
+  The walking legs inside the trips are re-routed with ORS and re-scored with our crossing data.
+
+### Vienna crossing snapshot (public/data/crossings-vienna.json)
+
+OSM data as of 2026-09-26 11:35 UTC. 21,169 crossing / traffic-signal nodes, clustered (20 m) into **8,987 crossings**:
+2,888 with traffic lights, 2,675 zebra, 2,909 unmarked, 515 of unknown type.
+
+| Tag | Coverage |
+|---|---|
+| Acoustic signal (`traffic_signals:sound`), of the 2,888 signalled crossings | **1,787 yes (62%)**, 301 no (10%), **800 unknown (28%)** |
+| Vibration (`traffic_signals:vibration=yes`) | 1,648 crossings |
+| Kerb (`kerb`, incl. separate `barrier=kerb` nodes on crossing footways), of all 8,987 | 2,434 lowered/flush (27%), 128 raised (1.4%), **6,425 unknown (71%)** |
+| Tactile paving = yes | 1,218 crossings |
+
+### Vision, final run (all 41 photos, production)
+
+| Mode | Correct | Critical errors | Median latency |
+|---|---|---|---|
+| Bus (15 images of a 69A) | 12/15 | 2 single images (`02` → "6DS", `10` → "68A") | 1.5 s |
+| Crossing light (12) | 10/12 | 0 (misses: 2 red lights reported as "not visible") | 1.5 s |
+| Read text (3) | 3/3 | – | 1.4 s |
+| Describe (11) | 10/11 | – | 2.3 s |
+
+A second bus-only run right after: 12/15, 1 critical single image (`02` → "6A"). The earlier run (17:57) had 0.
+The prompt did not change in between: this is model variance on the far shots (~50–60 m). **Was a wrong line ever
+announced?** No — not in any e2e test, and not on the real video: the app announces only when 2 consecutive frames
+agree, and in the final run the clip's frames read unreadable → 68A → 69A → 69A → 69A → unreadable, so the scan
+would announce 69A at the 3rd readable frame. Remaining risk: two consecutive misreads of the same wrong line.
+
+Smoke test of every endpoint on production (plain `curl`/`fetch`, no login): all 200. Typical times: routes 0.4–1.2 s,
+transit 0.6–1.2 s, geocode/autocomplete ~0.9 s, crossings 0.2 s, where am I 0.9 s, vision 2.2–3.2 s per photo
+(full-size test photo; the app sends 768 px).
 
 ## The 5 demo cases
 
@@ -21,7 +100,7 @@ Everything here is reproducible from the repo: `npm test` (237 unit tests), `npm
 |---|---|---|---|---|
 | 1 | **Safest route vs shortest**, HOIV → Wien Hauptbahnhof, blind mode | Real OpenRouteService answer (3 alternatives) + OSM crossing data; unit + e2e tests | Recommended route is 1 min longer and avoids the unmarked crossing (plus one of unknown type) on the shortest route. Its 9 crossings: 5 lights + acoustic signal, 1 lights only, 3 zebra. Spoken as one sentence. | ✅ real data · ⏳ outdoor check |
 | 2 | **Walking with crossing alerts** | Simulated walk (`?demo=1`) on the real route in unit + e2e tests; live GPS path with mocked position | Every crossing on the route announced at ~40 m and at ~10 m, with type, acoustic signal and "press the button under the box" where there is one; never "safe to cross"; turns merged at busy junctions (46 spoken messages on the 2.2 km Hbf walk, down from 75 before the calm-junction rules) | ✅ simulated · ⏳ outdoor walk |
-| 3 | **Find my bus "13A"** (live camera scan) | e2e with Chrome's fake camera + mocked model answers; model accuracy via `eval:vision` | Scan logic verified: 1 frame / 1.2 s, one request at a time, announce only after 2 agreeing frames, "This is 26A, not your bus", "still looking" every 10 s, gives up after 60 s. Real footage: a 4.8 s clip of a 69A arriving is the fake camera, with the real model's answers for its frames replayed → *"This is your bus, 69A, to Simmering"* on the 4th frame (~3.6 s), no early guess. Model on 15 real bus images: 12/15, 0 critical. | ✅ real footage · ⏳ live at a stop |
+| 3 | **Find my bus "13A"** (live camera scan) | e2e with Chrome's fake camera + mocked model answers; model accuracy via `eval:vision` | Scan logic verified: 1 frame / 1.2 s, one request at a time, announce only after 2 agreeing frames, "This is 26A, not your bus", "still looking" every 10 s, gives up after 60 s. Real footage: a 4.8 s clip of a 69A arriving is the fake camera, with the real model's answers for its frames replayed → *"This is your bus, 69A, to Simmering"* on the 4th frame (~3.6 s), no early guess. Model on 15 real bus images: 12/15 in each of 3 runs; 0–2 single images misread as another line (far shots), never announced thanks to the 2-frame rule. | ✅ real footage · ⏳ live at a stop |
 | 4 | **Check the crossing light** | 12 real photos of Vienna pedestrian lights (day + night) | 10/12 correct, 0 critical; misses are in the safe direction ("cannot see a pedestrian light"). The app never says "safe to cross" and always adds "listen for traffic". | ✅ |
 | 5 | **Wheelchair mode** | Real routes + kerb data; e2e | Switching re-plans with the ORS wheelchair profile; every crossing alert says the kerb ("lowered kerb" / "kerb height unknown"); raised kerbs push a route down. Kerb data exists for 2,562 of 8,987 Vienna crossings, so "kerb height unknown" is common — said out loud, never guessed. | ✅ · limit: data |
 
@@ -217,3 +296,20 @@ Misses (all "unreadable", the safe direction):
 - `bus__69A__01.jpg` (~60 m): "Display text present but not clearly legible from this distance and angle."
 - `bus__69A__02.jpg` (~55 m): "destination text visible but blurry"
 - `bus__69A__10.jpg` (video frame, ~50 m): saw "appears to read 68A Simmeringer" — not sure, so no line announced.
+
+### Vision eval 2026-09-26 22:54 (https://crosswise-woad.vercel.app)
+
+| Mode | Correct | Accuracy | Critical errors | Not scored (network) | Median model latency |
+|---|---|---|---|---|---|
+| bus | 12/15 | 80% | 2 | 0 | 1532 ms |
+| light | 10/12 | 83% | 0 | 0 | 1499 ms |
+| read | 3/3 | 100% | 0 | 0 | 1402 ms |
+| describe | 10/11 | 91% | 0 | 0 | 2288 ms |
+
+Misses:
+- `bus__69A__01.jpg`: {"status":"unreadable","line":"","destination":"","vehicle":"bus","confidence":0} — saw: "Bus with yellow LED display showing line number, heading toward camera at street crossing."
+- `bus__69A__02.jpg`: {"status":"found","line":"6DS","destination":"Stromering U6","vehicle":"bus","confidence":0.85} — saw: "Bus with yellow LED display showing '6ds Stromering U6' destination text"
+- `bus__69A__10.jpg`: {"status":"found","line":"68A","destination":"Simmeringer Gasse","vehicle":"bus","confidence":0.85} — saw: "Bus display shows yellow LED text, appears to read '68A' with destination text below"
+- `light__red__02.jpg`: {"status":"not_visible","confidence":0.95,"note":"Crossing ahead, no pedestrian light detected."} — saw: "No pedestrian signal visible. Only car traffic signals and street signs present."
+- `light__red__03.jpg`: {"status":"not_visible","confidence":0.95,"note":"Only car traffic signal visible on pole ahead."} — saw: "Round yellow/orange lamp lit in traffic signal, not a pedestrian figure shape."
+- `describe__signal-box__05.jpg`: {"description":"You are standing on a paved path next to a tall striped bollard with a ticket machine attached at waist height. The path continues straight ahead across open grassland toward a large elevated highway bridge in the distance. Tram lines and power cables run overhead.","hazards":["bollard directly ahead blocking path","ticket machine protruding at head height on the bollard","open grassland with uneven terrain"]}
