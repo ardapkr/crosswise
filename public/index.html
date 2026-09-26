@@ -49,12 +49,14 @@
         <h2 id="where-heading">Where to?</h2>
         <form id="route-form" autocomplete="off">
           <label for="to">Destination</label>
-          <input id="to" type="search" enterkeyhint="search" placeholder="e.g. Hauptbahnhof">
-          <label for="from">Start <span class="hint">(leave empty for my location)</span></label>
-          <input id="from" type="search" enterkeyhint="search" placeholder="My location">
+          <input id="to" type="search" enterkeyhint="search" placeholder="e.g. Stephansdom" autocapitalize="words" spellcheck="false">
+          <ul id="to-suggestions" class="suggestions" aria-label="Destination suggestions"></ul>
+          <label for="from">Start</label>
+          <input id="from" type="search" enterkeyhint="search" placeholder="Current location" spellcheck="false">
+          <ul id="from-suggestions" class="suggestions" aria-label="Start suggestions"></ul>
           <button id="find" type="submit" class="big primary">Find safest route</button>
         </form>
-        <ul id="places" class="places" aria-label="Places found"></ul>
+        <p id="suggest-status" class="sr-only" aria-live="polite"></p>
         <h3 class="sub" id="quick-heading">Quick destinations</h3>
         <div id="quick" class="quick" role="group" aria-labelledby="quick-heading"></div>
       </section>

@@ -2,14 +2,17 @@
 // Pure logic comes from /lib; this file does DOM + fetch only.
 
 import { getJSON } from './api.js';
-import { getPosition, HOIV } from './location.js';
+import { getPosition, lastPosition, HOIV } from './location.js';
 import { decodeGroups, crossingsOnRoute } from '../lib/crossings.js';
 import { rankRoutes, safetyLevel } from '../lib/scoring.js';
 import { routeSummary, describeCrossing } from '../lib/summary.js';
 import { bbox } from '../lib/geo.js';
+import { matchKnownPlaces, mergeSuggestions, fromGeocode } from '../lib/places.js';
 import { showRoutes } from './map.js';
+import { attachSuggestions } from './search.js';
 
 const $ = (id) => document.getElementById(id);
+export const CURRENT_LOCATION = 'Current location';
 
 export const QUICK_DESTINATIONS = [
   { label: 'Wien Hauptbahnhof', lon: 16.3755, lat: 48.1850 },
@@ -27,13 +30,19 @@ const LEVEL_TEXT = {
  * @param {{ getMode: () => string, speak: Function, demo: boolean, onChoose: (plan, route) => void }} opts
  */
 export function initRoutes({ getMode, speak, demo, onChoose }) {
-  let plan = null; // { from, to, ranked, groups }
+  let plan = null;      // { from, to, ranked, groups }
+  let fromPlace = null; // chosen start; null = current location
 
-  // --- start position ---
+  // Search is biased to where the user is (or HOIV / Vienna when we don't know yet).
+  const focus = () => (demo ? null : lastPosition()) || [HOIV.lon, HOIV.lat];
+  const focusParam = () => focus().map((x) => x.toFixed(5)).join(',');
+
+  // --- start position: "Current location" unless the user picked or typed another start ---
   async function resolveStart() {
+    if (fromPlace) return fromPlace;
     const text = $('from').value.trim();
-    if (text) {
-      const place = await geocodeFirst(text);
+    if (text && text.toLowerCase() !== CURRENT_LOCATION.toLowerCase()) {
+      const place = await findFirst(text);
       if (!place) throw new Error(`I could not find the start "${text}".`);
       return place;
     }
@@ -47,36 +56,53 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
     }
   }
 
-  async function geocodeFirst(q) {
-    const data = await getJSON(`/api/geocode?q=${encodeURIComponent(q)}&focus=${HOIV.lon},${HOIV.lat}`);
-    return data.results[0] || null;
+  /** Known places (HOIV, the station entrance) first, then the ORS full search. */
+  async function findAll(q) {
+    const data = await getJSON(`/api/geocode?q=${encodeURIComponent(q)}&focus=${focusParam()}`);
+    return mergeSuggestions(matchKnownPlaces(q), data.results.map(fromGeocode));
+  }
+  async function findFirst(q) {
+    return matchKnownPlaces(q)[0] || (await findAll(q))[0] || null;
   }
 
-  // --- destination search ---
+  // --- live suggestions while typing ---
+  const toBox = attachSuggestions({
+    input: $('to'), list: $('to-suggestions'), announcer: $('suggest-status'), getFocus: focus,
+    onPick: (place) => { $('to').value = place.name; run(() => planTo(place)); },
+  });
+  const currentRow = { current: true, name: CURRENT_LOCATION, detail: demo ? 'Demo: HOIV' : 'Use GPS' };
+  const fromBox = attachSuggestions({
+    input: $('from'), list: $('from-suggestions'), announcer: $('suggest-status'), getFocus: focus,
+    leadingRows: (q) => (q && q.toLowerCase() !== CURRENT_LOCATION.toLowerCase() ? [currentRow] : []),
+    onPick: (place) => {
+      fromPlace = place.current ? null : place;
+      $('from').value = place.name;
+      speak(place.current ? 'Starting from your current location.' : `Starting from ${place.name}.`);
+      if (plan) run(() => planTo(plan.to)); // a destination is already chosen: plan again from the new start
+      else $('to').focus();
+    },
+  });
+  $('from').value = CURRENT_LOCATION;
+  $('from').addEventListener('focus', () => $('from').select()); // typing replaces "Current location"
+  $('from').addEventListener('input', () => { fromPlace = null; });
+  $('from').addEventListener('blur', () => { if (!$('from').value.trim()) $('from').value = CURRENT_LOCATION; });
+
+  // --- full search (Enter / search button) ---
   async function search(q) {
-    const list = $('places');
-    list.innerHTML = '';
+    toBox.clear();
     speak(`Searching for ${q}.`);
-    const data = await getJSON(`/api/geocode?q=${encodeURIComponent(q)}&focus=${HOIV.lon},${HOIV.lat}`);
-    if (!data.results.length) { speak(`I found nothing for ${q}. Try another name.`); return; }
-    if (data.results.length === 1) { await planTo(data.results[0]); return; }
-    for (const place of data.results) {
-      const li = document.createElement('li');
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = place.label;
-      b.addEventListener('click', () => { list.innerHTML = ''; run(() => planTo(place)); });
-      li.appendChild(b);
-      list.appendChild(li);
-    }
-    speak(`${data.results.length} places found. First: ${data.results[0].label}. Choose one.`);
-    list.querySelector('button')?.focus();
+    const results = await findAll(q);
+    if (!results.length) { speak(`I found nothing for ${q}. Try another name.`); return; }
+    if (results.length === 1) { await planTo(results[0]); return; }
+    toBox.show(results);
+    speak(`${results.length} places found. First: ${results[0].name}. Choose one.`);
+    $('to-suggestions').querySelector('button')?.focus();
   }
 
   /** Voice: "take me to X" → first search result, planned directly (the summary names the place). */
   async function planToPlace(q) {
     $('to').value = q;
-    const place = await geocodeFirst(q);
+    const place = await findFirst(q);
     if (!place) { speak(`I could not find ${q}. Try another name.`); return; }
     await planTo(place);
   }
@@ -85,7 +111,7 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
   async function planTo(to) {
     const mode = getMode();
     const from = await resolveStart();
-    speak(`${from.note ? from.note + ' ' : ''}Finding the safest route to ${to.label || to.name}.`);
+    speak(`${from.note ? from.note + ' ' : ''}Finding the safest route to ${to.name || to.label}.`);
     const data = await getJSON(`/api/route?from=${from.lon},${from.lat}&to=${to.lon},${to.lat}&mode=${mode}`);
     if (!data.routes?.length) { speak('No walking route found.'); return; }
 
@@ -141,6 +167,7 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
   // --- wire up the form ---
   $('route-form').addEventListener('submit', (ev) => {
     ev.preventDefault();
+    fromBox.clear();
     const q = $('to').value.trim();
     if (!q) { speak('Type or say a destination first.'); $('to').focus(); return; }
     run(() => search(q));

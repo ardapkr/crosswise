@@ -2,6 +2,7 @@
 // All decisions come from lib/guidance.js; this file feeds it positions and shows/speaks the result.
 
 import { createGuideState, updateGuidance, nextEventText, simulatedPosition, formatDistance } from '../lib/guidance.js';
+import { rememberPosition } from './location.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -30,6 +31,7 @@ export function startNavigation({ route, mode, speak, demo, speed = 1.3, startAt
   function onPosition(pos, accuracy) {
     if (stopped) return;
     lastPos = pos;
+    if (!demo) rememberPosition(pos);
     onMove?.(pos);
     const r = updateGuidance(state, pos, { accuracy });
     state = r.state;

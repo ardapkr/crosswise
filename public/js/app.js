@@ -111,6 +111,8 @@ function start() {
   renderModes();
   speak(`Crosswise ready. ${modeLabel(state.mode)} mode.${state.demo ? ' Demo mode: walking is simulated.' : ''} Where do you want to go?`);
   $('to').focus();
+  // Ask for the position now (silently): "Current location" is ready and suggestions are biased to it.
+  if (!state.demo) getPosition().catch(() => {});
 }
 
 // App voice on/off (for screen reader users)
