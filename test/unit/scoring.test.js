@@ -164,3 +164,19 @@ describe('limited mobility (slow walker, sighted)', () => {
     expect(routeSummary(rankRoutes([{ id: 'x', duration: 300, crossings: [LIGHT] }], 'blind'), 'blind')).not.toMatch(/steps/);
   });
 });
+
+describe('tie-breaks after the worst crossing (measured on 30 real trips, see EVAL.md)', () => {
+  const soundy = { id: 'soundy', duration: 700, crossings: [ZEBRA, LIGHT_SOUND, LIGHT_SOUND, LIGHT_SOUND] };
+  const fewer = { id: 'fewer', duration: 650, crossings: [ZEBRA, LIGHT, LIGHT] };
+  it('blind: fewer crossings WITHOUT an acoustic signal beats fewer crossings in total', () => {
+    expect(rankRoutes([fewer, soundy], 'blind')[0].id).toBe('soundy');
+  });
+  it('wheelchair: sound does not help, fewer crossings wins', () => {
+    expect(rankRoutes([soundy, fewer], 'wheelchair')[0].id).toBe('fewer');
+  });
+  it('blind: with the same worst crossing, fewer unmarked crossings first', () => {
+    const twoBad = { id: 'twoBad', duration: 500, crossings: [UNMARKED, UNMARKED] };
+    const oneBad = { id: 'oneBad', duration: 600, crossings: [UNMARKED, ZEBRA, LIGHT] };
+    expect(rankRoutes([twoBad, oneBad], 'blind')[0].id).toBe('oneBad');
+  });
+});

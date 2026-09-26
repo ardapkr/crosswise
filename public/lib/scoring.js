@@ -2,7 +2,8 @@
 // Pure module. Rules from CLAUDE.md:
 //   blind: lights+sound 3, lights only/unknown sound 2, zebra 1, unmarked 0
 //   wheelchair: + kerb adjustment (raised −2, unknown −0.5, lowered +0.5)
-//   route: worst crossing first, then number of crossings, then duration
+//   route: worst crossing first, then fewest risky crossings, then (blind) fewest crossings without an
+//          acoustic signal, then number of crossings, then duration
 //   limited mobility: fewest risky (unmarked/unknown) crossings, then fewest crossings, then worst, then duration;
 //                     acoustic signals give no bonus (the user can see the light)
 
@@ -62,10 +63,19 @@ export function rankRoutes(routes, mode) {
   const byWorst = (a, b) => b.score.worst - a.score.worst;
   const byCount = (a, b) => a.score.count - b.score.count;
   const byRisky = (a, b) => a.score.risky - b.score.risky;
+  const bySilent = (a, b) => (a.score.count - a.score.withSound) - (b.score.count - b.score.withSound);
   const byDuration = (a, b) => a.duration - b.duration;
-  // Limited mobility: every crossing costs effort, so fewer crossings — but never by taking an
-  // unmarked crossing (cars don't stop, and crossing slowly takes longer).
-  const order = mode === 'limited' ? [byRisky, byCount, byWorst, byDuration] : [byWorst, byCount, byDuration];
+  const ORDER = {
+    // Worst crossing first; then fewest unmarked/unknown crossings; then fewest crossings a blind person
+    // cannot hear (no acoustic signal). Measured on 30 real trips: fewer unmarked crossings and more
+    // acoustic signals than plain "then fewer crossings", same median extra time (EVAL.md).
+    blind: [byWorst, byRisky, bySilent, byCount, byDuration],
+    wheelchair: [byWorst, byRisky, byCount, byDuration],
+    // Limited mobility: every crossing costs effort, so fewer crossings — but never by taking an
+    // unmarked crossing (cars don't stop, and crossing slowly takes longer).
+    limited: [byRisky, byCount, byWorst, byDuration],
+  };
+  const order = ORDER[mode];
 
   scored.sort((a, b) => {
     for (const cmp of order) {
