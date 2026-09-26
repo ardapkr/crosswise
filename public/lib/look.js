@@ -71,16 +71,70 @@ export function normalizeResult(mode, obj) {
   }
 }
 
+// ---- direction: the same line stops in both directions, so the destination display matters ----
+
+// Words that don't tell two destinations apart ("Alser Straße" vs "Mariahilfer Straße").
+const GENERIC = new Set(['wien', 'strasse', 'str', 'gasse', 'platz', 'bahnhof', 'station', 'haltestelle',
+  'der', 'die', 'das', 'am', 'an', 'bei', 'via', 'und', 'nach']);
+const ALIASES = { hbf: 'hauptbahnhof', bf: 'bahnhof', str: 'strasse' };
+
+/** "Nußdorf, Beethovengang" → ["nussdorf", "beethovengang"] (lower case, no accents, no generic words). */
+export function placeTokens(s) {
+  if (typeof s !== 'string') return [];
+  return s.toLowerCase()
+    .replace(/ß/g, 'ss')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/ae/g, 'a').replace(/oe/g, 'o').replace(/ue/g, 'u') // "Nussdorf"/"Nußdorf", "Gaertner"/"Gärtner"
+    .replace(/[^a-z0-9]+/g, ' ')
+    .split(' ')
+    .map((t) => ALIASES[t] || t)
+    .filter((t) => t.length >= 3 && !GENERIC.has(t));
+}
+
+function samePlace(a, b) {
+  const ta = placeTokens(a);
+  const tb = placeTokens(b);
+  return ta.some((x) => tb.some((y) => x === y || (x.length >= 5 && y.length >= 5 && (x.startsWith(y) || y.startsWith(x)))));
+}
+
+/**
+ * Does the destination on the display fit the user's direction?
+ * 'match' = shows our headsign · 'wrong' = shows where the trip COMES from (opposite direction)
+ * 'other' = readable but neither (e.g. a short trip) · 'unknown' = not readable
+ */
+export function directionMatch(destination, { headsign = '', origin = '' } = {}) {
+  if (!placeTokens(destination).length) return 'unknown';
+  if (headsign && samePlace(destination, headsign)) return 'match';
+  if (origin && samePlace(destination, origin)) return 'wrong';
+  return 'other';
+}
+
+/** Spoken result when the user's line AND direction are known (trip guidance). */
+function busWithDirection(r, direction) {
+  const dir = directionMatch(r.destination, direction);
+  const want = direction.headsign;
+  switch (dir) {
+    case 'match': return `This is ${r.line} towards ${r.destination}, your bus.`;
+    case 'wrong': return `${r.line}, but the wrong direction: it goes to ${r.destination}. Your bus goes towards ${want}.`;
+    case 'other': return `This is ${r.line} to ${r.destination}. Your bus goes towards ${want}: ask the driver to be sure.`;
+    default: return `This is ${r.line}, but I could not read the direction. Your bus goes towards ${want}: ask the driver to be sure.`;
+  }
+}
+
 const sentences = (text) => (text.match(/[^.!?]+[.!?]+/g) || (text ? [text] : [])).map((s) => s.trim());
 
-/** Sentence to speak for a normalized result. `targetLine` = the bus the user is waiting for. */
-export function spokenResult(mode, r, { targetLine = '' } = {}) {
+/**
+ * Sentence to speak for a normalized result. `targetLine` = the bus the user is waiting for,
+ * `targetDirection` = { headsign, origin } of their trip (then the display's destination is checked too).
+ */
+export function spokenResult(mode, r, { targetLine = '', targetDirection = null } = {}) {
   switch (mode) {
     case 'bus': {
       if (r.status === 'not_visible') return 'No bus or tram in view.';
       if (r.status !== 'found') return 'I see a vehicle but cannot read the number.';
       const target = normalizeLine(targetLine);
       const to = r.destination ? ` to ${r.destination}` : '';
+      if (target && r.line === target && targetDirection?.headsign) return busWithDirection(r, targetDirection);
       if (target) {
         return r.line === target
           ? `This is your bus, ${r.line}${r.destination ? `, to ${r.destination}` : ''}.`
