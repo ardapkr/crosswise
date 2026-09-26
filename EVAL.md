@@ -25,3 +25,14 @@ Vercel CLI 60.0.1 (Node.js 24.19.0) | curl is in beta — https://vercel.com/fee
 Error: An unexpected error occurred in curl: TypeError: fetch failed
 
 - `light__red__03.jpg`: {"status":"not_visible","confidence":0.95,"note":"Only car traffic light visible, no pedestrian signal"} — saw: "Traffic light with yellow lamp lit, no pedestrian signal visible in photo"
+
+### Vision eval 2026-09-26 14:25 UTC — light only, prompt v1, after fixing eval network retries
+
+| Mode | Correct | Accuracy | Critical errors | Not scored (network) | Median model latency |
+|---|---|---|---|---|---|
+| light | 10/12 | 83% | 0 | 0 | 1547 ms |
+
+Misses (both labels double-checked by zooming in — both are real model mistakes, neither is critical):
+- `light__none__01.jpg` (night, only car signals: red arrow + two round red lamps) → model said "red, standing figure lit". Harmless direction (user waits), but wrong.
+- `light__red__03.jpg` (pedestrian signal, red figure looks orange in the photo) → model said "not visible, amber car light".
+→ Prompt v2: judge the SHAPE of the lit lamp (figure vs round lamp/arrow), red figures look orange in photos.

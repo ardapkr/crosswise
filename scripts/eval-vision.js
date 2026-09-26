@@ -14,7 +14,7 @@
 // Photos are downscaled to 768 px wide first (like the app does) when ffmpeg is available.
 
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, appendFileSync } from 'node:fs';
-import { execFileSync, execSync, spawnSync } from 'node:child_process';
+import { execFileSync, execSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import os from 'node:os';
 
@@ -79,17 +79,63 @@ function latestPreview() {
 }
 
 let vercelJs = null;
-function callRemote(url, body) {
-  // `vercel curl` gets past Vercel's deployment protection. Run its JS entry directly (no shell quoting issues).
+const CALL_TIMEOUT_MS = 60_000;
+const RETRIES = 2;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** One `vercel curl` call (gets past Vercel's deployment protection). Resolves to the parsed JSON. */
+function vercelCurl(url, bodyFile) {
+  // Run the CLI's JS entry directly: no shell, no quoting or path-conversion issues on Windows.
   if (!vercelJs) vercelJs = path.join(execSync('npm root -g').toString().trim(), 'vercel', 'dist', 'vc.js');
-  const f = path.join(TMP, 'body.json');
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [vercelJs, 'curl', '/api/look', '--deployment', url, '--',
+      '--silent', '--max-time', '45', '--request', 'POST', '--header', 'Content-Type: application/json',
+      '--data-binary', `@${bodyFile}`]);
+    let out = '';
+    let err = '';
+    child.stdout.on('data', (d) => { out += d; });
+    child.stderr.on('data', (d) => { err += d; });
+    const timer = setTimeout(() => { child.kill(); reject(new Error('timed out')); }, CALL_TIMEOUT_MS);
+    child.on('close', () => {
+      clearTimeout(timer);
+      const line = out.trim().split('\n').filter((l) => l.startsWith('{')).pop();
+      if (!line) return reject(new Error(`no JSON from vercel curl: ${err.trim().split('\n').pop()}`));
+      try { resolve(JSON.parse(line)); } catch { reject(new Error('bad JSON from vercel curl')); }
+    });
+  });
+}
+
+/** Calls the deployed /api/look; retries network failures and 429/5xx answers (not wrong answers). */
+async function callRemote(url, body, name) {
+  const f = path.join(TMP, `${name}.json`);
   writeFileSync(f, JSON.stringify(body));
-  const r = spawnSync(process.execPath, [vercelJs, 'curl', '/api/look', '--deployment', url, '--',
-    '--silent', '--request', 'POST', '--header', 'Content-Type: application/json', '--data-binary', `@${f}`],
-  { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
-  const line = (r.stdout || '').trim().split('\n').filter((l) => l.startsWith('{')).pop();
-  if (!line) throw new Error(`no JSON from vercel curl: ${(r.stderr || '').slice(-300)}`);
-  return JSON.parse(line);
+  let lastError;
+  for (let attempt = 0; attempt <= RETRIES; attempt++) {
+    if (attempt) await sleep(2000 * attempt);
+    try {
+      const r = await vercelCurl(url, f);
+      if (r.result) return r;
+      lastError = new Error(r.error || 'no result');
+      if (!/busy|did not answer|error 5|failed/i.test(r.error || '')) break; // e.g. 400: retrying won't help
+    } catch (e) {
+      lastError = e;
+    }
+  }
+  throw lastError;
+}
+
+/** Runs `fn` over `items` with at most `n` running at the same time, keeping the order of results. */
+async function pool(items, n, fn) {
+  const results = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i], i);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, worker));
+  return results;
 }
 
 let localHandler = null;
@@ -111,45 +157,50 @@ async function main() {
   console.log(LOCAL ? 'Running locally (in-process handler)' : `Running against ${url}`);
 
   const modes = ['bus', 'light', 'read', 'describe'].filter((m) => !ONLY || m === ONLY);
-  const records = [];
+  const jobs = [];
   for (const mode of modes) {
     const dir = path.join(ROOT, 'test', 'vision', mode);
     const files = existsSync(dir) ? readdirSync(dir).filter((f) => /\.jpe?g$/i.test(f)).sort() : [];
-    for (const f of files) {
-      const expected = f.split('__')[1] || '';
-      const t0 = Date.now();
-      let resp;
-      try {
-        const body = { mode, image: prepareImage(path.join(dir, f)) };
-        resp = LOCAL ? await callLocal(body) : callRemote(url, body);
-      } catch (e) {
-        resp = { error: e.message };
-      }
-      if (!resp?.result) {
-        records.push({ mode, file: f, expected, error: resp?.error || 'no result', ok: false, critical: false });
-        console.log(`  ✗ ${f}  ERROR ${resp?.error || ''}`);
-        continue;
-      }
-      const s = score(mode, expected, resp.result);
-      records.push({ mode, file: f, expected, ...s, result: resp.result, observation: resp.observation, ms: resp.ms, roundTripMs: Date.now() - t0 });
-      const got = mode === 'bus' ? `${resp.result.status} ${resp.result.line}` : mode === 'light' ? resp.result.status
-        : mode === 'read' ? `${resp.result.status}: ${resp.result.summary || resp.result.text}` : resp.result.description;
-      console.log(`  ${s.ok ? '✓' : '✗'}${s.critical ? ' ⚠ CRITICAL' : ''} ${f}  → ${String(got).slice(0, 110)}  (${resp.ms} ms)`);
-    }
+    for (const f of files) jobs.push({ mode, dir, file: f, expected: f.split('__')[1] || '' });
   }
+
+  // 3 photos at a time: much faster than one by one, gentle enough for the API rate limits.
+  const records = await pool(jobs, LOCAL ? 1 : 3, async ({ mode, dir, file: f, expected }) => {
+    const t0 = Date.now();
+    let resp;
+    try {
+      const body = { mode, image: prepareImage(path.join(dir, f)) };
+      resp = LOCAL ? await callLocal(body) : await callRemote(url, body, f.replace(/\.\w+$/, ''));
+    } catch (e) {
+      resp = { error: e.message };
+    }
+    if (!resp?.result) {
+      console.log(`  ✗ ${f}  ERROR ${resp?.error || ''}`);
+      return { mode, file: f, expected, error: resp?.error || 'no result', ok: false, critical: false };
+    }
+    const s = score(mode, expected, resp.result);
+    const got = mode === 'bus' ? `${resp.result.status} ${resp.result.line}` : mode === 'light' ? resp.result.status
+      : mode === 'read' ? `${resp.result.status}: ${resp.result.summary || resp.result.text}` : resp.result.description;
+    console.log(`  ${s.ok ? '✓' : '✗'}${s.critical ? ' ⚠ CRITICAL' : ''} ${f}  → ${String(got).slice(0, 110)}  (${resp.ms} ms)`);
+    return { mode, file: f, expected, ...s, result: resp.result, observation: resp.observation, ms: resp.ms, roundTripMs: Date.now() - t0 };
+  });
 
   // Summary per mode
   const lines = [];
   const date = new Date().toISOString().slice(0, 16).replace('T', ' ');
-  lines.push(`### Vision eval ${date} (${LOCAL ? 'local' : url})`, '', '| Mode | Correct | Accuracy | Critical errors | Median model latency |', '|---|---|---|---|---|');
+  lines.push(`### Vision eval ${date} (${LOCAL ? 'local' : url})`, '',
+    '| Mode | Correct | Accuracy | Critical errors | Not scored (network) | Median model latency |',
+    '|---|---|---|---|---|---|');
   for (const mode of modes) {
-    const r = records.filter((x) => x.mode === mode);
-    if (!r.length) { lines.push(`| ${mode} | – | no photos yet | – | – |`); continue; }
+    const all = records.filter((x) => x.mode === mode);
+    if (!all.length) { lines.push(`| ${mode} | – | no photos yet | – | – | – |`); continue; }
+    const r = all.filter((x) => !x.error); // network/server failures are not model mistakes
     const ok = r.filter((x) => x.ok).length;
     const crit = r.filter((x) => x.critical).length;
     const ms = r.filter((x) => x.ms).map((x) => x.ms).sort((a, b) => a - b);
-    const med = ms.length ? ms[Math.floor(ms.length / 2)] : '–';
-    lines.push(`| ${mode} | ${ok}/${r.length} | ${Math.round((100 * ok) / r.length)}% | ${crit} | ${med} ms |`);
+    const med = ms.length ? `${ms[Math.floor(ms.length / 2)]} ms` : '–';
+    const acc = r.length ? `${Math.round((100 * ok) / r.length)}%` : '–';
+    lines.push(`| ${mode} | ${ok}/${r.length} | ${acc} | ${crit} | ${all.length - r.length} | ${med} |`);
   }
   const wrong = records.filter((x) => !x.ok);
   if (wrong.length) {
