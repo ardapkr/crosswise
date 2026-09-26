@@ -34,7 +34,7 @@ function enterLeg(s, i, now) {
     ];
   }
   // a ride: the user is at the stop (or started there)
-  const scan = leg.vehicle === 'bus' || leg.vehicle === 'tram' ? ` Tap Find bus: I check the line and the direction of arriving ${leg.vehicle}s.` : '';
+  const scan = leg.vehicle === 'bus' || leg.vehicle === 'tram' ? ` Tap Find bus: I check the line and the direction of arriving ${leg.vehicle === 'bus' ? 'buses' : 'trams'}.` : '';
   const said = [{ text: `${departureText(leg, now)}${scan}`, priority: 'navigation', keep: true }];
   return [{ ...s, index: i, walk: null, ride: createRideState(leg), last: null }, said];
 }

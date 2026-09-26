@@ -78,7 +78,7 @@ export function updateRide(state, { now, position = null, accuracy = 999, boarde
         ? (assumed ? ' I think you are on board now, but I have no GPS here: I count the stops by the timetable, so the count is approximate.'
           : ' No GPS here: I count the stops by the timetable, so the count is approximate.')
         : '';
-      say.push({ text: `On ${lineName(leg)} towards ${leg.headsign}. ${plural(n, 'stop')}. Get off at ${leg.to.name}.${next}${approx}`, priority: 'navigation', keep: true });
+      say.push({ text: `On ${lineName(leg)} towards ${leg.headsign}. ${plural(n, 'stop')}. Get off at ${leg.to.name}.${next}${approx}`, priority: 'crossing', keep: true }); // same rank as "your stop is next": keeps the order
     }
   }
 

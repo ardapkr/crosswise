@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-fm1hgpeyn-trua.vercel.app  (deployed 23:10; open while logged in to Vercel)
+**Latest preview:** https://crosswise-2qkxq5dc0-trua.vercel.app  (deployed 23:38; open while logged in to Vercel)
 
 ## Handover — Sat 23:15 (read this first in a new session)
 
