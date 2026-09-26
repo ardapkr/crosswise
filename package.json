@@ -5,13 +5,15 @@
   "type": "module",
   "description": "Accessible pedestrian navigation for Vienna: safest crossings, live bus scan, spoken guidance.",
   "engines": {
-    "node": ">=20"
+    "node": "24.x"
   },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "eval:vision": "node scripts/eval-vision.js"
+    "eval:vision": "node scripts/eval-vision.js",
+    "dev": "node scripts/dev-server.js",
+    "deploy": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-preview.ps1"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

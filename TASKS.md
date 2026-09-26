@@ -1,13 +1,13 @@
 # TASKS.md — work top to bottom. Check `[x]` only when tests pass and it's pushed + deployed.
 
 ## Phase 0 — Skeleton (target: done by 14:00)
-- [ ] Init repo: `package.json` (type: module, scripts test/e2e/eval:vision), `.gitignore` (node_modules, .env*, .vercel), folders `/public /public/lib /api /test /test/fixtures /test/vision`
-- [ ] Create private GitHub repo with `gh repo create`, push `main`
-- [ ] `vercel link`, confirm env vars exist with `vercel env ls` (do NOT print values), first `vercel deploy`
-- [ ] `index.html` with Start button, mode switch (Blind / Wheelchair / Limited mobility), big status text, `speak()` helper
-- [ ] Vitest + Playwright installed and one passing test each
-- [ ] Copy `overpass-hoiv.json` into `test/fixtures/`
-- [ ] Notify: "Skeleton live at <preview URL>"
+- [x] Init repo: `package.json` (type: module, scripts test/e2e/eval:vision), `.gitignore` (node_modules, .env*, .vercel), folders `/public /public/lib /api /test /test/fixtures /test/vision`
+- [x] Create private GitHub repo with `gh repo create`, push `main`
+- [x] `vercel link`, confirm env vars exist with `vercel env ls` (do NOT print values), first `vercel deploy`
+- [x] `index.html` with Start button, mode switch (Blind / Wheelchair / Limited mobility), big status text, `speak()` helper
+- [x] Vitest + Playwright installed and one passing test each
+- [x] Copy `overpass-hoiv.json` into `test/fixtures/`
+- [x] Notify: "Skeleton live at <preview URL>"
 
 ## Phase 1 — Route comparison (target: 17:00) ★ core
 - [ ] `/api/route`: ORS directions with alternatives for the chosen profile, cached; returns GeoJSON routes
