@@ -1,0 +1,20 @@
+{
+  "name": "crosswise",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Accessible pedestrian navigation for Vienna: safest crossings, live bus scan, spoken guidance.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "eval:vision": "node scripts/eval-vision.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "vitest": "^5.0.2"
+  }
+}

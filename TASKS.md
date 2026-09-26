@@ -1,0 +1,66 @@
+# TASKS.md — work top to bottom. Check `[x]` only when tests pass and it's pushed + deployed.
+
+## Phase 0 — Skeleton (target: done by 14:00)
+- [ ] Init repo: `package.json` (type: module, scripts test/e2e/eval:vision), `.gitignore` (node_modules, .env*, .vercel), folders `/public /public/lib /api /test /test/fixtures /test/vision`
+- [ ] Create private GitHub repo with `gh repo create`, push `main`
+- [ ] `vercel link`, confirm env vars exist with `vercel env ls` (do NOT print values), first `vercel deploy`
+- [ ] `index.html` with Start button, mode switch (Blind / Wheelchair / Limited mobility), big status text, `speak()` helper
+- [ ] Vitest + Playwright installed and one passing test each
+- [ ] Copy `overpass-hoiv.json` into `test/fixtures/`
+- [ ] Notify: "Skeleton live at <preview URL>"
+
+## Phase 1 — Route comparison (target: 17:00) ★ core
+- [ ] `/api/route`: ORS directions with alternatives for the chosen profile, cached; returns GeoJSON routes
+- [ ] `/api/geocode`: ORS geocode, focus on Vienna, returns top 3 matches
+- [ ] `scripts/fetch-crossings.js`: download ALL crossings + traffic_signals for Vienna (bbox 48.118,16.182,48.323,16.578) and Budapest (47.35,18.92,47.62,19.34) from Overpass ONCE (timeout 300, polite, retry once); save raw to `data/raw/`
+- [ ] `scripts/build-crossings.js`: filter + classify + cluster with lib/crossings.js, keep only needed tags, write compact `public/data/crossings-vienna.json` and `crossings-budapest.json`; print counts + file size
+- [ ] `/api/crossings`: serve from the snapshot for Vienna/Budapest bbox; live Overpass (cached) only as fallback elsewhere
+- [ ] `lib/geo.js`: distance, point-to-line distance, bbox (tested)
+- [ ] `lib/crossings.js`: filter (level, private), classify, cluster within 20 m (tested with fixture)
+- [ ] `lib/scoring.js`: per-mode crossing score + route ranking (tested: safer route must beat shorter route on fixture)
+- [ ] UI: from/to input (+ "use my location"), shows routes as simple cards: duration, #crossings, worst crossing, colour
+- [ ] Spoken summary: "Route 2 is 3 minutes longer, but every crossing has lights and an acoustic signal."
+- [ ] Optional small map (Leaflet from cdnjs) — only if everything above works
+- [ ] Save 3 real ORS responses around HOIV as fixtures so tests never need the network
+- [ ] Notify: "Route comparison ready to test on phone"
+
+## Phase 2 — Guidance + crossing alerts (target: 18:30 — outdoor filming starts)
+- [ ] `lib/guidance.js`: given position + route + crossing groups → next event (turn / crossing) and distance (tested)
+- [ ] Live GPS with `watchPosition`; announce crossing at ~40 m and ~10 m: type, sound signal, kerb info, "press the button under the box" when sound=yes
+- [ ] Turn instructions from ORS steps
+- [ ] `?demo=1` simulated walk along the route (Playwright test runs it)
+- [ ] Notify: "Guidance ready — test outdoors / film"
+
+## Phase 3 — Live bus scan (target: 22:00)
+- [ ] `/api/look` + `/api/prompts.js` (all 4 modes), JSON-only answers, robust parsing
+- [ ] `lib/scan.js`: agreement logic (2 consecutive matches), timeouts, "still looking" cadence (tested)
+- [ ] Camera module: rear camera, downscale to 768 px, one request in flight
+- [ ] "Find my bus" flow with optional target line ("I need 13A")
+- [ ] Playwright e2e with a fake-camera video of a bus
+- [ ] `npm run eval:vision` script
+- [ ] Notify: "Bus scan ready — needs real bus test"
+
+## Phase 4 — Modes (target: 23:30)
+- [ ] Wheelchair profile + kerb scoring + "curb height unknown" messages
+- [ ] Limited mobility: avoid steps, prefer fewer crossings
+- [ ] Tests: same fixture ranks differently per mode
+
+## Phase 5 — Look features (target: 01:00)
+- [ ] Crossing light check (never "safe to cross")
+- [ ] Read text
+- [ ] Describe surroundings (short, most important first, max ~3 sentences)
+
+## Phase 6 — Voice (target: 02:30)
+- [ ] Push-to-talk button, `lib/commands.js` keyword parser (tested): find my bus [line], read, describe, check light, where am I, take me to <place>, switch mode
+- [ ] Graceful fallback message when SpeechRecognition isn't supported
+
+## Phase 7 — Where am I (target: 03:00)
+- [ ] Street name + nearest stop / crossing from ORS reverse geocode or Overpass
+
+## Phase 8 — Polish + submission (target: 07:00, hard stop 07:30)
+- [ ] Accessibility pass: screen reader labels, focus order, contrast
+- [ ] Error states spoken aloud (no network, GPS denied, camera denied)
+- [ ] README: problem, features, how it works, data sources, honest limits, eval numbers, how to run
+- [ ] `EVAL.md`: the 5 demo cases, baseline comparison, vision accuracy, known failures
+- [ ] `git archive` ZIP of the repo for submission
+- [ ] Final production deploy (ask human first)

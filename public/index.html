@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>Crosswise</title>
+  <meta name="description" content="Safer walking routes with announced crossings, plus a camera assistant for buses, lights and text.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#status">Skip to status</a>
+  <header class="top">
+    <h1>Crosswise</h1>
+    <button id="repeat" class="small" type="button" aria-label="Repeat last message">Repeat</button>
+  </header>
+
+  <main id="main">
+    <!-- Big status text: everything spoken is also shown here. -->
+    <p id="status" class="status" role="status" aria-live="polite">Tap Start to begin.</p>
+
+    <!-- iOS needs a real tap before audio and camera work. -->
+    <button id="start" class="big primary" type="button">Start</button>
+
+    <section id="app" aria-label="Crosswise controls" hidden>
+      <section class="card" aria-labelledby="mode-heading">
+        <h2 id="mode-heading">Mode</h2>
+        <div id="modes" class="modes" role="group" aria-labelledby="mode-heading"></div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

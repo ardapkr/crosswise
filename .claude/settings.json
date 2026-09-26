@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(git *)",
+      "Bash(gh repo *)",
+      "Bash(gh auth status)",
+      "Bash(vercel)",
+      "Bash(vercel deploy)",
+      "Bash(vercel dev *)",
+      "Bash(vercel link *)",
+      "Bash(vercel env ls *)",
+      "Bash(vercel logs *)",
+      "Bash(curl *)",
+      "Bash(ffmpeg *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(zip *)",
+      "Bash(lsof *)",
+      "Bash(kill *)",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "ask": [
+      "Bash(vercel --prod *)",
+      "Bash(vercel deploy --prod *)",
+      "Bash(gh repo delete *)"
+    ],
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard *)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)",
+      "Bash(sudo *)",
+      "Read(./.env*)",
+      "Edit(./.env*)"
+    ]
+  }
+}
