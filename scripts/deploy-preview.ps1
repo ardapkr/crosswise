@@ -15,6 +15,7 @@ $paths = @('/api/health') + $args
 $failed = $false
 foreach ($p in $paths) {
   $body = vercel curl $p --deployment $url 2>$null | Out-String
+  if (-not $body.Trim()) { Start-Sleep -Seconds 3; $body = vercel curl $p --deployment $url 2>$null | Out-String } # network hiccup: retry once
   $short = $body.Trim()
   if ($short.Length -gt 300) { $short = $short.Substring(0, 300) + '...' }
   Write-Output "  $p -> $short"

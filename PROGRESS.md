@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-g8sxwct0b-trua.vercel.app  (deployed 16:26; open while logged in to Vercel)
+**Latest preview:** https://crosswise-n4c6neyxj-trua.vercel.app  (deployed 16:39; open while logged in to Vercel)
 
 ## Log (newest first)
 - 16:55 **Phase 4 done.** Kerb data: also downloaded (once) the `barrier=kerb` nodes that are part of crossing footways (Vienna 2,914, Budapest 1,104; bus-stop platform kerbs excluded) → crossings with known kerb in Vienna 1,642 → 2,562. Limited mobility now ranks by fewest risky (unmarked/unknown) crossings, then fewest crossings; no bonus for acoustic signals; summary says "Routes avoid steps." Real HOIV→Hbf in limited mode now avoids the unmarked crossing. Test with real Vienna crossings: same 3 candidate routes rank ACB (blind), BAC (wheelchair), CAB (limited). 150 unit + 18 e2e green.
