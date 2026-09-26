@@ -10,3 +10,4 @@ playwright-report/
 .vercel
 .env*
 test-material/
+submission/

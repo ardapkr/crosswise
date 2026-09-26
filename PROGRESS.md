@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-g63k3lrsu-trua.vercel.app  (deployed 17:27; open while logged in to Vercel)
+**Latest preview:** https://crosswise-iu6734kbs-trua.vercel.app  (deployed 17:34; open while logged in to Vercel)
 
 ## Log (newest first)
 - 17:34 Map (the deferred optional Phase 1 item): Leaflet map under "Routes, safest first" — recommended route thick yellow, shortest dashed, crossings coloured like the cards (green lights+sound, blue lights, orange zebra, red unmarked/unknown); while walking it moves into the walking panel with a cyan walker dot. aria-hidden + inert (cards and speech carry the same info); axe still 0 violations; app works if the map fails to load. 238 unit + 34 e2e green.

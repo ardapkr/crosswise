@@ -13,7 +13,8 @@
     "e2e": "playwright test",
     "eval:vision": "node scripts/eval-vision.js",
     "dev": "node scripts/dev-server.js",
-    "deploy": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-preview.ps1"
+    "deploy": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-preview.ps1",
+    "zip": "node -e \"require('fs').mkdirSync('submission',{recursive:true})\" && git archive --format=zip --prefix=crosswise/ -o submission/crosswise.zip HEAD"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
