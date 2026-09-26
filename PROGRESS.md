@@ -2,68 +2,64 @@
 
 **Latest preview:** https://crosswise-alu8dnhie-trua.vercel.app  (deployed 21:47; open while logged in to Vercel)
 
-## Handover — Sat 19:34 (read this first in a new session)
+## Handover — Sat 21:55 (read this first in a new session)
 
-State: `main` is clean, pushed, and green: `npm test` 241 passed, `npm run e2e` 34 passed (checked 19:34).
-The newest preview above has everything. No outdoor feedback, bus photos or user feedback have arrived yet.
+State: `main` is clean, pushed and green: `npm test` 269 passed, `npm run e2e` 43 passed (both projects:
+"chromium" + "bus-video"). The preview above = current `main` (UI redesign v1). Branch `ui-redesign` is merged.
+**Waiting for the humans' feedback on the redesign** (they asked to see it before any polishing).
 
 ### Done (built, tested, deployed)
-- **Phase 0–7 complete** (all boxes in TASKS.md except the 2 below). Features: safest-crossings route comparison
-  (ORS alternatives + OSM crossing snapshot, spoken summary with the real reason), GPS guidance with crossing alerts
-  at 40 m / 10 m and `?demo=1` walk, Find my bus live scan, check light / read / describe (Claude Haiku 4.5,
-  structured JSON), 3 modes (wheelchair kerbs, limited mobility), voice commands, Where am I, Leaflet map.
-- **Phase 8 done parts:** accessibility pass (axe 0 violations + App voice toggle for screen readers), error states
-  spoken, README.md, EVAL.md (5 demo cases, baseline comparison, vision accuracy, limits), USER_TEST.md,
-  DEMO_SCRIPT.md, `npm run zip`.
+- **Phase 0–7 + Phase 9 (feedback round 1)** — see TASKS.md. Features: safest-crossings route comparison (ORS
+  alternatives + OSM crossing snapshot, spoken reason), GPS guidance with crossing alerts at 40 m / 10 m and a
+  `?demo=1` walk, Find my bus live scan, check light / read / describe (Claude Haiku 4.5), 3 modes, voice
+  commands, Where am I.
+- **Phase 9 (20:00–21:50):** voice always English (lib/voices.js picks an en-US/en-GB voice, late voices handled,
+  recognition en-US); live search suggestions (/api/autocomplete + js/search.js, "Current location" default start,
+  curated places in lib/places.js); map with per-route colour + pattern, crossing dots by type, tap card → highlight;
+  full UI redesign (dark, sky-blue accent, full-screen map, search panel, bottom sheet, thumb-zone dock, walking
+  banner, full-screen camera view, settings dialog).
 - **Measured:** 30 real trips: unmarked/unknown crossings 43 → 21 vs shortest route, median +1.4 min. Vision:
-  light 10/12 (0 critical), read 3/3, describe 11/11.
+  **bus 12/15, 0 critical** (15 real 69A images), light 10/12 (0 critical), read 3/3, describe 11/11.
+- Phase 8 parts: accessibility (axe 0 violations on 7 screen states), spoken errors, README, EVAL, USER_TEST,
+  DEMO_SCRIPT, `npm run zip`.
 
 ### Half-done / waiting
-- **Bus reading accuracy: unknown.** `test/vision/bus/` is empty (no bus photos in test-material). The scan logic is
-  only tested with a fake camera + mocked answers. When photos come: name `bus__69A__01.jpg` / `bus__none__01.jpg`,
-  put them in `test/vision/bus/`, run `npm run eval:vision -- --log`, tune `api/prompts.js` (never guess a line).
-- **No real-world test yet:** GPS guidance outdoors, real lights, real buses, real phones (iPhone Safari / Android
-  Chrome), real VoiceOver/TalkBack. Steps in HUMAN_TODO.md.
-- **No real-user feedback yet** (judging criterion). Script ready: USER_TEST.md.
-- **EVAL.md / README.md:** bus accuracy, outdoor results and user quotes still missing ("not measured yet").
-- **DEMO_SCRIPT.md** is a draft; update with real footage + numbers.
-- TASKS Phase 8 open: **submission ZIP** (script ready — run `npm run zip` after the last commit, at the freeze) and
-  **production deploy** (needs the humans' OK; `vercel --prod` is in the "ask" list).
+- **Redesign v1 needs human feedback** (map size on small phones, Speak/Where am I placement, long route summary in
+  the sheet). Not tested on a real iPhone/Android or with real VoiceOver/TalkBack yet.
+- **No outdoor test / no real-user feedback yet** (judging criteria). Steps: HUMAN_TODO.md, USER_TEST.md.
+- DEMO_SCRIPT.md still describes the old UI flow in places; update after the redesign is accepted.
+  `docs/screenshots` not committed (run `node scripts/screenshots.js` with `npm run dev` running).
+- TASKS Phase 8 open: submission ZIP (`npm run zip` at the freeze) and production deploy (needs the humans' OK).
+- Search: Google Places was NOT adopted (terms forbid non-Google maps, ToS 3.2.3(e)); ORS ranking is proximity-biased
+  ("Prater" → Böhmischer Prater first). If humans want better ranking: try an OSM-based geocoder (e.g. Photon).
 
 ### Known bugs and weak spots
-1. **Production URL https://crosswise-woad.vercel.app is public but STALE** — it is the Phase 0 skeleton from the
-   very first deploy (no camera, `/api/route` 404). Don't share it until a production deploy is approved and done.
-2. Light check misses (safe direction): a red figure that looks orange in the photo, and a signal shot from below,
-   are reported "not visible" (`light__red__03`, `light__green__07`). Stopped prompt tuning at 12 photos to avoid
-   overfitting.
-3. Crossing detection is geometric: where pavements are not mapped separately, a route along a street can still
-   "touch" crossings of that street (false "Crossing now"). The 3 m node rule was measured on 6 routes only.
-   To verify on site: the simulated HOIV → Hbf walk says "Crossing now: traffic light…" right at the start (0 m).
-4. OSM gaps: 28% of Vienna's signals have no acoustic-signal info, 71% of crossings no kerb info, raised kerbs are
-   rare — so wheelchair mode often ranks routes the same as blind mode (it still speaks the kerb info).
-5. ORS wheelchair profile gave only 1 route for HOIV → Hbf (nothing to compare on that trip).
-6. No cap on extra time: the recommended route was up to 6.5 min longer (it is said out loud; the user can pick
-   the shortest card).
-7. Voice commands English only (en-US); no SpeechRecognition in Firefox (fallback message is spoken).
-8. Map tiles come from tile.openstreetmap.org (fine for a demo, not for heavy traffic).
+1. **Production URL https://crosswise-woad.vercel.app is public but STALE** (Phase 0 skeleton). Don't share it.
+2. On a ~700 px tall phone viewport the visible map band is only ~200 px (sheet + dock take the rest); the
+   "Show more/less" handle is the only way to resize (no drag gesture).
+3. The From field is only reachable inside the search panel (tap the search pill first) — also for screen readers.
+4. Light check misses in the safe direction (`light__red__03`, `light__green__07`: "not visible").
+5. Crossing detection is geometric: where pavements are not mapped, a route along a street can "touch" crossings.
+6. OSM gaps: 28% of signals without acoustic info, 71% of crossings without kerb info.
+7. Bus reading needs the bus within ~30 m; only one line (69A, dusk) measured.
+8. `npm run deploy` failed once with "no preview URL found" (transient CLI output issue); `vercel deploy
+   --target=preview --yes` directly worked. Retry the npm script first.
 
 ### Gotchas for the next session
-- Deploy with `npm run deploy` (preview + smoke test + updates the URL line above). The PowerShell tool may be
-  disabled; the npm script calls powershell.exe itself. Preview URLs need a Vercel login.
-- `vercel curl` in Git Bash needs `MSYS_NO_PATHCONV=1`. It is sometimes flaky ("fetch failed"): retry.
-- `.env.local` has **no keys** (Vercel "Sensitive" vars can't be pulled; reading `.env*` is blocked). Local
-  `npm run dev` works with the saved demo routes; live ORS/vision checks run against a preview.
-- `data/raw/` (Overpass downloads) is git-ignored. A fresh clone only has the built snapshots in `public/data/`,
-  which is all the app needs. Re-download only if needed: `node scripts/fetch-crossings.js` (skips existing files).
-- Don't edit files with `sed` when the text has backticks (GNU sed treats a backslash-backtick as an anchor and
-  corrupted README once) — use the Edit tool or a small node script.
+- Deploy with `npm run deploy` (preview + smoke test + updates the URL line above). Preview URLs need a Vercel login.
+- `vercel curl` in Git Bash needs `MSYS_NO_PATHCONV=1`; sometimes flaky: retry.
+- `.env.local` has **no keys**: locally /api/autocomplete and /api/look answer "…_API_KEY is not configured";
+  routes fall back to saved demo routes. Live checks run against a preview.
+- Long node heredocs in Git Bash sometimes break ("unexpected EOF"): write the script to the scratchpad and run it.
+- Leaflet's panes use z-index 400+: `.map-layer` must keep `z-index: 0; isolation: isolate` or the map covers the UI.
+- Panel sizes are CSS vars (--top-h, --dock-h, --bottom-h) set by `measurePanels()` in app.js; call it right after
+  any view change BEFORE fitting the map (ResizeObserver runs too late).
 - Local server is `npm run dev` (scripts/dev-server.js), not `vercel dev`.
 
-### Next steps, in order
-1. Humans' outdoor test + bus photos → fix what breaks (Phone test prompt), measure bus accuracy, update EVAL.md.
-2. Production deploy when the humans say so.
-3. User test notes → EVAL.md "user feedback".
-4. Morning freeze (06:00): final numbers in README/EVAL, `npm run zip`, ask before the production deploy.
+### Next 3 tasks
+1. Apply the humans' redesign feedback (then update DEMO_SCRIPT.md + commit screenshots for the README).
+2. Humans' outdoor test on real phones (VoiceOver/TalkBack, GPS walk, real bus/light) → fix what breaks, update EVAL.md.
+3. Morning freeze (06:00): final numbers in README/EVAL, `npm run zip`, ask before the production deploy.
 
 ## Log (newest first)
 - 21:47 **UI redesign v1** (branch ui-redesign → main), shown to the humans for feedback before polishing. Dark, calm, one accent (sky blue #4cc2ff, 9.7:1 on the background; chosen over violet: stays apart from the green/yellow/orange/red crossing colours). Full-screen map (pannable, aria-hidden, dark muted OSM tiles) with a "you are here" dot; search pill on top that opens a full-screen search panel (From: Current location, live suggestions, suggested places when empty); bottom sheet (big status text + Repeat, route cards first, mode as a segmented control, quick destinations; "Show more" handle expands it, the map re-fits the route); fixed dock in the thumb zone (Speak, Where am I?, and 4 camera tiles Find bus / Check light / Read / Describe). Walking: accent banner with the next instruction replaces the search, Repeat next / Stop route on top of the sheet. Camera: full-screen view above the dock (video, result in big text, "Your line", Stop). Settings dialog (App voice, voice commands, map colours, OSM credit); App voice toggle also on the start screen so VoiceOver users can silence the app before it talks. Fixed on the way: raw browser errors were spoken ("The play() request was interrupted…"), a camera stream could stay on when stopped during start-up, typing the bus line while the camera started was lost, Start button name did not contain its visible text (WCAG 2.5.3), map fitted with stale panel sizes. axe: 0 violations on start, main, cards, walking, camera, search panel, settings. 269 unit + 43 e2e green. Screenshots: node scripts/screenshots.js.
