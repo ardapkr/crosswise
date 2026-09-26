@@ -1,5 +1,5 @@
 // GET /api/geocode?q=Stephansplatz[&focus=lon,lat]  → { results: [{ label, lon, lat }] } (top 3)
-// OpenRouteService (Pelias) search, biased to the user's position or Vienna, limited to 60 km around it.
+// OpenRouteService (Pelias) search, biased to the user's position or Vienna, limited to 30 km around it.
 
 import { createCache } from './_lib/cache.js';
 import { parseLonLat, fail, fetchWithTimeout, requireKey } from './_lib/http.js';
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     u.searchParams.set('focus.point.lat', focus[1]);
     u.searchParams.set('boundary.circle.lon', focus[0]);
     u.searchParams.set('boundary.circle.lat', focus[1]);
-    u.searchParams.set('boundary.circle.radius', '60');
+    u.searchParams.set('boundary.circle.radius', '30'); // the city around the user (60 km reached Bratislava)
 
     let r;
     try {

@@ -8,6 +8,16 @@ Open the newest preview URL from the top of `PROGRESS.md` on the phone **while l
 (or turn off Deployment Protection — see bottom). Tap **Start** first (unlocks sound and camera).
 Report back with the **Phone test** prompt from PROMPTS.md: what it said out loud, where it was wrong.
 
+## NEW: voice "I want to go to …" (≈5 min, on the phone, app voice ON)
+1. Tap **Speak** (bottom left), after the beep say: "I want to go to Stephansplatz" (also try "take me to the opera",
+   "bring mich zum Prater", "I want to go somewhere").
+2. It asks: "Did you mean Stephansplatz, Vienna? It is about 4 kilometres from here. Say yes or no." — the mic
+   opens by itself after the question (you hear the beep). Say **yes** (or tap the big Yes button).
+3. It plans from your current GPS position and reads the options, then asks "Shall I start the recommended
+   option …?" → say **yes** → guidance starts. Say **no** at the first question → it offers the next match.
+4. Also try the phone keyboard's microphone in the search box: dictate "I want to go to Karlsplatz" → same question.
+Note: with the app voice OFF (VoiceOver/TalkBack) the mic does not reopen by itself — tap Speak or the Yes/No buttons.
+
 ## NEW: public transport trip (≈30 min) ★ new feature, needs a real ride
 1. At HOIV, search **Wien Hauptbahnhof** (walking takes 27 min, so bus/tram options come first).
    Listen: does the summary make sense? Is the recommended option really the better one?

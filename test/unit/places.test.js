@@ -83,3 +83,25 @@ describe('mergeSuggestions', () => {
     expect(merged.some((s) => s.name === 'Arsenalstraße 11')).toBe(false);
   });
 });
+
+describe('landmarks said by voice (the geocoder gets them wrong)', () => {
+  it('"the opera" is the Staatsoper, not a shop in Bratislava', async () => {
+    const { matchLandmark } = await import('../../public/lib/places.js');
+    for (const q of ['opera', 'the opera', 'Staatsoper', 'die Oper', 'vienna state opera']) expect(matchLandmark(q)[0]?.name).toBe('Wiener Staatsoper');
+  });
+  it('"Prater" is the famous one with the Ferris wheel; Schönbrunn with or without umlaut', async () => {
+    const { matchLandmark } = await import('../../public/lib/places.js');
+    expect(matchLandmark('Prater')[0]).toMatchObject({ name: 'Prater and Riesenrad', lon: 16.3959, lat: 48.2166 });
+    expect(matchLandmark('riesenrad')[0].name).toBe('Prater and Riesenrad');
+    for (const q of ['Schönbrunn', 'schonbrunn', 'Schoenbrunn palace', 'Schloss Schönbrunn']) expect(matchLandmark(q)[0]?.name).toBe('Schloss Schönbrunn');
+    expect(matchLandmark('the zoo')[0].name).toBe('Tiergarten Schönbrunn');
+    expect(matchLandmark('AKH')[0].name).toBe('AKH Wien');
+  });
+  it('whole names only: typing a part or an unrelated name matches nothing', async () => {
+    const { matchLandmark } = await import('../../public/lib/places.js');
+    expect(matchLandmark('op')).toEqual([]);
+    expect(matchLandmark('Stephansplatz')).toEqual([]);
+    expect(matchLandmark('opera shop')).toEqual([]);
+    expect(matchLandmark('')).toEqual([]);
+  });
+});

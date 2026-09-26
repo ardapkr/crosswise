@@ -11,7 +11,7 @@ import { decodeGroups, crossingsOnRoute } from '../lib/crossings.js';
 import { rankRoutes, safetyLevel } from '../lib/scoring.js';
 import { routeSummary, describeCrossing, routeCardText, routeBadge, LEVEL_TEXT } from '../lib/summary.js';
 import { bbox } from '../lib/geo.js';
-import { matchKnownPlaces, mergeSuggestions, fromGeocode, KNOWN_PLACES } from '../lib/places.js';
+import { matchKnownPlaces, matchLandmark, mergeSuggestions, fromGeocode, KNOWN_PLACES } from '../lib/places.js';
 import {
   walkRequests, buildTrip, firstReachable, orderPlan, planSummary, tripTitle, tripCardText, tripStepsShort,
   tripCrossingsShort, clock,
@@ -127,13 +127,20 @@ export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, close
    * query = the place as said ("stephansplatz"); '' = the user wants to go somewhere but did not say where.
    * by = 'walk' | 'transit' | null (asked for in the sentence).
    */
+  let lookup = 0; // the newest lookup wins: an older one that answers late must not ask its question
+
   async function confirmPlace(query, { by = null } = {}) {
+    const my = ++lookup;
     closeSearch();
     toBox.clear();
     if (!query) { askDestination(by); return; }
     $('to').value = query;
     speak(`Looking up ${query}.`);
-    const found = (await findAll(query)).slice(0, 3);
+    // spoken landmark names first ("the opera" is the Staatsoper, not a shop in Bratislava), then the search
+    let remote = [];
+    try { remote = await findAll(query); } catch (e) { if (my === lookup) throw e; return; }
+    if (my !== lookup) return;
+    const found = mergeSuggestions(matchLandmark(query), remote).slice(0, 3);
     if (!found.length) {
       askDestination(by, `I could not find ${query}. Where do you want to go? Say the place again, or a street name.`);
       return;
@@ -211,6 +218,7 @@ export function initRoutes({ getMode, speak, demo, onChoose, onChooseTrip, close
   /** opts.by: 'walk' = walking only, 'transit' = public transport first; opts.askToStart: ask to start after the summary. */
   async function planTo(to, { by = null, askToStart = false } = {}) {
     getAsk()?.cancel(); // a new plan answers any open question (e.g. a quick destination was tapped instead)
+    lookup++;           // … and makes a place lookup still on its way irrelevant
     closeSearch();
     const mode = getMode();
     const from = await resolveStart();
