@@ -8,7 +8,8 @@ Report back with the **Phone test** prompt from PROMPTS.md: what it said out lou
 
 ### 1. Find my bus at a real stop (≈10 min) ★ needs a human, can't be faked
 1. Go to a bus/tram stop near HOIV (e.g. 69A or tram D/O/18 stops; 13A stops at Hauptbahnhof).
-2. Type the line you wait for in **My bus or tram line** (e.g. `69A`), tap **Find my bus**.
+2. Tap **Find bus** (bottom bar), type the line you wait for in **Your line** (e.g. `69A`) and tap Go —
+   or tap **Speak** and say "find my bus 69 A".
 3. Point the camera at the front of arriving vehicles. You should hear a soft tick per photo,
    "Still looking" every ~10 s, "This is 18, not your bus" for other lines, and
    "This is your bus, 69A, to …" + a chime for yours. It gives up after 60 s.
@@ -16,7 +17,7 @@ Report back with the **Phone test** prompt from PROMPTS.md: what it said out lou
 5. **Film it** (screen + bus in the same shot) — this is the strongest moment for the video.
 
 ### 2. Check crossing light (≈5 min)
-At a signalled crossing, tap **Check crossing light** and point at the pedestrian light across the road.
+At a signalled crossing, tap **Check light** (bottom bar) and point at the pedestrian light across the road.
 Expected: "The pedestrian light looks green/red…" + "Listen for traffic before crossing". It must never
 say "safe". Try once with green, once with red, once pointing at a car light (should say it can't see one).
 

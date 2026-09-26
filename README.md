@@ -22,7 +22,7 @@ At the bus stop the next problem starts: which bus is this?
 | **Check the crossing light** | One photo → *"The pedestrian light looks red. Wait."* It never says "safe to cross" and always adds *"Listen for traffic before crossing."* |
 | **Read text / Describe surroundings** | Signs, timetables, door labels; a 3-sentence scene description with hazards first. |
 | **Where am I?** | Street and house number, nearest bus/tram stops, nearest crossing and its type. |
-| **Voice commands** | Tap "Speak a command": *find my bus 13A, take me to Hauptbahnhof, check the light, read this, where am I, wheelchair mode, stop, repeat, help.* |
+| **Voice commands** | Tap **Speak**: *find my bus 13A, take me to Hauptbahnhof, check the light, read this, where am I, wheelchair mode, stop, repeat, help.* |
 | **Three modes** | Blind / low vision, Wheelchair (ORS wheelchair profile, kerb-aware), Limited mobility (no steps, fewest crossings, never an unmarked one). |
 | **Accessible by design** | Everything is spoken **and** shown as large high-contrast text; buttons ≥ 64 px; real `<button>`s with labels for VoiceOver/TalkBack; speech priority (danger > crossing > navigation > info — nothing important is talked over). |
 

@@ -11,8 +11,8 @@ export const CROSSING_COLORS = { sound: '#3ddc84', lights: '#ffd23f', zebra: '#f
 /** One colour + line pattern per route, in rank order (1 = recommended). The pattern helps colour-blind users;
  *  the colours are kept away from the crossing colours (green / yellow / orange / red). */
 export const ROUTE_STYLES = [
-  { color: '#a78bfa', dash: null },        // violet, solid (recommended = the app's accent)
-  { color: '#38bdf8', dash: '12 9' },      // sky blue, dashed
+  { color: '#4cc2ff', dash: null },        // sky blue, solid (recommended = the app's accent)
+  { color: '#b69cff', dash: '12 9' },      // violet, dashed
   { color: '#f0abfc', dash: '1 11' },      // pink, dotted
 ];
 export const routeStyle = (rank) => ROUTE_STYLES[(rank - 1) % ROUTE_STYLES.length];
@@ -23,6 +23,8 @@ let layer = null;       // everything we draw, cleared on each new plan
 let dots = null;        // crossing dots of the selected route
 let walker = null;
 let pendingWalker = null; // a position that arrived while the map was still getting ready
+let here = null;          // "you are here" dot before a route is walked
+let pendingHere = null;
 let lines = new Map();  // route id → { line, route }
 let selected = null;
 let padding = () => ({ top: 24, right: 24, bottom: 24, left: 24 }); // the UI covers parts of the map
@@ -53,8 +55,27 @@ export async function ensureMap(el, { interactive = false, center = [48.1761, 16
     // Standard OpenStreetMap tiles (light use with attribution is allowed; the attribution link is shown
     // by the page, outside the aria-hidden map). styles.css darkens them to match the app.
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    if (pendingHere) showHere(pendingHere);
   }
   return map;
+}
+
+/** "You are here" dot; centres the map on it while no route is shown. */
+export function showHere([lon, lat]) {
+  if (!map) { pendingHere = [lon, lat]; return; }
+  if (!here) {
+    here = L.circleMarker([lat, lon], { radius: 9, color: '#ffffff', weight: 3, fillColor: '#4cc2ff', fillOpacity: 1, interactive: false }).addTo(map);
+  } else {
+    here.setLatLng([lat, lon]);
+  }
+  if (!layer) centerInView([lat, lon], 16);
+}
+
+/** Centres a point in the part of the map that the panels don't cover. */
+function centerInView(latLngPoint, zoom, animate = false) {
+  const p = padding();
+  const offset = L.point((p.left - p.right) / 2, (p.top - p.bottom) / 2);
+  map.setView(map.unproject(map.project(latLngPoint, zoom).subtract(offset), zoom), zoom, { animate });
 }
 
 const latLng = ([lon, lat]) => [lat, lon];
@@ -133,6 +154,12 @@ export function selectRoute(id, { fit = true } = {}) {
   window.__map = { routes: lines.size, crossings: (hit.route.crossings || []).length, selected: id };
 }
 
+/** Fits the selected route again (the visible part of the map changed, e.g. the sheet was expanded). */
+export function refit() {
+  const hit = lines.get(selected);
+  if (map && hit && !walker) fitTo(hit.route.geometry.map(latLng));
+}
+
 /** Walking: only the chosen route, its crossings and a dot for the walker. */
 export async function showWalk(box, route) {
   if (!(await prepare(box))) return;
@@ -147,12 +174,19 @@ export async function showWalk(box, route) {
 export function showPosition([lon, lat]) {
   if (!map || !layer) { pendingWalker = [lon, lat]; return; }
   if (!walker) {
-    walker = L.circleMarker([lat, lon], { radius: 10, color: '#ffffff', weight: 4, fillColor: '#a78bfa', fillOpacity: 1 }).addTo(layer);
+    walker = L.circleMarker([lat, lon], { radius: 10, color: '#ffffff', weight: 4, fillColor: '#4cc2ff', fillOpacity: 1 }).addTo(layer);
   } else {
     walker.setLatLng([lat, lon]);
   }
   walker.bringToFront();
-  if (!map.getBounds().pad(-0.2).contains([lat, lon])) map.panTo([lat, lon], { animate: true });
+  // keep the walker inside the part of the map the panels don't cover
+  const p = padding();
+  const size = map.getSize();
+  const pt = map.latLngToContainerPoint([lat, lon]);
+  const margin = 40;
+  if (pt.x < p.left + margin || pt.x > size.x - p.right - margin || pt.y < p.top + margin || pt.y > size.y - p.bottom - margin) {
+    centerInView([lat, lon], map.getZoom(), true);
+  }
   window.__walker = [lon, lat];
 }
 

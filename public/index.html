@@ -3,105 +3,190 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#0b0d10">
+  <meta name="color-scheme" content="dark">
   <title>Crosswise</title>
   <meta name="description" content="Safer walking routes with announced crossings, plus a camera assistant for buses, lights and text.">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <a class="skip" href="#status">Skip to status</a>
-  <header class="top">
-    <h1>Crosswise</h1>
-    <button id="repeat" class="small" type="button" aria-label="Repeat last message">Repeat</button>
-  </header>
+  <!-- Icons (24x24, stroke). Used with <svg><use href="#i-..."/></svg>; always decorative (aria-hidden). -->
+  <svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M18 6h2M4 12h2M10 12h10M4 18h11M19 18h1"/><circle cx="15.5" cy="6" r="2.2"/><circle cx="8" cy="12" r="2.2"/><circle cx="17" cy="18" r="2.2"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.7-6.4L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-bus" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 21v-3M16 21v-3"/><circle cx="8.5" cy="14.5" r=".6"/><circle cx="15.5" cy="14.5" r=".6"/></symbol>
+    <symbol id="i-light" viewBox="0 0 24 24"><rect x="7.5" y="2" width="9" height="20" rx="3"/><circle cx="12" cy="7" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="17" r="1.8"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h6M9 16h6"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></symbol>
+    <symbol id="i-go" viewBox="0 0 24 24"><path d="M4 11 20 4l-7 16-2-7z"/></symbol>
+    <symbol id="i-logo" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="19" height="19" rx="6"/><path d="M8 7v10M12 7v10M16 7v10"/></symbol>
+  </svg>
 
-  <main id="main">
-    <!-- Big status text: everything spoken is also shown here. -->
-    <p id="status" class="status" tabindex="-1">Tap Start to begin.</p>
-    <!-- Screen reader announcements when the app voice is off (see js/speech.js) -->
-    <div id="live-polite" class="sr-only" aria-live="polite"></div>
-    <div id="live-assertive" class="sr-only" aria-live="assertive"></div>
+  <!-- 1. Start screen: iOS only allows sound (and later camera/mic) after a real tap. -->
+  <main id="gate" class="gate">
+    <div class="gate-inner">
+      <p class="brand"><svg class="icon logo" aria-hidden="true"><use href="#i-logo"/></svg> Crosswise</p>
+      <h1 class="gate-title">Safer crossings, spoken&nbsp;out&nbsp;loud.</h1>
+      <p class="gate-lead">Walking routes with the safest crossings in Vienna, and a camera that finds your bus, checks the light and reads signs.</p>
+      <button id="start" type="button" class="btn btn-primary btn-xl">Start</button>
+      <button id="gate-voice" type="button" class="btn btn-quiet app-voice-toggle" aria-pressed="true" aria-describedby="gate-voice-hint">App voice: on</button>
+      <p id="gate-voice-hint" class="hint">Using VoiceOver or TalkBack? Turn the app voice off: your screen reader then reads every message.</p>
+    </div>
+  </main>
 
-    <!-- iOS needs a real tap before audio and camera work. -->
-    <button id="start" class="big primary" type="button">Start</button>
+  <!-- 2. The app: map behind, search on top, sheet + camera bar at the bottom (thumb zone). -->
+  <div id="app" class="app" hidden>
+    <h1 class="sr-only">Crosswise</h1>
+    <!-- Visual map for sighted users and companions; hidden from screen readers (cards + speech say the same). -->
+    <div id="map-box" class="map-layer" aria-hidden="true"><div class="map"></div></div>
 
-    <section id="app" aria-label="Crosswise controls" hidden>
-      <div class="row top-actions">
-        <button id="voice" type="button" class="big voice">Speak a command</button>
-        <button id="where" type="button" class="big">Where am I?</button>
-      </div>
-      <p id="voice-heard" class="voice-heard"></p>
+    <header class="top">
+      <form id="route-form" class="search" role="search" autocomplete="off">
+        <div class="search-bar">
+          <button id="search-back" type="button" class="icon-btn search-back" aria-label="Close search">
+            <svg class="icon" aria-hidden="true"><use href="#i-back"/></svg>
+          </button>
+          <svg class="icon search-icon" aria-hidden="true"><use href="#i-search"/></svg>
+          <label for="to" class="sr-only">Destination</label>
+          <input id="to" type="search" placeholder="Where to?" enterkeyhint="search" autocapitalize="words" spellcheck="false">
+          <button id="find" type="submit" class="icon-btn search-go" aria-label="Search">
+            <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+          </button>
+        </div>
+        <div class="search-panel">
+          <div class="from-row">
+            <label for="from">From</label>
+            <input id="from" type="search" enterkeyhint="search" spellcheck="false" placeholder="Current location">
+          </div>
+          <ul id="from-suggestions" class="suggestions" aria-label="Start suggestions"></ul>
+          <ul id="to-suggestions" class="suggestions" aria-label="Destination suggestions"></ul>
+          <p class="search-status" data-status-mirror aria-hidden="true"></p>
+        </div>
+      </form>
+      <button id="settings-open" type="button" class="icon-btn round" aria-label="Settings" aria-haspopup="dialog">
+        <svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg>
+      </button>
 
-      <!-- Shown while walking a route -->
-      <section id="nav-section" class="card nav" aria-labelledby="nav-heading" hidden>
-        <h2 id="nav-heading" tabindex="-1">Walking</h2>
-        <p class="nav-label">Next</p>
+      <!-- While walking: the next instruction replaces the search bar. -->
+      <section id="nav-banner" class="nav-banner" hidden aria-labelledby="nav-heading">
+        <h2 id="nav-heading" class="nav-label" tabindex="-1">Walking · next</h2>
         <p id="nav-next" class="nav-next">Waiting for your location…</p>
         <p id="nav-remaining" class="nav-remaining"></p>
-        <div class="row">
-          <button id="nav-repeat" type="button" class="big">Repeat next</button>
-          <button id="nav-stop" type="button" class="big">Stop route</button>
-        </div>
       </section>
+    </header>
 
-      <section id="where-section" class="card" aria-labelledby="where-heading">
-        <h2 id="where-heading">Where to?</h2>
-        <form id="route-form" autocomplete="off">
-          <label for="to">Destination</label>
-          <input id="to" type="search" enterkeyhint="search" placeholder="e.g. Stephansdom" autocapitalize="words" spellcheck="false">
-          <ul id="to-suggestions" class="suggestions" aria-label="Destination suggestions"></ul>
-          <label for="from">Start</label>
-          <input id="from" type="search" enterkeyhint="search" placeholder="Current location" spellcheck="false">
-          <ul id="from-suggestions" class="suggestions" aria-label="Start suggestions"></ul>
-          <button id="find" type="submit" class="big primary">Find safest route</button>
-        </form>
-        <p id="suggest-status" class="sr-only" aria-live="polite"></p>
-        <h3 class="sub" id="quick-heading">Quick destinations</h3>
-        <div id="quick" class="quick" role="group" aria-labelledby="quick-heading"></div>
-      </section>
-
-      <section id="routes-section" class="card" aria-labelledby="routes-heading" hidden>
-        <h2 id="routes-heading" tabindex="-1">Routes, safest first</h2>
-        <!-- Visual map for sighted companions; hidden from screen readers (the cards say the same). -->
-        <div id="map-box" class="map-box" aria-hidden="true" inert hidden>
-          <div class="map"></div>
-          <p class="map-legend">
-            <span><i style="background:#3ddc84"></i>lights + sound</span>
-            <span><i style="background:#ffd23f"></i>lights</span>
-            <span><i style="background:#ff9f1c"></i>zebra</span>
-            <span><i style="background:#ff5a5a"></i>unmarked / unknown</span>
-          </p>
-        </div>
-        <p class="map-credit">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</p>
-        <ol id="routes" class="routes"></ol>
-      </section>
-
-      <section id="look-section" class="card" aria-labelledby="look-heading">
-        <h2 id="look-heading">Camera assistant</h2>
-        <label for="bus-line">My bus or tram line <span class="hint">(optional, e.g. 13A)</span></label>
+    <!-- Camera assistant: full screen above the dock while the camera is on -->
+    <section id="camera-box" class="camera" hidden aria-labelledby="camera-title">
+      <h2 id="camera-title" class="camera-title">Camera</h2>
+      <div class="camera-view">
+        <video id="camera" playsinline muted aria-hidden="true"></video>
+        <p id="look-live" class="look-live" aria-hidden="true"></p>
+      </div>
+      <p class="camera-caption" data-status-mirror aria-hidden="true"></p>
+      <div id="bus-line-row" class="bus-line-row">
+        <label for="bus-line">Your line <span class="hint">(optional, e.g. 13A)</span></label>
         <input id="bus-line" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" placeholder="Any line">
-        <div class="look-buttons">
-          <button id="look-bus" type="button" class="big primary">Find my bus</button>
-          <button id="look-light" type="button" class="big">Check crossing light</button>
-          <button id="look-read" type="button" class="big">Read text</button>
-          <button id="look-describe" type="button" class="big">Describe surroundings</button>
+      </div>
+      <button id="look-stop" type="button" class="btn btn-danger">
+        <svg class="icon" aria-hidden="true"><use href="#i-stop"/></svg><span class="label">Stop camera</span>
+      </button>
+    </section>
+
+    <div class="bottom">
+      <section id="sheet" class="sheet" aria-label="Messages and routes">
+        <button id="sheet-toggle" type="button" class="sheet-handle" aria-expanded="false" aria-controls="sheet" aria-label="Show more"><span aria-hidden="true"></span></button>
+        <!-- While walking -->
+        <section id="nav-section" class="nav-controls" hidden aria-label="Walking controls">
+          <button id="nav-repeat" type="button" class="btn">
+            <svg class="icon" aria-hidden="true"><use href="#i-repeat"/></svg><span class="label">Repeat next</span>
+          </button>
+          <button id="nav-stop" type="button" class="btn btn-danger">
+            <svg class="icon" aria-hidden="true"><use href="#i-stop"/></svg><span class="label">Stop route</span>
+          </button>
+        </section>
+        <div class="status-row">
+          <p id="status" class="status" tabindex="-1">Crosswise ready.</p>
+          <button id="repeat" type="button" class="icon-btn" aria-label="Repeat last message">
+            <svg class="icon" aria-hidden="true"><use href="#i-repeat"/></svg>
+          </button>
         </div>
-        <div id="camera-box" class="camera-box" hidden>
-          <video id="camera" playsinline muted aria-hidden="true"></video>
-          <p id="look-live" class="look-live" aria-hidden="true"></p>
-          <button id="look-stop" type="button" class="big">Stop camera</button>
+        <p id="voice-heard" class="voice-heard"></p>
+
+        <div id="plan-section" class="plan">
+          <section id="routes-section" class="routes-block" hidden aria-labelledby="routes-heading">
+            <h2 id="routes-heading" class="section-title" tabindex="-1">Routes, safest first</h2>
+            <p class="legend" aria-hidden="true">
+              <span><i class="dot sound"></i>lights + sound</span>
+              <span><i class="dot lights"></i>lights</span>
+              <span><i class="dot zebra"></i>zebra</span>
+              <span><i class="dot unmarked"></i>unmarked</span>
+            </p>
+            <ol id="routes" class="routes"></ol>
+          </section>
+          <div id="modes" class="segmented" role="group" aria-label="Mode"></div>
+
+          <section id="where-section" class="quick-block" aria-labelledby="quick-heading">
+            <h2 id="quick-heading" class="section-title">Quick destinations</h2>
+            <div id="quick" class="quick"></div>
+          </section>
         </div>
       </section>
 
-      <section class="card" aria-labelledby="mode-heading">
-        <h2 id="mode-heading">Mode</h2>
-        <div id="modes" class="modes" role="group" aria-labelledby="mode-heading"></div>
-        <button id="app-voice" type="button" class="app-voice" aria-pressed="true" aria-describedby="app-voice-hint">App voice</button>
-        <p id="app-voice-hint" class="hint">Turn the app voice off if you use VoiceOver or TalkBack — your screen reader then reads everything.</p>
-      </section>
-    </section>
-  </main>
+      <div class="dock">
+        <div class="actions">
+          <button id="voice" type="button" class="btn btn-primary" aria-label="Speak a command">
+            <svg class="icon" aria-hidden="true"><use href="#i-mic"/></svg><span class="label">Speak</span>
+          </button>
+          <button id="where" type="button" class="btn">
+            <svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span class="label">Where am I?</span>
+          </button>
+        </div>
+        <div id="camera-bar" class="camera-bar" role="group" aria-label="Camera assistant">
+          <button id="look-bus" type="button" class="tile"><svg class="icon" aria-hidden="true"><use href="#i-bus"/></svg><span>Find bus</span></button>
+          <button id="look-light" type="button" class="tile"><svg class="icon" aria-hidden="true"><use href="#i-light"/></svg><span>Check light</span></button>
+          <button id="look-read" type="button" class="tile"><svg class="icon" aria-hidden="true"><use href="#i-text"/></svg><span>Read</span></button>
+          <button id="look-describe" type="button" class="tile"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg><span>Describe</span></button>
+        </div>
+      </div>
+    </div>
+
+    <a class="map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>
+
+    <dialog id="settings" class="settings" aria-labelledby="settings-title">
+      <div class="settings-head">
+        <h2 id="settings-title">Settings</h2>
+        <button id="settings-close" type="button" class="icon-btn" aria-label="Close settings">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+        </button>
+      </div>
+      <button id="app-voice" type="button" class="btn app-voice-toggle" aria-pressed="true" aria-describedby="app-voice-hint">App voice: on</button>
+      <p id="app-voice-hint" class="hint">Turn the app voice off if you use VoiceOver or TalkBack: your screen reader then reads every message.</p>
+      <h3>Voice commands</h3>
+      <p>Tap <strong>Speak</strong>, then say: find my bus 13A · take me to Hauptbahnhof · check the light · read this · describe · where am I · wheelchair mode · stop · repeat · help.</p>
+      <h3>Map colours</h3>
+      <ul class="legend-list">
+        <li><i class="dot sound"></i>Crossing with lights and an acoustic signal</li>
+        <li><i class="dot lights"></i>Crossing with lights</li>
+        <li><i class="dot zebra"></i>Zebra crossing without lights</li>
+        <li><i class="dot unmarked"></i>Unmarked crossing or type unknown</li>
+      </ul>
+      <p class="hint">Crosswise helps you plan and announces crossings. It never replaces a white cane, a guide dog or your own judgement.</p>
+      <p class="hint">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.</p>
+    </dialog>
+  </div>
+
+  <!-- Screen reader announcements when the app voice is off (see js/speech.js), and search suggestion counts -->
+  <div id="live-polite" class="sr-only" aria-live="polite"></div>
+  <div id="live-assertive" class="sr-only" aria-live="assertive"></div>
+  <p id="suggest-status" class="sr-only" aria-live="polite"></p>
 
   <script type="module" src="js/app.js"></script>
 </body>

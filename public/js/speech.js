@@ -60,6 +60,8 @@ window.__spoken = window.__spoken || [];
 function show(text) {
   const el = statusEl();
   if (el) el.textContent = text;
+  // a copy where the status is covered (the full-screen search panel); screen readers skip it
+  for (const m of document.querySelectorAll('[data-status-mirror]')) m.textContent = text;
 }
 
 function play(message) {

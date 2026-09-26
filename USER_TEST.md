@@ -19,8 +19,8 @@ Only record audio/video or faces if they explicitly agree.
 ## Setup
 - Phone volume up. Open the newest URL from `PROGRESS.md` (needs Vercel login on the phone, or ask Claude for
   a production deploy so the link is public).
-- If they use **VoiceOver or TalkBack**: in the app, *Mode* section → tap **App voice: on** to turn it off. Their
-  screen reader then reads everything.
+- If they use **VoiceOver or TalkBack**: on the start screen (or later in **Settings**, top right) tap
+  **App voice: on** to turn it off. Their screen reader then reads everything.
 - Pick their mode: Blind / low vision, Wheelchair or Limited mobility.
 
 ## Tasks (1–2 minutes each)

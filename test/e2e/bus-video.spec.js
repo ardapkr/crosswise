@@ -21,8 +21,9 @@ test('real 69A clip: frames from the clip are sent, "This is your bus, 69A, to S
 
   await page.goto('/');
   await page.getByRole('button', { name: 'Start' }).click();
-  await page.getByLabel(/My bus or tram line/).fill('69a');
-  await page.getByRole('button', { name: 'Find my bus' }).click();
+  await page.evaluate(() => window.crosswise.look.findBus('69a')); // = voice "find my bus 69 a"
+  await expect(page.locator('#camera-box')).toBeVisible();
+  await expect(page.getByLabel(/Your line/)).toHaveValue('69A');
 
   await expect(page.locator('#status')).toHaveText('This is your bus, 69A, to Simmering.', { timeout: 15_000 });
   expect(calls).toHaveLength(4); // unreadable, unreadable, 69A, 69A → announced on the 2nd agreeing frame

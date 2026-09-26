@@ -32,7 +32,8 @@ export function initVoice({ speak, handlers }) {
 
   function setListening(on) {
     listening = on;
-    btn.textContent = on ? 'Listening… tap to cancel' : 'Speak a command';
+    btn.querySelector('.label').textContent = on ? 'Listening…' : 'Speak';
+    btn.setAttribute('aria-label', on ? 'Listening… tap to cancel' : 'Speak a command');
     btn.classList.toggle('listening', on);
   }
 

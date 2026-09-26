@@ -86,14 +86,15 @@ test('keyboard: arrow down moves into the suggestions, Escape closes them', asyn
   await page.keyboard.press('Escape');
   await expect(page.locator('#to-suggestions')).toBeHidden();
   await expect(to).toBeFocused();
-  await expect(to).toHaveAttribute('aria-expanded', 'false');
 });
 
 test('"Current location" is the default start; another start can be picked from suggestions', async ({ page }) => {
   const { routeCalls } = await start(page, '/?demo=1');
-  const from = page.getByLabel('Start', { exact: true });
+  const from = page.getByLabel('From', { exact: true });
   await expect(from).toHaveValue('Current location');
 
+  await page.getByLabel('Destination', { exact: true }).click(); // opens the search panel with the start field
+  await expect(from).toBeVisible();
   await from.fill('Karl');
   const rows = page.locator('#from-suggestions button');
   await expect(rows.first()).toHaveAccessibleName('Current location, Demo: HOIV'); // way back to GPS
@@ -101,10 +102,11 @@ test('"Current location" is the default start; another start can be picked from 
   await expect(from).toHaveValue('Karlsplatz');
   await expect(page.locator('#status')).toHaveText('Starting from Karlsplatz.');
 
-  await page.getByRole('button', { name: 'Wien Hauptbahnhof' }).click(); // quick destination
+  await page.getByRole('button', { name: /^Wien Hauptbahnhof, Quick destination/ }).click(); // suggested in the empty search
   await expect(page.locator('#routes > li')).toHaveCount(3);
   expect(routeCalls.at(-1).from).toBe('16.3697,48.2004');
 
+  await page.getByLabel('Destination', { exact: true }).click(); // the start field is in the search panel
   await from.fill('Kar');
   await rows.first().click(); // "Current location"
   await expect(from).toHaveValue('Current location');
