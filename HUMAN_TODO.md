@@ -8,6 +8,19 @@ Open the newest preview URL from the top of `PROGRESS.md` on the phone **while l
 (or turn off Deployment Protection — see bottom). Tap **Start** first (unlocks sound and camera).
 Report back with the **Phone test** prompt from PROMPTS.md: what it said out loud, where it was wrong.
 
+## NEW: public transport trip (≈30 min) ★ new feature, needs a real ride
+1. At HOIV, search **Wien Hauptbahnhof** (walking takes 27 min, so bus/tram options come first).
+   Listen: does the summary make sense? Is the recommended option really the better one?
+2. Tap **Start this trip** on the 69A card. Walk to the stop: does the walk end on the **correct side** of the street
+   (the 69A towards Hauptbahnhof, not towards Simmering)?
+3. At the stop: tap **Find bus** — "Your line" is already 69A and it shows "Your trip: 69A towards Hauptbahnhof".
+   Point at arriving buses: it should say "This is 69A towards Hauptbahnhof, your bus" — or "69A, but the wrong
+   direction" for the other side. **Film this** (screen + bus).
+4. Board, tap **I'm on board**. Does it count the stops right? Does "Your stop is next" come at the right moment?
+5. Optional: a U-Bahn ride (e.g. U1 Hauptbahnhof → Stephansplatz): no GPS underground → it counts by the timetable
+   and says "approximately". Is it close?
+Note the times and anything wrong (wrong stop side, wrong count, confusing sentence) for EVAL.md.
+
 ## Outdoor session 17:30–18:30 (daylight) — in this order
 
 ### 1. Find my bus at a real stop (≈10 min) ★ needs a human, can't be faked

@@ -17,8 +17,10 @@ At the bus stop the next problem starts: which bus is this?
 | Feature | How it works |
 |---|---|
 | **Safest-crossings route** | Gets up to 3 walking (or wheelchair) routes from OpenRouteService, finds every crossing the route actually uses in OpenStreetMap data, scores them (lights + acoustic signal > lights > zebra > unmarked; kerbs for wheelchairs) and recommends the route whose worst crossing is safest. It says why: *"The recommended route is 1 minute longer and avoids the unmarked crossing on the shortest route."* |
+| **Public transport, door to door** | Every search also asks [Transitous](https://transitous.org) (free, open timetable data) for up to 2 bus/tram/U-Bahn trips. If walking takes more than ~20 minutes, public transport is listed first and the app says so. Only the rides come from the timetable: every walking leg (to the stop, changes, to the destination) is routed again by us with the crossing scoring, and ends at the platform of *that line and direction* (the correct side of the street). Spoken per leg: *"Walk 2 minutes to Hüttenbrennergasse. 1 crossing: traffic light with acoustic signal. Take bus 69A towards Hauptbahnhof. 4 stops. Get off at Hauptbahnhof Ost."* |
+| **Riding** | Before each ride: line, direction, departure time. On board: stops counted by GPS, or by the timetable when there is no GPS underground (then it says the count is approximate), *"Your stop is next"*, *"Get off now"*. |
 | **Crossing alerts while walking** | Live GPS guidance announces each crossing ~40 m before and again at ~10 m: type, acoustic signal, kerb, *"Press the button under the box"*. Turn-by-turn instructions in between, off-route warning. |
-| **Find my bus** | Point the phone at arriving buses. It scans ~1 photo per 1.2 s and speaks only when 2 photos agree: *"This is 26A, not your bus"* … *"This is your bus, 13A."* Gives up after 60 s. |
+| **Find my bus** | Point the phone at arriving buses. It scans ~1 photo per 1.2 s and speaks only when 2 photos agree: *"This is 26A, not your bus"* … *"This is your bus, 13A."* Gives up after 60 s. During a trip the line **and direction** are set automatically and the destination display is read too: *"This is 13A towards Hauptbahnhof, your bus"* or *"13A, but the wrong direction"*. |
 | **Check the crossing light** | One photo → *"The pedestrian light looks red. Wait."* It never says "safe to cross" and always adds *"Listen for traffic before crossing."* |
 | **Read text / Describe surroundings** | Signs, timetables, door labels; a 3-sentence scene description with hazards first. |
 | **Where am I?** | Street and house number, nearest bus/tram stops, nearest crossing and its type. |
@@ -33,7 +35,7 @@ At the bus stop the next problem starts: which bus is this?
   never worse than the shortest route's.
 - **Crossing light** on 12 real photos: 10 correct, **0 dangerous errors** (both misses: "I cannot see a pedestrian light").
 - **Read text** 3/3, **describe** 11/11. **Bus numbers 12/15, 0 critical** (15 real images of a 69A; the misses are far shots where it says "unreadable" instead of guessing).
-- 237 unit tests + 26 end-to-end browser tests (fake camera, fake GPS, fake speech).
+- 334 unit tests + 52 end-to-end browser tests (fake camera, fake GPS, fake speech, saved real timetable answers).
 
 ## How it works
 
@@ -44,6 +46,7 @@ Phone browser (plain HTML/CSS/JS, no framework)          Vercel serverless funct
     crossings.js  filter, classify, cluster OSM nodes    /api/crossings crossing snapshot (Vienna/Budapest), Overpass elsewhere
     scoring.js    crossing + route scores per mode       /api/look      Claude Haiku 4.5 vision, JSON answers
     guidance.js   when to say what while walking         /api/where     reverse geocode + stops/crossing snapshots
+    transit.js / trip.js / ride.js  public transport   /api/transit   Transitous (MOTIS) trips, no key
     scan.js       live bus-scan rules
     look.js       safe wording of camera results
     commands.js   voice command parser
@@ -62,6 +65,7 @@ Phone browser (plain HTML/CSS/JS, no framework)          Vercel serverless funct
 
 ## Data sources
 
+- Public transport: [Transitous](https://transitous.org) (community-run MOTIS journey planner on open GTFS data; Wiener Linien, ÖBB)
 - Routes and geocoding: [OpenRouteService](https://openrouteservice.org) (foot-walking and wheelchair profiles)
 - Crossings, kerbs and stops: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL), via the Overpass API
 - Vision: [Anthropic](https://www.anthropic.com) Claude Haiku 4.5
@@ -91,6 +95,9 @@ Rebuild the data snapshots (rarely — the public Overpass server is shared): `n
 - The camera assistant is an aid: photos can be misread. Bus numbers are only announced after 2 agreeing photos.
 - Voice commands are English only; speech recognition does not work in Firefox.
 - Only Vienna and Budapest have offline crossing data; elsewhere a live Overpass query is used.
+- Public transport times are the **timetable** (Transitous has no live Wiener Linien delays). Stop counting without GPS
+  (underground) is by timetable and therefore approximate — the app says so. Wheelchair access of vehicles comes from
+  the timetable's flag; step-free station paths are requested but not verified by us.
 
 ## Team
 

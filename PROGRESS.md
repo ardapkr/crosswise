@@ -1,12 +1,23 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-alu8dnhie-trua.vercel.app  (deployed 21:47; open while logged in to Vercel)
+**Latest preview:** https://crosswise-fm1hgpeyn-trua.vercel.app  (deployed 23:10; open while logged in to Vercel)
 
-## Handover — Sat 21:55 (read this first in a new session)
+## Handover — Sat 23:15 (read this first in a new session)
 
-State: `main` is clean, pushed and green: `npm test` 269 passed, `npm run e2e` 43 passed (both projects:
-"chromium" + "bus-video"). The preview above = current `main` (UI redesign v1). Branch `ui-redesign` is merged.
-**Waiting for the humans' feedback on the redesign** (they asked to see it before any polishing).
+State: `main` is clean, pushed and green: `npm test` 334 passed, `npm run e2e` 52 passed (both projects:
+"chromium" + "bus-video"). The preview above = current `main` (UI redesign v1 + **public transport**, Phase 10).
+Waiting for the humans: feedback on the redesign, and a **real public transport ride** (HUMAN_TODO.md, top).
+
+### Public transport spike (Sat 22:45, 20 min) — Transitous is good enough, Google not needed
+Transitous (`https://api.transitous.org/api/v1/plan`, free, no key, MOTIS 2 on open GTFS) for 7 Vienna trips:
+HOIV → Stephansplatz, → Schönbrunn, → Westbahnhof, → Hauptbahnhof, → Karlsplatz (wheelchair), Hauptbahnhof → Prater,
+Hauptbahnhof → HOIV. **Every trip** came back with bus / tram / U-Bahn (and ÖBB S-Bahn) legs, line numbers (69A, D, 6,
+U1, U4, S1), directions (headsign + where the trip comes from), **platform-level stops** (the same stop has a different
+position per direction: Absberggasse tram D vs tram 6; 69A towards Hauptbahnhof vs towards Simmering), intermediate
+stops with times, the vehicle's route line and a wheelchair flag. Weak spots: times are timetable only (no live
+Wiener Linien delays), duplicates (same trip, later departures), and a few silly options (a 1-stop tram at the end,
+3 changes via a railjet) → removed by a 5-min-per-change penalty and a "same trip + one extra ride" rule. Also works
+from Vercel (smoke test 23:10). Saved answers: `test/fixtures/transit-*.json` (`node scripts/save-transit-fixtures.js`).
 
 ### Done (built, tested, deployed)
 - **Phase 0–7 + Phase 9 (feedback round 1)** — see TASKS.md. Features: safest-crossings route comparison (ORS
@@ -57,11 +68,12 @@ State: `main` is clean, pushed and green: `npm test` 269 passed, `npm run e2e` 4
 - Local server is `npm run dev` (scripts/dev-server.js), not `vercel dev`.
 
 ### Next 3 tasks
-1. Apply the humans' redesign feedback (then update DEMO_SCRIPT.md + commit screenshots for the README).
-2. Humans' outdoor test on real phones (VoiceOver/TalkBack, GPS walk, real bus/light) → fix what breaks, update EVAL.md.
+1. Humans' outdoor test incl. a real 69A ride (HUMAN_TODO.md top) → fix what breaks, add results to EVAL.md.
+2. Apply the humans' redesign feedback (then update DEMO_SCRIPT.md with a transit moment + commit screenshots).
 3. Morning freeze (06:00): final numbers in README/EVAL, `npm run zip`, ask before the production deploy.
 
 ## Log (newest first)
+- 23:12 **Public transport (Phase 10, branch transit → main).** Every search = walking routes + up to 2 trips from Transitous (`/api/transit`, cached 2 min; if Transitous is down, saved HOIV → Hauptbahnhof / Stephansplatz answers are replayed with times moved to now and the app says the times are examples). Hybrid routing (`lib/trip.js`): only the rides come from the timetable; every walking leg is routed again with ORS alternatives + our crossing scoring and ends at the platform of that line AND direction (= correct side of the street); tiny walks (< 40 m) keep the planner's path. Leave time = departure − our walk − 1 min buffer; a change is flagged "tight" if our walk is longer than the gap. Options: walking card + up to 2 trip cards; walking > 20 min (and a faster trip exists) → transit first and said ("Walking takes 27 minutes, so public transport comes first."); between trips the safer one (worst crossing on foot) wins if it arrives ≤ 10 min later, and the summary says why. The 3-way walking comparison (with the shortest-route baseline) moved behind "Compare walking routes"; without transit it shows as before. Guidance (`lib/trip-guide.js`, `lib/ride.js`, `js/trip-nav.js`): walk legs with crossing alerts → "You are at the stop X" → "Bus 69A towards Hauptbahnhof leaves at 09:09, in 4 minutes, by the timetable. Tap Find bus…" → boarding by GPS movement, the "I'm on board" button, or assumed 3 min after departure without GPS → stops counted by GPS, else by timetable ("approximately") → "Your stop is next" → "Get off now" → next leg. "I'm at the stop" button for stations without GPS. Find my bus: line + direction set by the trip, destination display compared with headsign / origin ("This is 13A towards Hauptbahnhof, your bus" / "13A, but the wrong direction: it goes to …"; unreadable → 2 more frames, then an honest "could not read the direction… ask the driver"). Wheelchair: pedestrianProfile=WHEELCHAIR, trips with a vehicle marked not accessible dropped, access shown per card. Map: rides dashed, walking solid, boarding/alighting stops as white dots. Tests: 65 new unit (real Transitous fixtures + Vienna snapshot), 9 new e2e (incl. the real 69A clip → "69A, but the wrong direction: it goes to Simmering"), axe 0 violations on the new screens. 334 unit + 52 e2e green.
 - 21:47 **UI redesign v1** (branch ui-redesign → main), shown to the humans for feedback before polishing. Dark, calm, one accent (sky blue #4cc2ff, 9.7:1 on the background; chosen over violet: stays apart from the green/yellow/orange/red crossing colours). Full-screen map (pannable, aria-hidden, dark muted OSM tiles) with a "you are here" dot; search pill on top that opens a full-screen search panel (From: Current location, live suggestions, suggested places when empty); bottom sheet (big status text + Repeat, route cards first, mode as a segmented control, quick destinations; "Show more" handle expands it, the map re-fits the route); fixed dock in the thumb zone (Speak, Where am I?, and 4 camera tiles Find bus / Check light / Read / Describe). Walking: accent banner with the next instruction replaces the search, Repeat next / Stop route on top of the sheet. Camera: full-screen view above the dock (video, result in big text, "Your line", Stop). Settings dialog (App voice, voice commands, map colours, OSM credit); App voice toggle also on the start screen so VoiceOver users can silence the app before it talks. Fixed on the way: raw browser errors were spoken ("The play() request was interrupted…"), a camera stream could stay on when stopped during start-up, typing the bus line while the camera started was lost, Start button name did not contain its visible text (WCAG 2.5.3), map fitted with stale panel sizes. axe: 0 violations on start, main, cards, walking, camera, search panel, settings. 269 unit + 43 e2e green. Screenshots: node scripts/screenshots.js.
 - 20:54 Map: every route its own colour AND line pattern (recommended violet solid = accent, sky blue dashed, pink dotted: colour-blind safe, kept away from the crossing colours), recommended thicker; crossing dots by TYPE as the humans asked (green lights+sound, yellow lights, orange zebra, red unmarked/unknown; lib/scoring.js crossingType, same in every mode). Tapping a route card highlights its route (thick, on top, its crossings, zoomed to it) and reads the card out (lib/summary.js routeCardText) — the title is an aria-pressed button inside the h3. Card swatch = the map line. OSM attribution moved outside the aria-hidden map (a real link). Leaflet stays vendored (same cdnjs build, works offline). No hand-over to other map apps. 269 unit + 39 e2e green.
 - 20:45 Search: live suggestions while typing (like a map app). New /api/autocomplete (ORS /geocode/autocomplete, cached, focus = GPS position or HOIV, ~55 km box, layers venue/address/street/neighbourhood/borough, max 6) + js/search.js (3 letters, 300 ms debounce, newest answer wins, big 64 px buttons right after the input, "N suggestions below." for screen readers, arrow keys / Escape, list never hidden on blur so VoiceOver can swipe into it). "Current location" is the default start; the start field has suggestions too (with a "Current location" row to go back). Position is fetched silently at Start (not in demo) to bias suggestions. ORS quality (live, from HOIV): Stephansdom 1st from "Steph", Karlsplatz/Westbahnhof/Belvedere/Albertina/Rathaus good; "Hauptbahnhof" → ORS lists the car-train terminal (Autoreisezug, ~1 km off) first; HOIV unknown; "Prater" → Böhmischer Prater (near HOIV) before the Wurstelprater; 3 letters listed villages 20–40 km away until the layers filter. Fixes: lib/places.js curated KNOWN_PLACES (HOIV, Hauptbahnhof main station) shown first + used by Enter and "take me to". Google Places NOT proposed: its terms forbid Places content on a non-Google map (Maps Platform ToS 3.2.3(e)) and we draw on OSM/Leaflet. 265 unit + 39 e2e green.
@@ -86,6 +98,11 @@ State: `main` is clean, pushed and green: `npm test` 269 passed, `npm run e2e` 4
 - 13:36 Test photos (26, no videos, no buses) labelled by content into `test/vision/{light,read,describe}/`; mapping in `test/vision/SOURCES.txt`. Fake cameras made from photos: `test/fixtures/{light-green,light-red,sign}.y4m`.
 
 ## Decisions
+- Public transport from **Transitous** (free, open data, no key), not Google Routes: coverage and detail for Vienna were good in the spike (platform-level stops per direction, headsigns, intermediate stops, wheelchair flag). Timetable only (no live delays) — said in the UI ("by the timetable").
+- Transit options are ranked: earliest arrival + 5 min per change (blind users find changes hard); a trip that is the same as a better one plus one more ride is dropped; between the 2 shown trips, the safer walking crossings win if the trip arrives at most 10 min later.
+- Limited mobility also asks Transitous for step-free walking (pedestrianProfile=WHEELCHAIR: lifts instead of stairs in stations), same as wheelchair mode.
+- Boarding without GPS is assumed 3 min after the scheduled departure (the stop count then says "approximately"); the user can always tap "I'm on board" / "I'm at the stop".
+- The walking comparison (recommended vs shortest = the judges' baseline) stays one tap away ("Compare walking routes") when transit is shown, and is the whole answer when no transit is found.
 - Destination suggestions stay on ORS (+ curated places). Google Places Autocomplete was NOT adopted: its terms forbid showing/using Places content on a non-Google map (Maps Platform ToS 3.2.3(e)), and we draw routes on OSM/Leaflet; it would also need a billing account.
 - Accent colour sky blue #4cc2ff (not violet/yellow): high contrast, calm, and far from the crossing colours; yellow now means "lights" on the map.
 - Leaflet is vendored (public/vendor/leaflet, BSD-2, downloaded once from cdnjs) instead of loaded from the CDN: works offline, tests stay deterministic. Tiles: standard OpenStreetMap (CARTO dark tiles now need an API key), darkened with a CSS filter.

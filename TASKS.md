@@ -71,3 +71,14 @@
 - [x] Search: live suggestions while typing (ORS autocomplete via `/api/autocomplete`), "Current location" as default start; report ORS quality for Stephansdom / Hauptbahnhof / HOIV
 - [x] Map: each route its own colour, recommended thicker, crossing dots green/yellow/orange/red, tapping a route card highlights it
 - [x] UI redesign: dark + one accent, search on top, full-screen map, bottom sheet with route cards, camera bottom bar, segmented mode control → show the humans a preview before polishing  _(v1 on the preview 21:47, waiting for their feedback)_
+
+## Phase 10 — Public transport (Sat 22:40, humans' request) — branch transit, merged
+- [x] Spike: Transitous (free, no key) for 7 Vienna trips → lines, directions, platform-level stops, times, geometry, wheelchair flag: good → no Google
+- [x] `/api/transit` (cached 2 min, saved-trip fallback with times moved to now) + `lib/transit.js` (parse, dedupe, wheelchair filter) + real fixtures
+- [x] Trip options: walking + up to 2 trips; walking > 20 min → transit first, said out loud; safer trip preferred if ≤ 10 min later
+- [x] Hybrid routing (`lib/trip.js`): only rides from the timetable, every walking leg routed by ORS + crossing scoring, ending at the platform of that line + direction
+- [x] Spoken legs; before a ride: line, direction, departure; on board: stops by GPS or timetable (says "approximate"), "your stop is next" (`lib/ride.js`, `lib/trip-guide.js`)
+- [x] Find my bus: line + direction set by the trip, destination display checked ("13A, but the wrong direction")
+- [x] Wheelchair: step-free walking requested (pedestrianProfile=WHEELCHAIR), vehicles marked not accessible dropped, "unknown" shown
+- [x] Map: rides dashed, walking solid, stops marked; tests (unit + e2e with saved Transitous answers); preview deployed
+- [ ] Real ride outdoors (HUMAN_TODO) → EVAL.md
