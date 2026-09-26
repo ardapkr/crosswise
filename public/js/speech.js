@@ -1,5 +1,9 @@
 // Browser wrapper around speechSynthesis. Priority rules live in lib/speech-queue.js.
 // Every message is also written into the big status text.
+//
+// Screen readers: the visible status is NOT a live region, so with the app voice on nothing is said twice.
+// VoiceOver/TalkBack users can turn the app voice off; then messages go to hidden live regions and the
+// screen reader reads them (crossing/danger alerts assertively, so they interrupt).
 
 import { PRIORITY, decide, enqueue, nextMessage } from '../lib/speech-queue.js';
 
@@ -9,6 +13,24 @@ let current = null;   // message being spoken right now
 let queue = [];
 let last = null;      // for the Repeat button
 const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
+const VOICE_KEY = 'crosswise.appVoice';
+let voiceOn = (() => { try { return localStorage.getItem(VOICE_KEY) !== 'off'; } catch { return true; } })();
+
+export function appVoiceOn() { return voiceOn; }
+
+export function setAppVoice(on) {
+  voiceOn = Boolean(on);
+  try { localStorage.setItem(VOICE_KEY, voiceOn ? 'on' : 'off'); } catch { /* ignore */ }
+  if (!voiceOn && synth) synth.cancel();
+}
+
+/** Hands a message to the screen reader via a hidden live region. */
+function announce(message) {
+  const el = document.getElementById(message.priority >= PRIORITY.crossing ? 'live-assertive' : 'live-polite');
+  if (!el) return;
+  el.textContent = '';
+  setTimeout(() => { el.textContent = message.text; }, 30); // a change is needed for it to be read again
+}
 
 // Tests (Playwright) read this to check what was said.
 window.__spoken = window.__spoken || [];
@@ -26,6 +48,12 @@ function play(message) {
 
   // A cancelled utterance fires onend/onerror later: only react if it is still the current one.
   const finish = () => { if (current === message) done(); };
+  if (!voiceOn) {
+    announce(message);
+    // give the screen reader time to read it before the next queued message replaces it
+    setTimeout(finish, Math.min(8000, 1200 + message.text.length * 55));
+    return;
+  }
   if (!synth) { setTimeout(finish, 0); return; }
   const u = new SpeechSynthesisUtterance(message.text);
   u.lang = 'en-GB';

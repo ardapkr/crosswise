@@ -58,8 +58,8 @@
 - [x] Street name + nearest stop / crossing from ORS reverse geocode or Overpass
 
 ## Phase 8 — Polish + submission (target: 07:00, hard stop 07:30)
-- [ ] Accessibility pass: screen reader labels, focus order, contrast
-- [ ] Error states spoken aloud (no network, GPS denied, camera denied)
+- [x] Accessibility pass: screen reader labels, focus order, contrast  _(axe-core WCAG 2.1 AA: 0 violations on all 5 screen states; App voice toggle for VoiceOver/TalkBack users)_
+- [x] Error states spoken aloud (no network, GPS denied, camera denied)
 - [x] README: problem, features, how it works, data sources, honest limits, eval numbers, how to run  _(update eval numbers after real bus/outdoor tests)_
 - [x] `EVAL.md`: the 5 demo cases, baseline comparison, vision accuracy, known failures  _(bus accuracy + outdoor results still to add)_
 - [ ] `git archive` ZIP of the repo for submission

@@ -17,7 +17,10 @@
 
   <main id="main">
     <!-- Big status text: everything spoken is also shown here. -->
-    <p id="status" class="status" role="status" aria-live="polite">Tap Start to begin.</p>
+    <p id="status" class="status" tabindex="-1">Tap Start to begin.</p>
+    <!-- Screen reader announcements when the app voice is off (see js/speech.js) -->
+    <div id="live-polite" class="sr-only" aria-live="polite"></div>
+    <div id="live-assertive" class="sr-only" aria-live="assertive"></div>
 
     <!-- iOS needs a real tap before audio and camera work. -->
     <button id="start" class="big primary" type="button">Start</button>
@@ -80,6 +83,8 @@
       <section class="card" aria-labelledby="mode-heading">
         <h2 id="mode-heading">Mode</h2>
         <div id="modes" class="modes" role="group" aria-labelledby="mode-heading"></div>
+        <button id="app-voice" type="button" class="app-voice" aria-pressed="true" aria-describedby="app-voice-hint">App voice</button>
+        <p id="app-voice-hint" class="hint">Turn the app voice off if you use VoiceOver or TalkBack — your screen reader then reads everything.</p>
       </section>
     </section>
   </main>

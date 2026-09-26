@@ -3,6 +3,7 @@
 **Latest preview:** https://crosswise-7iuqhnnwu-trua.vercel.app  (deployed 17:17; open while logged in to Vercel)
 
 ## Log (newest first)
+- 18:35 Accessibility pass: automated axe-core audit (WCAG 2.1 A/AA) of start, main, route cards, walking and camera screens → 0 violations (now an e2e test). Fixed the double-speech problem: the visible status is no longer a live region; new "App voice: on/off" toggle (remembered) — off = VoiceOver/TalkBack reads messages from hidden live regions, crossing/danger alerts assertively. Error states tested: offline, GPS unavailable, GPS/camera/mic permission denied, server errors. 237 unit + 32 e2e green.
 - 18:15 README.md and EVAL.md written (summary, 5 demo cases with status, baseline comparison, vision accuracy, honest limits, per-trip appendix). Still missing: real bus accuracy, outdoor walk results, real user feedback.
 - 18:00 Crossing detection fix (branch member-nodes, merged): a crossing is "on the route" only if the route passes within 3 m of one of its crossing NODES (group centre still within 12 m + cluster radius). Measured on 6 real routes: 55 of 70 counted crossings were 0–2 m from a node (really used), 15 were 4–10 m away (pavement running past a crossing the user never takes), nothing in between → ~1 in 5 alerts/penalties were false. Snapshot now stores node positions (Vienna 511 KB). Belvedere route: 8 → 5 crossings, all with acoustic signals.
 - 17:50 Baseline comparison on 30 random real trips around HOIV (scripts/eval-routes.js, saved ORS answers in eval/): vs the shortest route, unmarked/unknown crossings 43 → 21 (−51%), trips with any unmarked crossing 18 → 13, median +1.4 min when the route differs (max 6.5), worst crossing never worse. Blind tie-break after the worst crossing: fewest risky, then fewest crossings without acoustic signal (chosen by comparing 4 rules on the saved trips).
@@ -27,7 +28,6 @@
 - Vision model stays `claude-haiku-4-5-20251001` as specified in CLAUDE.md (fast: ~1.5–2 s per frame). Answers use structured outputs (JSON schema), and lib/look.js validates them again; a "found" bus line with confidence < 0.6 is treated as unreadable (never guess a line).
 - Single-photo checks (light/read/describe) turn the camera off right after the photo (battery + privacy).
 - The bus-scan e2e test uses Chromium's fake camera with a mocked /api/look (there is no bus footage yet); the real model is measured by `npm run eval:vision`.
-- Open issue for Phase 8: with VoiceOver/TalkBack on, the app voice (speechSynthesis) and the screen reader reading the aria-live status can talk at the same time. Plan: a "screen reader" setting that turns off the app voice.
 - Speech: newer "info" message replaces older info (user just tapped something); navigation/crossing/danger messages always finish and queue. Route summary is "info".
 - Limited-mobility ranking currently = fewer crossings first; on HOIV→Hbf it picks the route with the unmarked crossing. Revisit in Phase 4.
 - `/api/route` falls back to saved real ORS responses (`api/_data/`) for HOIV→Hauptbahnhof/Belvedere if ORS fails (also makes local dev work without keys).

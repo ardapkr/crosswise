@@ -1,7 +1,7 @@
 // Main UI wiring. Logic lives in /lib; this file only connects buttons, speech and storage.
 
 import { MODES, normalizeMode } from '../lib/modes.js';
-import { speak, repeatLast, unlockSpeech } from './speech.js';
+import { speak, repeatLast, unlockSpeech, appVoiceOn, setAppVoice } from './speech.js';
 import { initRoutes } from './routes-ui.js';
 import { startNavigation } from './navigation.js';
 import { initLook } from './look-ui.js';
@@ -105,6 +105,18 @@ function start() {
   speak(`Crosswise ready. ${modeLabel(state.mode)} mode.${state.demo ? ' Demo mode: walking is simulated.' : ''} Where do you want to go?`);
   $('to').focus();
 }
+
+// App voice on/off (for screen reader users)
+function renderVoiceToggle() {
+  $('app-voice').setAttribute('aria-pressed', String(appVoiceOn()));
+  $('app-voice').textContent = appVoiceOn() ? 'App voice: on' : 'App voice: off';
+}
+$('app-voice').addEventListener('click', () => {
+  setAppVoice(!appVoiceOn());
+  renderVoiceToggle();
+  speak(appVoiceOn() ? 'App voice on.' : 'App voice off. Your screen reader will read the messages.');
+});
+renderVoiceToggle();
 
 $('start').addEventListener('click', start);
 $('repeat').addEventListener('click', repeatLast);
