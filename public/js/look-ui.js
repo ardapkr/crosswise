@@ -33,6 +33,7 @@ export function initLook({ speak, testVideoUrl = null }) {
   let errors = 0;
   let busy = false;       // a single-photo check is running
   let starts = 0;         // counts bus-scan starts: only the newest one may run
+  let tripTarget = null;  // { line, headsign, origin } from the trip being guided: line AND direction
 
   const setLive = (text) => { $('look-live').textContent = text; };
   // The camera view covers the search and the sheet: take them out of reach (screen readers too) meanwhile.
@@ -66,14 +67,14 @@ export function initLook({ speak, testVideoUrl = null }) {
   function handleScanEvents(events) {
     for (const e of events) {
       if (!scan) return;
-      const target = scan.targetLine;
+      const opts = { targetLine: scan.targetLine, targetDirection: scan.targetDirection };
       if (e.type === 'found') {
         chime();
         navigator.vibrate?.([200, 100, 200]);
-        speak(spokenResult('bus', e.result, { targetLine: target }), 'navigation');
+        speak(spokenResult('bus', e.result, opts), 'navigation');
         stopScan(false);
       } else if (e.type === 'wrong') {
-        speak(spokenResult('bus', e.result, { targetLine: target }), 'navigation');
+        speak(spokenResult('bus', e.result, opts), 'navigation');
       } else if (e.type === 'still_looking') {
         speak('Still looking.', 'info');
       } else if (e.type === 'timeout') {
@@ -127,8 +128,9 @@ export function initLook({ speak, testVideoUrl = null }) {
     $('bus-line').value = target;
     generation++;
     errors = 0;
-    scan = createScan({ targetLine: target, now: performance.now() });
-    speak(`${target ? `Looking for ${target}.` : 'Looking for a bus or tram.'} Point the camera at the front of arriving buses.`, 'info');
+    const direction = directionFor(target);
+    scan = createScan({ targetLine: target, targetDirection: direction, now: performance.now() });
+    speak(`${target ? `Looking for ${target}${direction ? ` towards ${direction.headsign}` : ''}.` : 'Looking for a bus or tram.'} Point the camera at the front of arriving buses.`, 'info');
     if (document.activeElement !== $('bus-line')) $('look-stop').focus(); // don't interrupt someone typing the line
     loop = setInterval(() => {
       if (!scan) return;
@@ -144,9 +146,24 @@ export function initLook({ speak, testVideoUrl = null }) {
   function retarget(line) {
     const target = normalizeLine(line);
     $('bus-line').value = target;
+    const direction = directionFor(target);
     // fresh agreement + 60 s timeout for the new line; a frame already on its way still counts (one request at a time)
-    scan = { ...createScan({ targetLine: target, now: performance.now() }), inFlight: scan.inFlight, lastSentAt: scan.lastSentAt, frames: scan.frames };
-    speak(target ? `Looking for ${target}.` : 'Looking for any bus or tram.', 'info');
+    scan = { ...createScan({ targetLine: target, targetDirection: direction, now: performance.now() }), inFlight: scan.inFlight, lastSentAt: scan.lastSentAt, frames: scan.frames };
+    speak(target ? `Looking for ${target}${direction ? ` towards ${direction.headsign}` : ''}.` : 'Looking for any bus or tram.', 'info');
+  }
+
+  /** The trip's direction applies only while the user looks for the trip's line. */
+  function directionFor(line) {
+    return tripTarget && line && normalizeLine(tripTarget.line) === line ? tripTarget : null;
+  }
+
+  /** Set by the trip guidance: the line and direction to look for (null = no trip). */
+  function setTarget(t) {
+    tripTarget = t?.line ? t : null;
+    if (tripTarget && !scan) $('bus-line').value = normalizeLine(tripTarget.line);
+    if (!tripTarget && !scan) $('bus-line').value = '';
+    $('bus-direction').textContent = tripTarget ? `Your trip: ${tripTarget.line} towards ${tripTarget.headsign}` : '';
+    $('bus-direction').hidden = !tripTarget;
   }
 
   function stopScan(announce = true) {
@@ -208,6 +225,7 @@ export function initLook({ speak, testVideoUrl = null }) {
     read: () => single('read'),
     describe: () => single('describe'),
     stop: () => stopAll(true),
+    setTarget,
     get scanning() { return Boolean(scan); },
   };
 }

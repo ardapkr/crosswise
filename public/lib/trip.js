@@ -226,6 +226,17 @@ export function tripSteps(trip, mode) {
   });
 }
 
+/** Short lines for the card: "Walk 2 min to Hüttenbrennergasse · 1 crossing", "Bus 69A to Hauptbahnhof · 09:09 · 4 stops". */
+export function tripStepsShort(trip) {
+  return trip.legs.map((leg) => {
+    if (leg.kind === 'ride') {
+      return `${capital(lineName(leg))}${leg.headsign ? ` to ${leg.headsign}` : ''} · ${clock(leg.departure)} · ${plural(leg.stops, 'stop')}, get off at ${leg.to.name}`;
+    }
+    const n = (leg.route.crossings || []).length;
+    return `Walk ${minutes(leg.route.duration)} min to ${leg.to.name || 'destination'}${n ? ` · ${plural(n, 'crossing')}` : ''}${leg.tight ? ' · tight change' : ''}`;
+  });
+}
+
 const LEVEL_SHORT = {
   good: 'all with lights and an acoustic signal',
   ok: 'all with lights',
@@ -242,8 +253,22 @@ export function tripCrossingsShort(trip) {
 
 /** Read out when a transit card is tapped. */
 export function tripCardText(trip, mode, now) {
-  const head = `${capital(tripName(trip))}: ${plural(minutes(trip.duration), 'minute')}, leave at ${clock(trip.leave)}, ${relative(trip.leave, now)}, arrive at ${clock(trip.arrive)}. ${capital(tripCrossingsShort(trip))}.`;
+  const head = `${capital(tripName(trip))}: ${plural(minutes(trip.duration), 'minute')}, ${leaveText(trip, now)}, arrive at ${clock(trip.arrive)}. ${capital(tripCrossingsShort(trip))}.`;
   return [head, ...tripSteps(trip, mode)].join(' ');
+}
+
+export const SAFER_WITHIN_MS = 10 * 60e3; // a safer trip wins if it arrives at most 10 minutes later
+
+/**
+ * Which trip first? Like the walking routes: safest crossings first — but only if it arrives at most
+ * 10 minutes later; otherwise the earlier arrival wins.
+ */
+export function compareTrips(a, b) {
+  if (Math.abs(a.arrive - b.arrive) <= SAFER_WITHIN_MS) {
+    const d = (b.score.worst - a.score.worst) || (a.score.risky || 0) - (b.score.risky || 0);
+    if (d && !Number.isNaN(d)) return d;
+  }
+  return a.arrive - b.arrive;
 }
 
 /**
@@ -251,15 +276,28 @@ export function tripCardText(trip, mode, now) {
  * @returns {{ items: object[], transitFirst: boolean }} items = [walk, ...trips] or [...trips, walk]
  */
 export function orderPlan(walkBest, trips) {
-  const sorted = [...trips].sort((a, b) => a.arrive - b.arrive);
+  const sorted = [...trips].sort(compareTrips);
   const transitFirst = Boolean(walkBest && sorted.length && walkBest.duration > WALK_FIRST_MAX_S && sorted[0].duration < walkBest.duration);
   if (!walkBest) return { items: sorted, transitFirst: sorted.length > 0 };
   return { items: transitFirst ? [...sorted, walkBest] : [walkBest, ...sorted], transitFirst };
 }
 
+/** "leave now, 23:06" / "leave at 23:19, in 13 minutes" */
+export function leaveText(trip, now) {
+  const rel = relative(trip.leave, now);
+  return rel === 'now' ? `leave now, ${clock(trip.leave)}` : `leave at ${clock(trip.leave)}, ${rel}`;
+}
+
 /** One sentence per trip for the spoken plan summary. */
 function tripSentence(trip, now) {
-  return `${capital(tripName(trip))}, ${plural(minutes(trip.duration), 'minute')}, leave at ${clock(trip.leave)}, ${relative(trip.leave, now)}. ${capital(tripCrossingsShort(trip))}.`;
+  return `${capital(tripName(trip))}, ${plural(minutes(trip.duration), 'minute')}, ${leaveText(trip, now)}. ${capital(tripCrossingsShort(trip))}.`;
+}
+
+/** Said when the recommended trip is not the fastest one: why. */
+function saferNote(best, other) {
+  if (!other || best.arrive <= other.arrive) return '';
+  const m = Math.max(1, Math.round((best.arrive - other.arrive) / 60000));
+  return ` It arrives ${plural(m, 'minute')} later than ${tripName(other)}, but its crossings are safer.`;
 }
 
 /**
@@ -269,12 +307,16 @@ function tripSentence(trip, now) {
 export function planSummary({ walkBest, walkSummary, trips, transitFirst, now, note = '' }) {
   const extra = note ? ` ${note}` : '';
   if (!trips.length) return `${walkSummary || 'No route found.'}${extra}`;
-  const sorted = [...trips].sort((a, b) => a.arrive - b.arrive);
-  const second = sorted[1] ? ` Second option: ${tripSentence(sorted[1], now)}` : '';
+  const sorted = [...trips].sort(compareTrips);
+  const second = sorted[1] ? `${saferNote(sorted[0], sorted[1])} Second option: ${tripSentence(sorted[1], now)}` : '';
   if (transitFirst) {
+    const walk = walkBest.score
+      ? ` On foot: ${plural(minutes(walkBest.duration), 'minute')}, ${walkBest.score.count ? `${plural(walkBest.score.count, 'crossing')}, ${LEVEL_SHORT[safetyLevel(walkBest.score)]}` : 'no road crossings'}.`
+      : '';
     return `Walking takes ${plural(minutes(walkBest.duration), 'minute')}, so public transport comes first. ` +
-      `Best: ${tripSentence(sorted[0], now)}${second}${extra}`;
+      `Best: ${tripSentence(sorted[0], now)}${second}${walk}${extra}`;
   }
   if (!walkBest) return `Public transport: ${tripSentence(sorted[0], now)}${second}${extra}`;
-  return `${walkSummary} By public transport: ${tripSentence(sorted[0], now)}${second}${extra}`;
+  const walking = walkSummary ? `Walking: ${walkSummary.charAt(0).toLowerCase()}${walkSummary.slice(1)}` : '';
+  return `${walking} By public transport: ${tripSentence(sorted[0], now)}${second}${extra}`.trim();
 }

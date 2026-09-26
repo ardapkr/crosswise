@@ -21,11 +21,12 @@ let L = null;
 let map = null;
 let layer = null;       // everything we draw, cleared on each new plan
 let dots = null;        // crossing dots of the selected route
+let stops = null;       // boarding / alighting stops of the selected trip
 let walker = null;
 let pendingWalker = null; // a position that arrived while the map was still getting ready
 let here = null;          // "you are here" dot before a route is walked
 let pendingHere = null;
-let lines = new Map();  // route id → { line, route }
+let lines = new Map();  // route id → { parts: [{ line, dash }], route, color, primary }
 let selected = null;
 let padding = () => ({ top: 24, right: 24, bottom: 24, left: 24 }); // the UI covers parts of the map
 
@@ -121,26 +122,78 @@ async function prepare(box) {
 }
 
 function styleLines() {
-  for (const [id, { line, route }] of lines) {
+  for (const [id, { parts, color, primary }] of lines) {
     const on = id === selected;
-    const { color, dash } = routeStyle(route.rank);
-    line.setStyle({
-      color, dashArray: dash, lineCap: 'round', lineJoin: 'round',
-      weight: on ? 9 : route.rank === 1 ? 6 : 5, // the recommended route stays thicker than the others
-      opacity: on ? 1 : 0.5,
-    });
-    if (on) line.bringToFront();
+    for (const { line, dash } of parts) {
+      line.setStyle({
+        color, dashArray: dash, lineCap: 'round', lineJoin: 'round',
+        weight: on ? 9 : primary ? 6 : 5, // the recommended option stays thicker than the others
+        opacity: on ? 1 : 0.5,
+      });
+      if (on) line.bringToFront();
+    }
   }
+  stops?.eachLayer((d) => d.bringToFront());
   dots?.eachLayer((d) => d.bringToFront());
 }
 
-/** Route comparison: every route in its own colour, the selected one (default: recommended) on top. */
+/** Walking route comparison: every route in its own colour and pattern, the selected one on top. */
 export async function showRoutes(box, ranked) {
   if (!(await prepare(box))) return;
-  for (const r of [...ranked].reverse()) lines.set(r.id, { line: L.polyline(r.geometry.map(latLng)).addTo(layer), route: r });
+  for (const r of [...ranked].reverse()) {
+    const { color, dash } = routeStyle(r.rank);
+    lines.set(r.id, { parts: [{ line: L.polyline(r.geometry.map(latLng)).addTo(layer), dash }], route: r, color, primary: r.rank === 1 });
+  }
   drawEnds(ranked[0]);
   selectRoute(ranked[0].id, { fit: false });
   fitTo(ranked.flatMap((r) => r.geometry.map(latLng)), false);
+}
+
+// Public transport on the map: walking legs solid, rides dashed (in the option's colour).
+export const RIDE_DASH = '2 12';
+
+/** [{ geometry, ride }] for a walking route or a transit trip. */
+function segmentsOf(item) {
+  if (item.kind !== 'transit') return [{ geometry: item.geometry, ride: false }];
+  return item.legs.map((l) => ({ geometry: l.kind === 'walk' ? l.route.geometry : l.geometry, ride: l.kind === 'ride' }));
+}
+
+function addItem(item, index) {
+  const { color } = ROUTE_STYLES[index % ROUTE_STYLES.length];
+  const parts = segmentsOf(item)
+    .filter((s) => s.geometry?.length > 1)
+    .map((s) => ({ line: L.polyline(s.geometry.map(latLng)).addTo(layer), dash: s.ride ? RIDE_DASH : null }));
+  lines.set(item.id, { parts, route: item, color, primary: index === 0 });
+}
+
+function drawStops(item) {
+  stops?.remove();
+  stops = L.layerGroup().addTo(layer);
+  if (item?.kind !== 'transit') return;
+  for (const l of item.legs.filter((x) => x.kind === 'ride')) {
+    for (const p of [l.from, l.to]) {
+      L.circleMarker([p.lat, p.lon], { radius: 7, color: '#0b0b10', weight: 3, fillColor: '#ffffff', fillOpacity: 1 }).addTo(stops);
+    }
+  }
+}
+
+/** Options (walking + public transport), each in its own colour; rides dashed. The first one is selected. */
+export async function showOptions(box, items, { selectedId = items[0]?.id } = {}) {
+  if (!(await prepare(box))) return;
+  items.forEach((item, i) => addItem(item, i));
+  drawEnds(items[0]);
+  selectRoute(selectedId, { fit: false });
+  fitTo(items.flatMap((r) => r.geometry.map(latLng)), false);
+}
+
+/** Following one trip (walking + rides). */
+export async function showTrip(box, trip) {
+  if (!(await prepare(box))) return;
+  addItem(trip, 0);
+  drawEnds(trip);
+  selectRoute(trip.id, { fit: false });
+  fitTo(trip.geometry.map(latLng), false);
+  if (pendingWalker) showPosition(pendingWalker);
 }
 
 /** Highlights one route (tapped route card): thick + on top, its crossings as dots, zoomed to it. */
@@ -148,6 +201,7 @@ export function selectRoute(id, { fit = true } = {}) {
   const hit = lines.get(id);
   if (!map || !hit) return;
   selected = id;
+  drawStops(hit.route);
   drawDots(hit.route);
   styleLines();
   if (fit) fitTo(hit.route.geometry.map(latLng));
@@ -163,7 +217,8 @@ export function refit() {
 /** Walking: only the chosen route, its crossings and a dot for the walker. */
 export async function showWalk(box, route) {
   if (!(await prepare(box))) return;
-  lines.set(route.id, { line: L.polyline(route.geometry.map(latLng)).addTo(layer), route });
+  const { color } = routeStyle(route.rank || 1);
+  lines.set(route.id, { parts: [{ line: L.polyline(route.geometry.map(latLng)).addTo(layer), dash: null }], route, color, primary: true });
   drawEnds(route);
   selectRoute(route.id, { fit: false });
   fitTo(route.geometry.map(latLng), false);

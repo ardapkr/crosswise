@@ -1,7 +1,7 @@
 // Route comparison UI. ORS is mocked with REAL saved responses; crossings come from the real
 // Vienna snapshot via the local /api/crossings (no API key needed).
 import { test, expect } from '@playwright/test';
-import { mockOrs } from './helpers.js';
+import { mockOrs, mockTransit } from './helpers.js';
 
 test('quick destination → safest route first, shortest route marked, summary spoken', async ({ page }) => {
   await mockOrs(page);
@@ -45,6 +45,7 @@ test('switching to wheelchair re-plans with the wheelchair profile and mentions 
 
 test('server errors are spoken, not silent', async ({ page }) => {
   await page.route('**/api/route?*', (route) => route.fulfill({ status: 502, json: { error: 'Route service error 503' } }));
+  await mockTransit(page, null);
   await page.goto('/?demo=1');
   await page.getByRole('button', { name: 'Start' }).click();
   await page.getByRole('button', { name: 'Oberes Belvedere' }).click();

@@ -174,9 +174,12 @@ describe('orderPlan + planSummary', () => {
   it('summary says why transit comes first', () => {
     const now = 0;
     const text = planSummary({ walkBest: walk(50), walkSummary: 'W.', trips: [trip('13A', 20, 20 * 60e3)], transitFirst: true, now });
-    expect(text).toMatch(/^Walking takes 50 minutes, so public transport comes first\. Best: Bus 13A, 20 minutes, leave at \d\d:\d\d, now\. No road crossings on foot\.$/);
-    expect(planSummary({ walkBest: walk(8), walkSummary: 'W.', trips: [trip('13A', 9, 9 * 60e3)], transitFirst: false, now }))
-      .toMatch(/^W\. By public transport: Bus 13A/);
+    expect(text).toMatch(/^Walking takes 50 minutes, so public transport comes first\. Best: Bus 13A, 20 minutes, leave now, \d\d:\d\d\. No road crossings on foot\.$/);
+    expect(planSummary({ walkBest: walk(8), walkSummary: 'The safest walk.', trips: [trip('13A', 9, 9 * 60e3)], transitFirst: false, now }))
+      .toMatch(/^Walking: the safest walk\. By public transport: Bus 13A/);
+    const scored = { ...walk(50), score: { count: 2, worst: 3 } };
+    expect(planSummary({ walkBest: scored, walkSummary: 'W.', trips: [trip('13A', 20, 20 * 60e3)], transitFirst: true, now }))
+      .toMatch(/On foot: 50 minutes, 2 crossings, all with lights and an acoustic signal\.$/);
     expect(planSummary({ walkBest: walk(8), walkSummary: 'W.', trips: [], transitFirst: false, now, note: 'No transit.' })).toBe('W. No transit.');
   });
 });
@@ -190,5 +193,21 @@ describe('real-data check: HOIV → Schönbrunn', () => {
       const onRoute = t.legs.filter((l) => l.kind === 'walk').flatMap((l) => crossingsOnRoute(groups, l.route.geometry));
       expect(t.score.count).toBe(onRoute.length);
     }
+  });
+});
+
+describe('compareTrips: safest crossings first, if it costs at most 10 minutes', () => {
+  const t = (id, arriveMin, worst, risky = 0) => ({ id, arrive: arriveMin * 60e3, duration: 600, leave: 0, legs: [{ kind: 'ride', vehicle: 'bus', line: id }], score: { worst, risky, count: 1 } });
+  it('a safer trip arriving 6 min later comes first, and the summary says why', async () => {
+    const { compareTrips } = await import('../../public/lib/trip.js');
+    const fast = t('D', 29, 1); // a zebra crossing on foot
+    const safe = t('69A', 35, 2); // all with lights
+    expect([fast, safe].sort(compareTrips)[0].id).toBe('69A');
+    const text = planSummary({ walkBest: { duration: 1620 }, walkSummary: '', trips: [fast, safe], transitFirst: true, now: 0 });
+    expect(text).toMatch(/Best: Bus 69A.*It arrives 6 minutes later than bus D, but its crossings are safer\. Second option: Bus D/);
+  });
+  it('more than 10 min later: the earlier trip wins', async () => {
+    const { compareTrips } = await import('../../public/lib/trip.js');
+    expect([t('D', 29, 1), t('69A', 45, 3)].sort(compareTrips)[0].id).toBe('D');
   });
 });

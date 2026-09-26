@@ -93,7 +93,8 @@
       <p class="camera-caption" data-status-mirror aria-hidden="true"></p>
       <div id="bus-line-row" class="bus-line-row">
         <label for="bus-line">Your line <span class="hint">(optional, e.g. 13A)</span></label>
-        <input id="bus-line" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" placeholder="Any line">
+        <input id="bus-line" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" placeholder="Any line" aria-describedby="bus-direction">
+        <p id="bus-direction" class="hint" hidden></p>
       </div>
       <button id="look-stop" type="button" class="btn btn-danger">
         <svg class="icon" aria-hidden="true"><use href="#i-stop"/></svg><span class="label">Stop camera</span>
@@ -105,6 +106,9 @@
         <button id="sheet-toggle" type="button" class="sheet-handle" aria-expanded="false" aria-controls="sheet" aria-label="Show more"><span aria-hidden="true"></span></button>
         <!-- While walking -->
         <section id="nav-section" class="nav-controls" hidden aria-label="Walking controls">
+          <button id="nav-leg" type="button" class="btn btn-primary" hidden>
+            <svg class="icon" aria-hidden="true"><use href="#i-bus"/></svg><span class="label">I'm on board</span>
+          </button>
           <button id="nav-repeat" type="button" class="btn">
             <svg class="icon" aria-hidden="true"><use href="#i-repeat"/></svg><span class="label">Repeat next</span>
           </button>
@@ -121,8 +125,21 @@
         <p id="voice-heard" class="voice-heard"></p>
 
         <div id="plan-section" class="plan">
+          <!-- Walking + public transport (shown when public transport was found) -->
+          <section id="options-section" class="routes-block" hidden aria-labelledby="options-heading">
+            <h2 id="options-heading" class="section-title" tabindex="-1">Your options</h2>
+            <p id="options-note" class="hint" hidden></p>
+            <p class="legend" aria-hidden="true">
+              <span><i class="line walk"></i>walk</span>
+              <span><i class="line ride"></i>bus, tram, U-Bahn</span>
+              <span><i class="dot sound"></i>lights + sound</span>
+              <span><i class="dot unmarked"></i>unmarked</span>
+            </p>
+            <ol id="options" class="routes"></ol>
+            <button id="walk-compare" type="button" class="btn btn-quiet" aria-expanded="false" aria-controls="routes-section">Compare walking routes</button>
+          </section>
           <section id="routes-section" class="routes-block" hidden aria-labelledby="routes-heading">
-            <h2 id="routes-heading" class="section-title" tabindex="-1">Routes, safest first</h2>
+            <h2 id="routes-heading" class="section-title" tabindex="-1">Walking routes, safest first</h2>
             <p class="legend" aria-hidden="true">
               <span><i class="dot sound"></i>lights + sound</span>
               <span><i class="dot lights"></i>lights</span>
