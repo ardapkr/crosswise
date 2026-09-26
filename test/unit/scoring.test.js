@@ -191,3 +191,31 @@ describe('crossingLevel (map dot colour)', () => {
     expect(crossingLevel(X('signals', { sound: 'yes', kerb: 'raised' }), 'wheelchair')).toBe('caution');
   });
 });
+
+describe('routeSummary tells the real reason for the choice', () => {
+  it('more acoustic signals (not fewer crossings) → says so, never claims "fewer crossings"', () => {
+    const shortest = { id: 's', duration: 600, distance: 800, crossings: [ZEBRA, LIGHT, LIGHT] };
+    const soundy = { id: 'b', duration: 660, distance: 850, crossings: [ZEBRA, LIGHT_SOUND, LIGHT_SOUND, LIGHT_SOUND] };
+    const ranked = rankRoutes([shortest, soundy], 'blind');
+    expect(ranked[0].id).toBe('b');
+    const text = routeSummary(ranked, 'blind');
+    expect(text).not.toMatch(/fewer crossings/);
+    expect(text).toMatch(/^The recommended route is 1 minute longer and has more crossings with an acoustic signal: 3 of 4, instead of 0 of 3\./);
+  });
+  it('fewer crossings → says so', () => {
+    const shortest = { id: 's', duration: 600, distance: 800, crossings: [ZEBRA, ZEBRA, ZEBRA] };
+    const fewer = { id: 'f', duration: 660, distance: 850, crossings: [ZEBRA] };
+    expect(routeSummary(rankRoutes([shortest, fewer], 'blind'), 'blind'))
+      .toMatch(/^The recommended route is 1 minute longer but has fewer crossings: 1 instead of 3\./);
+  });
+});
+
+  it('no crossings at all on the recommended route', () => {
+    const shortest = { id: 's', duration: 600, distance: 800, crossings: [ZEBRA, LIGHT] };
+    const none = { id: 'n', duration: 780, distance: 1000, crossings: [] };
+    expect(routeSummary(rankRoutes([shortest, none], 'blind'), 'blind'))
+      .toBe('The recommended route is 3 minutes longer and avoids the zebra crossing without lights on the shortest route. It has no road crossings.');
+    const allSound = { id: 's2', duration: 600, distance: 800, crossings: [LIGHT_SOUND, LIGHT_SOUND] };
+    expect(routeSummary(rankRoutes([allSound, none], 'blind'), 'blind'))
+      .toBe('The recommended route is 3 minutes longer and has no road crossings, the shortest route has 2. It has no road crossings.');
+  });

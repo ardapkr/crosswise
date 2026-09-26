@@ -44,26 +44,53 @@ export function crossingList(score, mode) {
   return `Its ${score.count} crossings: ${parts.join(', ')}.`;
 }
 
-/** What the shortest route has that the recommended one avoids, e.g. "the 2 unmarked crossings". */
-function avoided(best, shortest, mode) {
-  const b = best.score;
-  const s = shortest.score;
+const KIND_NAMES = {
+  unmarked: ['unmarked crossing', 'unmarked crossings'],
+  unknown: ['crossing of unknown type', 'crossings of unknown type'],
+  zebra: ['zebra crossing without lights', 'zebra crossings without lights'],
+  silent: ['traffic light without an acoustic signal', 'traffic lights without an acoustic signal'],
+};
+const silentCount = (score) => score.kinds.signals - score.withSound;
+const countOf = (score, kind) => (kind === 'silent' ? silentCount(score) : score.kinds[kind] || 0);
+
+/** "avoids the 2 unmarked crossings" (none left) or "has fewer unmarked crossings: 1 instead of 2". */
+function fewerOf(kind, best, shortest) {
+  const b = countOf(best, kind);
+  const s = countOf(shortest, kind);
+  if (b >= s) return null;
+  const [one, many] = KIND_NAMES[kind];
+  if (b === 0) return `avoids ${s === 1 ? `the ${one}` : `the ${s} ${many}`} on the shortest route`;
+  return `has fewer ${many}: ${b} instead of ${s}`;
+}
+
+/**
+ * Why the recommended route beats the shortest one, in the order the ranking decides:
+ * raised kerbs (wheelchair) / the worst crossing, then unmarked crossings, then acoustic signals, then count.
+ */
+function reason(bestRoute, shortestRoute, mode) {
+  const b = bestRoute.score;
+  const s = shortestRoute.score;
   if (mode === 'wheelchair' && s.kerbRaised > b.kerbRaised) {
-    return s.kerbRaised === 1 ? 'the raised kerb' : `the ${s.kerbRaised} raised kerbs`;
+    return b.kerbRaised === 0
+      ? `avoids ${s.kerbRaised === 1 ? 'the raised kerb' : `the ${s.kerbRaised} raised kerbs`} on the shortest route`
+      : `has fewer raised kerbs: ${b.kerbRaised} instead of ${s.kerbRaised}`;
   }
-  const worst = s.worstCrossing?.kind;
-  const n = (k) => s.kinds[k] - (b.kinds[k] || 0);
-  if (worst === 'unmarked' && n('unmarked') > 0) {
-    return s.kinds.unmarked === 1 ? 'the unmarked crossing' : `the ${s.kinds.unmarked} unmarked crossings`;
+  const worstKind = s.worstCrossing?.kind === 'signals' ? 'silent' : s.worstCrossing?.kind;
+  if (b.worst > s.worst && worstKind && KIND_NAMES[worstKind]) {
+    const r = fewerOf(worstKind, b, s);
+    if (r) return r;
   }
-  if (worst === 'zebra' && n('zebra') > 0) {
-    return s.kinds.zebra === 1 ? 'the zebra crossing without lights' : `the ${s.kinds.zebra} zebra crossings without lights`;
+  for (const kind of ['unmarked', 'unknown']) {
+    const r = fewerOf(kind, b, s);
+    if (r) return r;
   }
-  const silent = s.kinds.signals - s.withSound;
-  if (worst === 'signals' && silent > 0) {
-    return silent === 1 ? 'the traffic light without an acoustic signal' : `the ${silent} traffic lights without an acoustic signal`;
+  if (mode === 'blind' && b.withSound > s.withSound) {
+    return `has more crossings with an acoustic signal: ${b.withSound} of ${b.count}, instead of ${s.withSound} of ${s.count}`;
   }
-  return null;
+  if (b.count === 0 && s.count > 0) return `has no road crossings, the shortest route has ${s.count}`;
+  if (b.count < s.count) return `has fewer crossings: ${b.count} instead of ${s.count}`;
+  const r = fewerOf('zebra', b, s) || fewerOf('silent', b, s);
+  return r || 'has safer crossings';
 }
 
 function kerbPhrase(score, mode) {
@@ -104,17 +131,13 @@ function summaryText(ranked, mode) {
   }
   const extra = minutes(best.duration - shortest.duration);
   const longer = extra < 1 ? 'less than a minute longer' : `${plural(extra, 'minute')} longer`;
-  const avoid = avoided(best, shortest, mode);
+  const why = reason(best, shortest, mode);
   const allGood = best.score.count > 0 && best.score.withSound === best.score.count;
 
   if (allGood) {
-    return `The recommended route is ${longer}, but every crossing has lights and an acoustic signal.` +
-      (avoid ? ` It avoids ${avoid} on the shortest route.` : '') + kerbPhrase(best.score, mode);
+    const also = why.startsWith('avoids') ? ` It ${why}.` : '';
+    return `The recommended route is ${longer}, but every crossing has lights and an acoustic signal.${also}` + kerbPhrase(best.score, mode);
   }
-  if (avoid) {
-    return `The recommended route is ${longer} and avoids ${avoid} on the shortest route. ` +
-      crossingList(best.score, mode) + kerbPhrase(best.score, mode);
-  }
-  return `The recommended route is ${longer} but has fewer crossings: ${best.score.count} instead of ${shortest.score.count}. ` +
-    crossingList(best.score, mode) + kerbPhrase(best.score, mode);
+  const joiner = why.startsWith('has fewer crossings') ? 'but' : 'and';
+  return `The recommended route is ${longer} ${joiner} ${why}. ` + crossingList(best.score, mode) + kerbPhrase(best.score, mode);
 }
