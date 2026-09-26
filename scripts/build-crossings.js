@@ -46,3 +46,23 @@ for (const [city, [s, w, n, e]] of Object.entries(CITIES)) {
     `${JSON.stringify(kinds)}, ${withSound} with acoustic signal; ${kerbNote}; ${file} ${(text.length / 1024).toFixed(0)} KB`,
   );
 }
+
+// ---- Stops snapshot (for "Where am I?") ----
+const { parseStops, encodeStops } = await import('../public/lib/whereami.js');
+for (const [city, [s, w, n, e]] of Object.entries(CITIES)) {
+  const src = `data/raw/overpass-stops-${city}.json`;
+  try { await access(src); } catch { console.log(`${src} missing — run fetch-crossings.js first`); continue; }
+  const stops = parseStops(JSON.parse(await readFile(src, 'utf8')));
+  const out = {
+    city,
+    bbox: [w, s, e, n],
+    builtAt: new Date().toISOString(),
+    source: 'OpenStreetMap contributors (ODbL), via Overpass API',
+    format: 'rows: [lat, lon, name, kind b/t/bt/s/r/o, "line;line"]',
+    rows: encodeStops(stops),
+  };
+  const file = `public/data/stops-${city}.json`;
+  const text = JSON.stringify(out);
+  await writeFile(file, text);
+  console.log(`${city}: ${stops.length} named stops; ${file} ${(text.length / 1024).toFixed(0)} KB`);
+}

@@ -32,10 +32,23 @@ node(w)["barrier"="kerb"];
 out body;`;
 }
 
-// Two downloads per city: the crossing/signal nodes and the kerb nodes on crossing footways.
+/** Bus and tram stops where people wait (platforms), with their names and lines where mapped. */
+export function buildStopsQuery(bbox) {
+  const b = bbox.join(',');
+  return `[out:json][timeout:300];
+(
+  node["highway"="bus_stop"](${b});
+  node["railway"="tram_stop"](${b});
+  node["public_transport"="platform"](${b});
+);
+out body;`;
+}
+
+// Three downloads per city: crossing/signal nodes, kerb nodes on crossing footways, and stops.
 const DATASETS = [
   { name: (city) => `overpass-${city}`, query: buildQuery, what: 'crossing + signal nodes' },
   { name: (city) => `overpass-kerbs-${city}`, query: buildKerbQuery, what: 'kerb nodes on crossings' },
+  { name: (city) => `overpass-stops-${city}`, query: buildStopsQuery, what: 'bus and tram stops' },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

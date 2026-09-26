@@ -152,3 +152,5 @@ input::placeholder { color: #9a9a9a; }
 button.voice { margin-bottom: 6px; }
 button.voice.listening { background: var(--bad); color: #000; border-color: var(--bad); }
 .voice-heard { margin: 0 0 12px; color: var(--muted); min-height: 1.4em; }
+.top-actions { margin-bottom: 4px; }
+.top-actions .big { min-height: 88px; }

@@ -7,6 +7,9 @@ import { startNavigation } from './navigation.js';
 import { initLook } from './look-ui.js';
 import { unlockSound } from './sound.js';
 import { initVoice } from './voice.js';
+import { getJSON } from './api.js';
+import { getPosition, HOIV } from './location.js';
+import { whereAmIText } from '../lib/whereami.js';
 
 const MODE_KEY = 'crosswise.mode';
 const $ = (id) => document.getElementById(id);
@@ -111,6 +114,27 @@ const testVideo = params.get('video');
 const SAFE_PATH = /^\/[\w\-./]+$/; // same-origin path only (a foreign video would also block frame capture)
 const look = initLook({ speak, testVideoUrl: testVideo && SAFE_PATH.test(testVideo) ? testVideo : null });
 
+// --- where am I ---
+async function whereAmI() {
+  let pos = nav?.position?.() || (state.demo ? [HOIV.lon, HOIV.lat] : null);
+  if (!pos) {
+    try {
+      const p = await getPosition();
+      pos = [p.lon, p.lat];
+    } catch (e) {
+      speak(e.message, 'navigation');
+      return;
+    }
+  }
+  try {
+    const data = await getJSON(`/api/where?lon=${pos[0].toFixed(6)}&lat=${pos[1].toFixed(6)}`);
+    speak(whereAmIText(data, state.mode), 'navigation');
+  } catch (e) {
+    speak(e.message, 'navigation');
+  }
+}
+$('where').addEventListener('click', whereAmI);
+
 const voice = initVoice({
   speak,
   handlers: {
@@ -118,7 +142,7 @@ const voice = initVoice({
     check_light: () => look.checkLight(),
     read: () => look.read(),
     describe: () => look.describe(),
-    where_am_i: () => speak('Where am I is coming soon.'),
+    where_am_i: () => whereAmI(),
     navigate: (place) => routes.planToPlace(place),
     set_mode: (mode) => setMode(mode),
     stop: () => { if (nav) stopRoute(); else look.stop(); },

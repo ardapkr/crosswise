@@ -16,6 +16,7 @@ export function startNavigation({ route, mode, speak, demo, speed = 1.3, startAt
   let timer = null;
   let wakeLock = null;
   let stopped = false;
+  let lastPos = null;    // for "Where am I?" while walking
 
   // Keep the screen (and GPS) awake while walking. Not supported everywhere: ignore failures.
   navigator.wakeLock?.request?.('screen').then((l) => { wakeLock = l; }).catch(() => {});
@@ -28,6 +29,7 @@ export function startNavigation({ route, mode, speak, demo, speed = 1.3, startAt
 
   function onPosition(pos, accuracy) {
     if (stopped) return;
+    lastPos = pos;
     const r = updateGuidance(state, pos, { accuracy });
     state = r.state;
     last = r;
@@ -78,6 +80,7 @@ export function startNavigation({ route, mode, speak, demo, speed = 1.3, startAt
 
   return {
     stop,
+    position: () => lastPos,
     /** Repeat what comes next, e.g. after a noisy moment. */
     repeat() {
       if (!last) { speak('Waiting for your location.'); return; }

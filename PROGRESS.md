@@ -1,6 +1,6 @@
 # PROGRESS.md
 
-**Latest preview:** https://crosswise-n4c6neyxj-trua.vercel.app  (deployed 16:39; open while logged in to Vercel)
+**Latest preview:** https://crosswise-7zgw9h5cf-trua.vercel.app  (deployed 16:49; open while logged in to Vercel)
 
 ## Log (newest first)
 - 17:15 **Phase 6 done.** Voice: big "Speak a command" button (tap to talk, beep = speak now, app voice is stopped first so the mic doesn't hear it). `lib/commands.js` keyword parser (61 tests): find my bus [line] ("13 a" → 13A, "sixty nine a" → 69A, "the D tram" → D), check the light, read, describe, where am I, take me to <place> (plans to the first search result), wheelchair/blind/limited mode, stop, repeat, help; uses the recogniser's 2nd/3rd guess if the 1st isn't understood. Fallback message when SpeechRecognition is missing (e.g. Firefox). 211 unit + 23 e2e green.
