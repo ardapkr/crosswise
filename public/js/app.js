@@ -6,6 +6,7 @@ import { initRoutes } from './routes-ui.js';
 import { startNavigation } from './navigation.js';
 import { initLook } from './look-ui.js';
 import { unlockSound } from './sound.js';
+import { initVoice } from './voice.js';
 
 const MODE_KEY = 'crosswise.mode';
 const $ = (id) => document.getElementById(id);
@@ -110,5 +111,20 @@ const testVideo = params.get('video');
 const SAFE_PATH = /^\/[\w\-./]+$/; // same-origin path only (a foreign video would also block frame capture)
 const look = initLook({ speak, testVideoUrl: testVideo && SAFE_PATH.test(testVideo) ? testVideo : null });
 
+const voice = initVoice({
+  speak,
+  handlers: {
+    find_bus: (line) => look.findBus(line),
+    check_light: () => look.checkLight(),
+    read: () => look.read(),
+    describe: () => look.describe(),
+    where_am_i: () => speak('Where am I is coming soon.'),
+    navigate: (place) => routes.planToPlace(place),
+    set_mode: (mode) => setMode(mode),
+    stop: () => { if (nav) stopRoute(); else look.stop(); },
+    repeat: () => repeatLast(),
+  },
+});
+
 // Expose for tests and the browser console.
-window.crosswise = { state, speak, setMode, routes, look };
+window.crosswise = { state, speak, setMode, routes, look, voice };

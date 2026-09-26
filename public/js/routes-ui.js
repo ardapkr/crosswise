@@ -72,6 +72,14 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
     list.querySelector('button')?.focus();
   }
 
+  /** Voice: "take me to X" → first search result, planned directly (the summary names the place). */
+  async function planToPlace(q) {
+    $('to').value = q;
+    const place = await geocodeFirst(q);
+    if (!place) { speak(`I could not find ${q}. Try another name.`); return; }
+    await planTo(place);
+  }
+
   // --- routes ---
   async function planTo(to) {
     const mode = getMode();
@@ -149,6 +157,7 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
     get plan() { return plan; },
     planTo: (to) => run(() => planTo(to)),
     search: (q) => run(() => search(q)),
+    planToPlace: (q) => run(() => planToPlace(q)),
     /** Mode changed: wheelchair uses another ORS profile, so plan again. */
     replan: () => { if (plan) run(() => planTo(plan.to)); },
   };

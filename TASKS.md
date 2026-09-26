@@ -51,8 +51,8 @@
 - [x] Describe surroundings (short, most important first, max ~3 sentences)
 
 ## Phase 6 — Voice (target: 02:30)
-- [ ] Push-to-talk button, `lib/commands.js` keyword parser (tested): find my bus [line], read, describe, check light, where am I, take me to <place>, switch mode
-- [ ] Graceful fallback message when SpeechRecognition isn't supported
+- [x] Push-to-talk button, `lib/commands.js` keyword parser (tested): find my bus [line], read, describe, check light, where am I, take me to <place>, switch mode
+- [x] Graceful fallback message when SpeechRecognition isn't supported
 
 ## Phase 7 — Where am I (target: 03:00)
 - [ ] Street name + nearest stop / crossing from ORS reverse geocode or Overpass

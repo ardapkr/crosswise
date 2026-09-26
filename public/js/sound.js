@@ -28,3 +28,6 @@ export function tick() { beep(1200, 40, 0.03); }
 
 /** Rising two-tone: "found it". */
 export function chime() { beep(660, 120, 0.08); beep(990, 180, 0.08, 0.13); }
+
+/** Short beep: "speak now". */
+export function listenCue() { beep(880, 90, 0.08); }

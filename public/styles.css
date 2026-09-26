@@ -147,3 +147,8 @@ input::placeholder { color: #9a9a9a; }
 .camera-box video { width: 100%; max-height: 42vh; object-fit: cover; border-radius: var(--radius); border: 3px solid var(--accent); background: #111; }
 .look-live { margin: 0; font-size: 1.1rem; color: var(--muted); min-height: 1.4em; }
 @media (min-width: 560px) { .look-buttons { grid-template-columns: 1fr 1fr; } }
+
+/* --- voice --- */
+button.voice { margin-bottom: 6px; }
+button.voice.listening { background: var(--bad); color: #000; border-color: var(--bad); }
+.voice-heard { margin: 0 0 12px; color: var(--muted); min-height: 1.4em; }
