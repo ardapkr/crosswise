@@ -98,10 +98,23 @@ describe('routeSummary', () => {
   it('explains why the safer route is worth the extra minutes', () => {
     const ranked = rankRoutes([shortest, safer], 'blind');
     const text = routeSummary(ranked, 'blind');
-    expect(text).toContain('recommended route is 3 minutes longer');
-    expect(text).toContain('every crossing has lights and an acoustic signal');
-    expect(text).toContain('shortest route');
-    expect(text).toMatch(/unmarked/i);
+    expect(text).toBe(
+      'The recommended route is 3 minutes longer, but every crossing has lights and an acoustic signal. ' +
+      'It avoids the unmarked crossing on the shortest route.',
+    );
+  });
+  it('mixed routes: names what is avoided, then lists the crossings', () => {
+    const shortest2 = { id: 'a', duration: 1540, distance: 2141, crossings: [LIGHT_SOUND, UNMARKED, UNMARKED, ZEBRA] };
+    const better = { id: 'b', duration: 1600, distance: 2226, crossings: [LIGHT_SOUND, LIGHT_SOUND, LIGHT, ZEBRA, ZEBRA] };
+    const text = routeSummary(rankRoutes([shortest2, better], 'blind'), 'blind');
+    expect(text).toBe(
+      'The recommended route is 1 minute longer and avoids the 2 unmarked crossings on the shortest route. ' +
+      'Its 5 crossings: 2 with lights and an acoustic signal, 1 with lights only, 2 zebra crossings.',
+    );
+  });
+  it('a single crossing is described directly', () => {
+    const r = rankRoutes([{ id: 'x', duration: 300, crossings: [ZEBRA] }], 'blind');
+    expect(routeSummary(r, 'blind')).toBe('One route found: 5 minutes and 1 crossing. Its only crossing: Zebra crossing without lights.');
   });
   it('says so when the shortest route is also the safest', () => {
     const ranked = rankRoutes([safer, { ...shortest, crossings: [LIGHT_SOUND] }], 'blind');
