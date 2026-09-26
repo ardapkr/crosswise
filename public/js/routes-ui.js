@@ -5,10 +5,10 @@ import { getJSON } from './api.js';
 import { getPosition, lastPosition, HOIV } from './location.js';
 import { decodeGroups, crossingsOnRoute } from '../lib/crossings.js';
 import { rankRoutes, safetyLevel } from '../lib/scoring.js';
-import { routeSummary, describeCrossing } from '../lib/summary.js';
+import { routeSummary, describeCrossing, routeCardText, routeBadge, LEVEL_TEXT } from '../lib/summary.js';
 import { bbox } from '../lib/geo.js';
 import { matchKnownPlaces, mergeSuggestions, fromGeocode } from '../lib/places.js';
-import { showRoutes } from './map.js';
+import { showRoutes, selectRoute, routeStyle } from './map.js';
 import { attachSuggestions } from './search.js';
 
 const $ = (id) => document.getElementById(id);
@@ -18,13 +18,6 @@ export const QUICK_DESTINATIONS = [
   { label: 'Wien Hauptbahnhof', lon: 16.3755, lat: 48.1850 },
   { label: 'Oberes Belvedere', lon: 16.3809, lat: 48.1915 },
 ];
-
-const LEVEL_TEXT = {
-  good: 'All crossings with lights and sound',
-  ok: 'All crossings with lights',
-  caution: 'Has a crossing without lights',
-  risky: 'Has a risky or unknown crossing',
-};
 
 /**
  * @param {{ getMode: () => string, speak: Function, demo: boolean, onChoose: (plan, route) => void }} opts
@@ -121,9 +114,24 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
     const routes = data.routes.map((r) => ({ ...r, crossings: crossingsOnRoute(groups, r.geometry) }));
     const ranked = rankRoutes(routes, mode);
     plan = { from, to, mode, ranked, groups };
+    showRoutes($('map-box'), ranked); // optional visual, not awaited (forgets the old plan's lines at once)
     render(ranked, mode);
-    showRoutes($('map-box'), ranked, mode); // optional visual, not awaited
     speak(routeSummary(ranked, mode)); // info: the newest summary replaces an older one
+  }
+
+  // A small line in the route's map colour and pattern, so card and map line can be matched at a glance.
+  function swatch(rank) {
+    const { color, dash } = routeStyle(rank);
+    return `<svg class="swatch" viewBox="0 0 44 12" aria-hidden="true" focusable="false"><line x1="5" y1="6" x2="39" y2="6"
+      stroke="${color}" stroke-width="6" stroke-linecap="round"${dash ? ` stroke-dasharray="${dash.split(' ').map((n) => n / 2).join(' ')}"` : ''}/></svg>`;
+  }
+
+  /** Tapping a card highlights its route on the map and reads the card out. */
+  function pick(r, { quiet = false } = {}) {
+    for (const b of $('routes').querySelectorAll('.route-pick')) b.setAttribute('aria-pressed', String(b.dataset.id === r.id));
+    for (const li of $('routes').children) li.classList.toggle('selected', li.dataset.id === r.id);
+    selectRoute(r.id);
+    if (!quiet) speak(routeCardText(r, plan.mode));
   }
 
   function render(ranked, mode) {
@@ -133,27 +141,32 @@ export function initRoutes({ getMode, speak, demo, onChoose }) {
       const level = safetyLevel(r.score);
       const li = document.createElement('li');
       li.className = `route level-${level}`;
-      const badges = [r.rank === 1 ? 'Recommended' : null, r.isShortest ? 'Shortest' : null].filter(Boolean);
-      const title = `${badges.length ? badges.join(' · ') : 'Alternative'}: ${Math.max(1, Math.round(r.duration / 60))} min`;
+      li.dataset.id = r.id;
+      const badge = routeBadge(r);
+      const title = `${badge}: ${Math.max(1, Math.round(r.duration / 60))} min`;
       const worst = r.score.count ? describeCrossing(r.score.worstCrossing, mode) : 'No road crossings';
       li.innerHTML = `
-        <h3></h3>
+        <h3><button type="button" class="route-pick" aria-pressed="false">${swatch(r.rank)}<span class="title"></span></button></h3>
         <p class="meta"></p>
         <p class="level"></p>
         <p class="worst"><span class="label">Worst crossing:</span> <span class="value"></span></p>
         <button type="button" class="go">Start this route</button>`;
-      li.querySelector('h3').textContent = title;
+      li.querySelector('.title').textContent = title;
+      li.querySelector('.route-pick').dataset.id = r.id;
       li.querySelector('.meta').textContent =
         `${(r.distance / 1000).toFixed(1)} km · ${r.score.count} crossing${r.score.count === 1 ? '' : 's'}` +
         (r.score.withSound ? ` · ${r.score.withSound} with sound` : '');
       li.querySelector('.level').textContent = LEVEL_TEXT[level];
       li.querySelector('.worst .value').textContent = worst;
       const go = li.querySelector('.go');
-      go.setAttribute('aria-label', `Start the ${badges[0] || 'alternative'} route, ${Math.round(r.duration / 60)} minutes`);
+      go.setAttribute('aria-label', `Start the ${badge.split(' · ')[0].toLowerCase()} route, ${Math.round(r.duration / 60)} minutes`);
       go.addEventListener('click', () => onChoose?.(plan, r));
+      // the whole card is a tap target (the title button is the accessible one); Start has its own action
+      li.addEventListener('click', (e) => { if (!e.target.closest('.go')) pick(r); });
       ol.appendChild(li);
     }
     $('routes-section').hidden = false;
+    pick(ranked[0], { quiet: true }); // the summary is being spoken already
     $('routes-heading').focus(); // screen readers land on the results
   }
 

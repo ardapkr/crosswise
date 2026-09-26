@@ -96,7 +96,18 @@ export function safetyLevel(score) {
   return 'risky';                          // unmarked / unknown / raised kerb
 }
 
-/** Colour bucket for one crossing (map dots), same buckets as safetyLevel. */
+/** Colour bucket for one crossing in a mode, same buckets as safetyLevel. */
 export function crossingLevel(c, mode) {
   return safetyLevel({ worst: crossingScore(c, mode) });
+}
+
+/**
+ * Map dot colour for one crossing, by its TYPE — the same in every mode, like the map legend:
+ * 'sound' = lights + acoustic signal (green), 'lights' = lights, no or unknown sound (yellow),
+ * 'zebra' (orange), 'unmarked' = unmarked or unknown type (red). Kerbs are in the card text and speech.
+ */
+export function crossingType(c) {
+  if (c?.kind === 'signals') return c.sound === 'yes' ? 'sound' : 'lights';
+  if (c?.kind === 'zebra') return 'zebra';
+  return 'unmarked';
 }

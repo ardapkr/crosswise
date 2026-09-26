@@ -69,5 +69,5 @@
 - [x] New test material (`test-material/new-test/`): 15 bus images in the vision eval (12/15, 0 critical), the 69A clip as e2e fake camera + stage demo clip
 - [x] Voice: always English whatever the phone language (en-US voice picked explicitly, late-loading voices), recognition en-US
 - [x] Search: live suggestions while typing (ORS autocomplete via `/api/autocomplete`), "Current location" as default start; report ORS quality for Stephansdom / Hauptbahnhof / HOIV
-- [ ] Map: each route its own colour, recommended thicker, crossing dots green/yellow/orange/red, tapping a route card highlights it
+- [x] Map: each route its own colour, recommended thicker, crossing dots green/yellow/orange/red, tapping a route card highlights it
 - [ ] UI redesign: dark + one accent, search on top, full-screen map, bottom sheet with route cards, camera bottom bar, segmented mode control → show the humans a preview before polishing

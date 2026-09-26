@@ -1,6 +1,40 @@
 // Turns scored routes and crossings into short sentences to speak. Pure module.
 
 import { normalizeMode } from './modes.js';
+import { safetyLevel } from './scoring.js';
+
+/** One line per card colour (safetyLevel of the route). */
+export const LEVEL_TEXT = {
+  good: 'All crossings with lights and sound',
+  ok: 'All crossings with lights',
+  caution: 'Has a crossing without lights',
+  risky: 'Has a risky or unknown crossing',
+};
+
+/** "Recommended" / "Shortest" / "Recommended · Shortest" / "Alternative" */
+export function routeBadge(r) {
+  return [r.rank === 1 ? 'Recommended' : null, r.isShortest ? 'Shortest' : null].filter(Boolean).join(' · ') || 'Alternative';
+}
+
+/**
+ * Spoken when a route card is tapped:
+ * "Alternative route: 29 minutes, 2.4 kilometres, 7 crossings, 5 with an acoustic signal. All crossings with lights."
+ */
+export function routeCardText(r, mode) {
+  const s = r.score;
+  const name = routeBadge(r).replace(' · ', ' and ').toLowerCase();
+  const parts = [
+    `${Math.max(1, Math.round(r.duration / 60))} minutes`,
+    `${(r.distance / 1000).toFixed(1)} kilometres`,
+    s.count ? `${s.count} crossing${s.count === 1 ? '' : 's'}` : 'no road crossings',
+  ];
+  if (s.withSound && mode !== 'limited') parts.push(`${s.withSound} with an acoustic signal`);
+  const level = safetyLevel(s);
+  // name the worst crossing only when it has no lights (all-lights routes say so in the level text)
+  const worst = s.count && (level === 'caution' || level === 'risky')
+    ? ` Worst crossing: ${describeCrossing(s.worstCrossing, mode).toLowerCase()}.` : '';
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)} route: ${parts.join(', ')}. ${LEVEL_TEXT[level]}.${worst}`;
+}
 
 const KIND_TEXT = {
   signals: 'Traffic light',

@@ -126,8 +126,15 @@ input::placeholder { color: #9a9a9a; }
 .route .go { width: 100%; margin-top: 10px; }
 .route.level-good { border-left-color: var(--good); }
 .route.level-good .level { color: var(--good); }
-.route.level-ok { border-left-color: #7fd0ff; }
-.route.level-ok .level { color: #7fd0ff; }
+.route.level-ok { border-left-color: #ffd23f; }
+.route.level-ok .level { color: #ffd23f; }
+.route { cursor: pointer; }
+.route.selected { box-shadow: 0 0 0 3px var(--focus); }
+.route-pick { all: unset; display: inline-flex; align-items: center; gap: 10px; min-height: 48px; cursor: pointer; }
+.route-pick:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+.swatch { width: 44px; height: 12px; flex: none; }
+.map-credit { font-size: 0.8rem; color: var(--muted); margin: -8px 0 12px; }
+.map-credit a { color: inherit; }
 .route.level-caution { border-left-color: var(--warn); }
 .route.level-caution .level { color: var(--warn); }
 .route.level-risky { border-left-color: var(--bad); }

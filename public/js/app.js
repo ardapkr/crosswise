@@ -71,7 +71,7 @@ function startRoute(plan, route) {
   $('nav-heading').focus();
   speak(`Starting the route: about ${Math.max(1, Math.round(route.duration / 60))} minutes, ${route.score.count} crossings.` +
     (state.demo ? ' Demo walk.' : ''), 'navigation');
-  showWalk($('map-box'), route, plan.mode);
+  showWalk($('map-box'), route);
   nav = startNavigation({
     route,
     mode: plan.mode,
