@@ -132,6 +132,8 @@ Rebuild the data snapshots (rarely — the public Overpass server is shared): `n
 
 Built by Arda Peker and teammate Kate at TELOS Hackathon 2026 (HACK_002), HOIV, Vienna.
 
+**Tools:** JavaScript · Leaflet · OpenStreetMap · Vercel · Vitest · Playwright · Claude Code
+
 ## License
 
 MIT, see [LICENSE](LICENSE). Map data © OpenStreetMap contributors (ODbL).
