@@ -1,5 +1,5 @@
 // Crossing data from OpenStreetMap: filter, classify, cluster, and match to a route.
-// Pure module: no DOM, no fetch. Rules come from CLAUDE.md ("Crossing data rules").
+// Pure module: no DOM, no fetch. Rules: docs/design.md ("Crossing data").
 
 import { distance, pointToLineDistance, bbox, bboxContains } from './geo.js';
 

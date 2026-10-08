@@ -12,3 +12,16 @@ playwright-report/
 test-material/
 submission/
 .claude/settings.local.json
+
+# Hackathon working notes (kept locally, not part of the project)
+CLAUDE.md
+PROMPTS.md
+HUMAN_TODO.md
+PROGRESS.md
+TASKS.md
+SETUP.md
+DEMO_SCRIPT.md
+USER_TEST.md
+SUBMISSION.md
+.claude/
+repo.zip

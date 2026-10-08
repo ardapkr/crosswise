@@ -8,7 +8,7 @@
 //   describe__zebra__01    → description mentions a zebra crossing (keyword list below)
 //
 // Usage:
-//   npm run eval:vision                      → uses the newest preview URL from PROGRESS.md (via `vercel curl`)
+//   npm run eval:vision                      → the production URL, or $CROSSWISE_URL (via `vercel curl`)
 //   npm run eval:vision -- --url <preview>   → a specific deployment
 //   npm run eval:vision -- --local           → calls the handler in-process (needs ANTHROPIC_API_KEY in .env.local)
 //   add --mode bus to run one mode, --log to append the summary to EVAL.md
@@ -78,8 +78,7 @@ function prepareImage(file) {
 }
 
 function latestPreview() {
-  const m = readFileSync(path.join(ROOT, 'PROGRESS.md'), 'utf8').match(/https:\/\/crosswise-[a-z0-9-]+\.vercel\.app/);
-  return m?.[0];
+  return process.env.CROSSWISE_URL || 'https://crosswise-woad.vercel.app';
 }
 
 let vercelJs = null;

@@ -67,8 +67,7 @@ function vercelGet(url, apiPath) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchAll(trips) {
-  const url = arg('--url') || readFileSync(path.join(ROOT, 'PROGRESS.md'), 'utf8').match(/https:\/\/crosswise-[a-z0-9-]+\.vercel\.app/)?.[0];
-  if (!url) throw new Error('no preview URL');
+  const url = arg('--url') || process.env.CROSSWISE_URL || 'https://crosswise-woad.vercel.app';
   const saved = existsSync(FILE) ? JSON.parse(readFileSync(FILE, 'utf8')) : {};
   for (const t of trips) {
     if (saved[t.id]?.raw?.features) continue;

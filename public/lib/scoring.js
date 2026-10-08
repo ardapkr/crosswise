@@ -1,5 +1,5 @@
 // How safe is a crossing, and which route is best, per mode.
-// Pure module. Rules from CLAUDE.md:
+// Pure module. Rules (also in docs/design.md):
 //   blind: lights+sound 3, lights only/unknown sound 2, zebra 1, unmarked 0
 //   wheelchair: + kerb adjustment (raised −2, unknown −0.5, lowered +0.5)
 //   route: worst crossing first, then fewest risky crossings, then (blind) fewest crossings without an
