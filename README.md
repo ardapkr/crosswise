@@ -1,9 +1,23 @@
 # Crosswise
 
+[![CI](https://github.com/ardapkr/crosswise/actions/workflows/ci.yml/badge.svg)](https://github.com/ardapkr/crosswise/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/demo-crosswise--woad.vercel.app-4cc2ff)](https://crosswise-woad.vercel.app/?demo=1)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 **Safer walking routes and a talking camera assistant for blind, low-vision, wheelchair and limited-mobility
-pedestrians in Vienna.** Built in ~18 hours at the TELOS Hackathon (Track A1 · Applied AI for Consumers).
+pedestrians in Vienna.** Built in ~18 hours at the TELOS Hackathon 2026 in Vienna (Track A1 · Applied AI for Consumers).
 
 > Crosswise assists a white cane or guide dog. It never replaces them.
+
+<p align="center">
+  <img src="docs/screenshots/1-start.png" width="200" alt="Start screen">
+  <img src="docs/screenshots/4-routes.png" width="200" alt="Route options with crossing safety">
+  <img src="docs/screenshots/6-walking.png" width="200" alt="Spoken crossing alert while walking">
+  <img src="docs/screenshots/7-find-bus.png" width="200" alt="Live camera bus finder">
+</p>
+
+**Try it:** open <https://crosswise-woad.vercel.app/?demo=1> on a phone. `?demo=1` simulates walking the chosen
+route, so it works indoors.
 
 ## The problem
 
@@ -67,6 +81,8 @@ Phone browser (plain HTML/CSS/JS, no framework)          Vercel serverless funct
 - **Demo mode**: `?demo=1` simulates walking the chosen route at 1.3 m/s (`&speed=4` faster, `&at=1450` starts
   1450 m in), so everything can be shown indoors.
 
+All scoring, clustering and camera rules are written down in [docs/design.md](docs/design.md).
+
 ## Data sources
 
 - Public transport: [Transitous](https://transitous.org) (community-run MOTIS journey planner on open GTFS data; Wiener Linien, ÖBB)
@@ -77,7 +93,7 @@ Phone browser (plain HTML/CSS/JS, no framework)          Vercel serverless funct
 
 ## Run it
 
-Needs Node 20+ and free API keys for OpenRouteService and Anthropic.
+Needs Node 24 and free API keys for OpenRouteService and Anthropic.
 
 ```bash
 npm install
@@ -103,6 +119,19 @@ Rebuild the data snapshots (rarely — the public Overpass server is shared): `n
   (underground) is by timetable and therefore approximate — the app says so. Wheelchair access of vehicles comes from
   the timetable's flag; step-free station paths are requested but not verified by us.
 
+## Tests
+
+- **386 unit tests** (Vitest) cover the pure logic in `public/lib/`: crossing filtering and clustering, scoring,
+  guidance timing, the bus-scan rules, voice command parsing and the public transport parser. Many use real saved
+  OpenStreetMap, OpenRouteService and Transitous answers from `test/fixtures/`.
+- **58 browser tests** (Playwright) run the whole app in Chromium with a recorded video as a fake camera, a fake GPS
+  position and fake speech, including a real clip of a 69A bus arriving.
+- Both suites run on every push in GitHub Actions.
+
 ## Team
 
-Built by two students with Claude Code at TELOS Hackathon 2026, HOIV, Vienna.
+Built by Arda Peker and teammate Kate at TELOS Hackathon 2026 (HACK_002), HOIV, Vienna.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Map data © OpenStreetMap contributors (ODbL).
